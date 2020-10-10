@@ -1,0 +1,30 @@
+# locally created result files and directories
+results_*.xls*
+results_*/
+row_diffs_*.xls*
+
+# tox and pytest and pyenv
+.tox/
+.pytest_cache/
+.python-version
+
+# coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# packaging
+dist/
+build/
+*.egg
+*.egg-info/
+
+
+# everything else
+.DS_Store
+*.pyc
+*.pyo
+docs/_build/
+.vscode
+*.code-workspace
+.ipynb_checkpoints/
