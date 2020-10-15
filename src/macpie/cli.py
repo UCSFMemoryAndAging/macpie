@@ -103,6 +103,7 @@ def link(ctx, primary_keep, secondary_get, secondary_days, secondary_when, prima
                           group_by_col=primary_do.id2_col,
                           date_col=primary_do.date_col,
                           keep=ctx.obj['primary_keep'],
+                          id_col=primary_do.id_col if primary_do.id_col else None,
                           drop_duplicates=False
                           )
     )
