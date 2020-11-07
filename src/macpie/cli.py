@@ -59,11 +59,24 @@ def main(ctx, verbose, id_col, date_col, id2_col):
 @click.option('-g', '--secondary-get',
               default='all',
               type=click.Choice(['all', 'closest'], case_sensitive=False))
-@click.option('-d', '--secondary-days',
+@click.option('-t', '--secondary-days',
               default=90)
 @click.option('-w', '--secondary-when',
               default='earlier_or_later',
               type=click.Choice(['earlier', 'later', 'earlier_or_later'], case_sensitive=False))
+@click.option('-i', '--secondary-id-col',
+              default=None,
+              help="Secondary ID Column Header")
+@click.option('-d', '--secondary-date-col',
+              default=None,
+              help="Secondary Date Column Header")
+@click.option('-j', '--secondary-id2-col',
+              default=None,
+              help="Secondary ID2 Column Header")
+@click.option('--merge-results/--no-merge-results',
+              default=True)
+@click.option('--keep-original/--no-keep-original',
+              default=False)
 @click.argument('primary',
                 nargs=1,
                 type=ClickPath(exists=True, file_okay=True, dir_okay=True))
@@ -71,11 +84,28 @@ def main(ctx, verbose, id_col, date_col, id2_col):
                 nargs=-1,
                 type=ClickPath(exists=True, file_okay=True, dir_okay=True))
 @click.pass_context
-def link(ctx, primary_keep, secondary_get, secondary_days, secondary_when, primary, secondary):
+def link(ctx,
+         primary_keep,
+         secondary_get,
+         secondary_days,
+         secondary_when,
+         secondary_id_col,
+         secondary_date_col,
+         secondary_id2_col,
+         merge_results,
+         keep_original,
+         primary,
+         secondary):
+
     ctx.obj['primary_keep'] = primary_keep
     ctx.obj['secondary_get'] = secondary_get
     ctx.obj['secondary_days'] = secondary_days
     ctx.obj['secondary_when'] = secondary_when
+    ctx.obj['secondary_id_col'] = secondary_id_col if secondary_id_col is not None else ctx.obj['id_col']
+    ctx.obj['secondary_date_col'] = secondary_date_col if secondary_date_col is not None else ctx.obj['date_col']
+    ctx.obj['secondary_id2_col'] = secondary_id2_col if secondary_id2_col is not None else ctx.obj['id2_col']
+    ctx.obj['merge_results'] = merge_results
+    ctx.obj['keep_original'] = keep_original
 
     _primary = _validate_filepath(primary)
 
@@ -114,9 +144,9 @@ def link(ctx, primary_keep, secondary_get, secondary_days, secondary_when, prima
                 secondary_do = LavaDataObject.from_file(
                     sec,
                     sec.stem,
-                    id_col=ctx.obj['id_col'],
-                    date_col=ctx.obj['date_col'],
-                    id2_col=ctx.obj['id2_col']
+                    id_col=ctx.obj['secondary_id_col'],
+                    date_col=ctx.obj['secondary_date_col'],
+                    id2_col=ctx.obj['secondary_id2_col']
                 )
 
                 Q.add_node(secondary_do)
@@ -141,9 +171,16 @@ def link(ctx, primary_keep, secondary_get, secondary_days, secondary_when, prima
                 click.echo(f"Warning: Ignoring un-importable file: {sec}")
 
     click.echo("Executing query...")
+
     Q.execute()
+
     click.echo("Writing query results...")
-    output_filepath = Q.write_excel()
+
+    if ctx.obj['merge_results']:
+        output_filepath = Q.write_excel_cli_link_results_with_merge()
+    else:
+        output_filepath = Q.write_excel_cli_basic()
+
     click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
 
     if ctx.obj['verbose']:
@@ -187,7 +224,7 @@ def keepone(ctx, keep, primary):
     click.echo("Executing query...")
     Q.execute()
     click.echo("Writing query results...")
-    output_filepath = Q.write_excel()
+    output_filepath = Q.write_excel_cli_basic()
     click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
 
     if ctx.obj['verbose']:

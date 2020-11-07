@@ -1,8 +1,10 @@
 import networkx as nx
+import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from macpie.io import create_output_dir, format_excel
+from macpie.io import create_output_dir
+from macpie.io import format_excel_cli_basic, format_excel_cli_link_results_with_merge
 from macpie.util import add_suffix
 
 
@@ -88,6 +90,9 @@ class Query:
                 # log the edge operation
                 self.log_edge_operation(left_node, right_node, edge_operation)
 
+    def get_root_node(self):
+        return list(nx.topological_sort(self.g))[0]
+
     def log_node(self, a):
         self.log_dataobjects.append(a.to_dict())
 
@@ -116,7 +121,7 @@ class Query:
 
         self.log_operations.append(entry)
 
-    def write_excel(self, output_dir: Path = None):
+    def write_excel_cli_basic(self, output_dir: Path = None):
         if self.executed is False:
             raise RuntimeError("should not write results file without first calling 'execute()'")
 
@@ -130,7 +135,7 @@ class Query:
             # only output nodes that have been operated on to reduce bloated files
             if node_operation is not None:
                 result = self.g.nodes[node]['operation_result']
-                result.to_excel(excel_writer=writer, sheet_name=node.name, index=False)
+                result.to_excel(excel_writer=writer, sheet_name=self.g.nodes[node]['name'], index=False)
 
         # edges with operations like linking
         for left_node, right_node, operation_result in self.g.edges.data('operation_result'):
@@ -147,6 +152,60 @@ class Query:
         log_operations.to_excel(excel_writer=writer, sheet_name='_log_operations', index=False)
 
         writer.save()
-        format_excel(final_file)
+
+        format_excel_cli_basic(final_file)
+
+        return final_file
+
+    def write_excel_cli_link_results_with_merge(self, output_dir: Path = None):
+        if self.executed is False:
+            raise RuntimeError("should not write results file without first calling 'execute()'")
+
+        final_dir = create_output_dir(output_dir)
+        final_file = final_dir / (final_dir.stem + '.xlsx')
+
+        writer = pd.ExcelWriter(final_file, engine='openpyxl')
+
+        primary_node = self.get_root_node()
+        primary_result = self.g.nodes[primary_node]['operation_result']
+        primary_result.columns = pd.MultiIndex.from_product([[primary_node.name], primary_result.columns])
+
+        final_result = primary_result
+
+        for left_node, right_node, operation_result in self.g.edges.data('operation_result'):
+            if operation_result is not None:
+                if self.g.edges[left_node, right_node]['duplicates']:
+                    # put secondary results that have duplicates as separate worksheets after the results worksheet
+                    sheet_name = self.g.edges[left_node, right_node]['name']
+                    sheet_name = add_suffix(sheet_name, "(DUPS)", 31)
+                    operation_result.to_excel(excel_writer=writer, sheet_name=sheet_name, index=False)
+                else:
+                    # merge all secondary results that do not have any duplicates
+                    final_result = final_result.mac.merge(
+                        operation_result,
+                        left_on=[
+                            (primary_node.name, primary_node.id2_col),
+                            (primary_node.name, primary_node.date_col),
+                            (primary_node.name, primary_node.id_col)
+                        ],
+                        right_on=[col + '_link' for col in [primary_node.id2_col,
+                                                            primary_node.date_col,
+                                                            primary_node.id_col]],
+                        add_indexes=(None, right_node.name)
+                    )
+
+        final_result_sheet_name = 'MERGED_RESULTS'
+        final_result.index = np.arange(1, len(final_result) + 1)
+        final_result.to_excel(excel_writer=writer, sheet_name=final_result_sheet_name, index=True)
+
+        log_dataobjects = pd.DataFrame(self.log_dataobjects)
+        log_operations = pd.DataFrame(self.log_operations)
+
+        log_dataobjects.to_excel(excel_writer=writer, sheet_name='_log_dataobjects', index=False)
+        log_operations.to_excel(excel_writer=writer, sheet_name='_log_operations', index=False)
+
+        writer.save()
+
+        format_excel_cli_link_results_with_merge(final_file, final_result_sheet_name)
 
         return final_file

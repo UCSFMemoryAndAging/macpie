@@ -53,13 +53,15 @@ def test_query():
         do2
     )
 
+    assert Q.get_root_node().name == "pidn_date_1"
+
     assert Q.g.edges[do1, do2]['name'] == do1.name + "->" + do2.name
 
     assert Q.g.number_of_edges() == 1
 
     # need to run Q.execute() before writing to excel
     with pytest.raises(RuntimeError):
-        Q.write_excel()
+        Q.write_excel_cli_basic()
 
     Q.execute()
-    # Q.write_excel(output_dir=current_dir)
+    # Q.write_excel_cli_basic(output_dir=current_dir)

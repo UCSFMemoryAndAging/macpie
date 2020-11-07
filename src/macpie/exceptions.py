@@ -10,6 +10,13 @@ class FileImportError(Exception):
         self.message = message
 
 
+class MergeError(ValueError):
+    """
+    Error raised when problems arise during DateProximity
+    merging due to problems with input data. Subclass of `ValueError`.
+    """
+
+
 class WriteError(Exception):
     def __init__(self, message):
         self.message = message

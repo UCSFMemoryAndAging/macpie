@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+from macpie.util import is_list_like, list_like_str_equal
 
 COL_KEYWORDS = {'_abs_diff_days', '_diff_days', '_duplicates', '_merge'}
 
@@ -86,12 +87,29 @@ def drop_suffix(df: pd.DataFrame, suffix):
     return df.rename(columns=lambda x: x[:-len(suffix)] if x.endswith(suffix) else x)
 
 
+def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
+    if axis == 0:
+        if isinstance(df.index, pd.MultiIndex):
+            df.index = [delimiter.join(str(idx) for idx in idx_tup) for idx_tup in df.index]
+    elif axis == 1:
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = [delimiter.join(str(col) for col in col_tup) for col_tup in df.columns]
+
+
 def get_col_name(df: pd.DataFrame, col_name: str):
     if col_name is None:
         raise KeyError("column to get is 'None'")
+
+    if is_list_like(col_name):
+        for col in df.columns:
+            if list_like_str_equal(col, col_name, True):
+                return col
+        raise KeyError(f"column not found: {col_name}")
+
     for col in df.columns:
         if col.lower() == col_name.lower():
             return col
+
     raise KeyError(f"column not found: {col_name}")
 
 

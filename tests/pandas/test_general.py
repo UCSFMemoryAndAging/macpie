@@ -188,6 +188,25 @@ def test_diff_rows_2():
         df1.mac.diff_rows(df2)
 
 
+def test_flatten_multiindex():
+    d = {
+        'PIDN': [2, 2, 3],
+        'DCDate': [datetime(2001, 3, 2), datetime(2001, 3, 2), datetime(2001, 8, 1)],
+        'InstrID': [7, 8, 9]
+    }
+    df = pd.DataFrame(data=d)
+
+    # test flattening row index
+    df.index = pd.MultiIndex.from_product([['CDR'], df.index])
+    df.mac.flatten_multiindex(axis=0)
+    assert list(df.index) == ['CDR_0', 'CDR_1', 'CDR_2']
+
+    # test flattening col index
+    df.columns = pd.MultiIndex.from_product([['CDR'], df.columns])
+    df.mac.flatten_multiindex(axis=1)
+    assert list(df.columns) == ['CDR_PIDN', 'CDR_DCDate', 'CDR_InstrID']
+
+
 def test_get_col_name():
     d = {
         'col1': [1, 2, 3],

@@ -4,6 +4,7 @@ from .general import *
 from .operators.date_proximity import date_proximity
 from .operators.filter_by_id import filter_by_id
 from .operators.group_by_keep_one import group_by_keep_one
+from .operators.merge import merge
 
 
 @pd.api.extensions.register_dataframe_accessor("mac")
@@ -35,6 +36,9 @@ class MacAccessor:
     def drop_suffix(self, suffix: str):
         return drop_suffix(self._obj, suffix)
 
+    def flatten_multiindex(self, axis: int = 0, delimiter: str = '_'):
+        return flatten_multiindex(self._obj, axis)
+
     def get_col_name(self, col_name: str):
         return get_col_name(self._obj, col_name)
 
@@ -60,17 +64,6 @@ class MacAccessor:
         return to_datetime(self._obj, date_col)
 
     # operators
-    def filter_by_id(
-        self,
-        id_col: str,
-        ids: List[int]
-    ):
-        return filter_by_id(
-            self._obj,
-            id_col,
-            ids
-        )
-
     def date_proximity(
         self,
         right: pd.DataFrame,
@@ -106,6 +99,17 @@ class MacAccessor:
             merge_suffixes=merge_suffixes
         )
 
+    def filter_by_id(
+        self,
+        id_col: str,
+        ids: List[int]
+    ):
+        return filter_by_id(
+            self._obj,
+            id_col,
+            ids
+        )
+
     def group_by_keep_one(
         self,
         group_by_col: str,
@@ -121,4 +125,25 @@ class MacAccessor:
             keep=keep,
             id_col=id_col,
             drop_duplicates=drop_duplicates
+        )
+
+    def merge(
+        self,
+        right: pd.DataFrame,
+        on=None,
+        left_on=None,
+        right_on=None,
+        merge_suffixes=('_x', '_y'),
+        add_suffixes=False,
+        add_indexes=(None, None)
+    ):
+        return merge(
+            self._obj,
+            right,
+            on=on,
+            left_on=left_on,
+            right_on=right_on,
+            merge_suffixes=merge_suffixes,
+            add_suffixes=add_suffixes,
+            add_indexes=add_indexes
         )
