@@ -1,7 +1,9 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
+from macpie.exceptions import DataObjectIDColKeyError, DataObjectID2ColKeyError
 from macpie.io import import_file
 
 
@@ -26,17 +28,34 @@ class DataObject:
         if self.date_col is not None:
             self.date_col = self.df.mac.to_datetime(self.date_col)
 
-        if self.id_col is not None:
-            try:
-                self.id_col = self.df.mac.get_col_name(self.id_col)
-            except KeyError:
-                raise KeyError(f"ID column '{self.id_col}' in dataobject '{self.name}'' not found")
-
         if self.id2_col is not None:
             try:
                 self.id2_col = self.df.mac.get_col_name(self.id2_col)
             except KeyError:
-                raise KeyError(f"ID2 column '{self.id2_col}' in dataobject '{self.name}'' not found")
+                raise DataObjectID2ColKeyError(f"ID2 column '{self.id2_col}' in dataobject '{self.name}'' not found")
+
+        if self.id_col is not None:
+            try:
+                self.id_col = self.df.mac.get_col_name(self.id_col)
+            except KeyError:
+                raise DataObjectIDColKeyError(f"ID column '{self.id_col}' in dataobject '{self.name}'' not found")
+
+            if self.df[self.id_col].duplicated().any():
+                raise DataObjectIDColKeyError(
+                    f"ID column '{self.id_col}' in dataobject '{self.name}'' has duplicates,"
+                    " which are not allowed"
+                )
+
+        if self.id_col is None:
+            self.id_col = 'mp_id_col'
+            sort_cols = []
+            if self.id2_col is not None:
+                sort_cols.append(self.id2_col)
+            if self.date_col is not None:
+                sort_cols.append(self.date_col)
+
+            self.df = self.df.sort_values(by=sort_cols)
+            self.df.insert(0, self.id_col, np.arange(1, len(self.df) + 1))
 
     @property
     def df(self):
@@ -60,6 +79,12 @@ class DataObject:
             f'date_col={self.date_col!r}, '
             f'id2_col={self.id2_col!r})'
         )
+
+    def rename_id_col(self, new_id_col):
+        old_id_col = self.id_col
+        self.id_col = new_id_col
+        if old_id_col is not None and old_id_col in self._df.columns:
+            self.df = self.df.rename(columns={old_id_col: new_id_col})
 
     def to_dict(self):
         return {

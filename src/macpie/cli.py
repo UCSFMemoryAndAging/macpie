@@ -6,7 +6,7 @@ import click
 
 from macpie.classes import LavaDataObject
 from macpie.classes import Query
-from macpie.exceptions import FileImportError
+from macpie.exceptions import DataObjectIDColKeyError, FileImportError
 from macpie.io import allowed_file, get_files_from_dir
 from macpie.pandas import date_proximity, group_by_keep_one
 from macpie.util import add_suffix
@@ -114,17 +114,31 @@ def link(ctx,
 
         if len(_secondary_valid) == 1:
             if _primary == _secondary_valid[0]:
-                raise click.UsageError(f"Error: Primary file is {_primary}. No secondary files to link to.")
+                raise click.UsageError(f"ERROR: Primary file is {_primary}. No secondary files to link to.")
 
     Q = Query()
 
-    primary_do = LavaDataObject.from_file(
-        _primary,
-        _primary.stem,
-        id_col=ctx.obj['id_col'],
-        date_col=ctx.obj['date_col'],
-        id2_col=ctx.obj['id2_col'],
-    )
+    try:
+        primary_do = LavaDataObject.from_file(
+            _primary,
+            _primary.stem,
+            id_col=ctx.obj['id_col'],
+            date_col=ctx.obj['date_col'],
+            id2_col=ctx.obj['id2_col'],
+        )
+    except DataObjectIDColKeyError:
+        click.echo('\nWARNING: ID Column Header (-i, --id-col) not specified '
+                   'and default of "InstrID" not found in your PRIMARY file.')
+        click.echo('         Creating one for you called "link_id"\n')
+
+        primary_do = LavaDataObject.from_file(
+            _primary,
+            _primary.stem,
+            id_col=None,
+            date_col=ctx.obj['date_col'],
+            id2_col=ctx.obj['id2_col'],
+        )
+        primary_do.rename_id_col('link_id')
 
     Q.add_node(
         primary_do,
@@ -133,7 +147,7 @@ def link(ctx,
                           group_by_col=primary_do.id2_col,
                           date_col=primary_do.date_col,
                           keep=ctx.obj['primary_keep'],
-                          id_col=primary_do.id_col if primary_do.id_col else None,
+                          id_col=primary_do.id_col,
                           drop_duplicates=False
                           )
     )
@@ -168,7 +182,7 @@ def link(ctx,
                 )
 
             except FileImportError:
-                click.echo(f"Warning: Ignoring un-importable file: {sec}")
+                click.echo(f"WARNING: Ignoring un-importable file: {sec}")
 
     click.echo("Executing query...")
 
@@ -251,11 +265,11 @@ def _print_ctx(ctx):
 
 def _validate_filepath(p):
     if not p.exists():
-        raise click.UsageError('Error: File does not exist.')
+        raise click.UsageError('ERROR: File does not exist.')
     if p.is_dir():
-        raise click.UsageError('Error: File is not a file but a directory.')
+        raise click.UsageError('ERROR: File is not a file but a directory.')
     if not allowed_file(p):
-        raise click.UsageError('Error: File extension is not allowed.')
+        raise click.UsageError('ERROR: File extension is not allowed.')
     return p
 
 
@@ -278,9 +292,9 @@ def _validate_filepaths(ps):
             valid_ps.append(p)
 
     for p in invalid_ps:
-        click.echo(f"Warning: Ignoring invalid file: {p}")
+        click.echo(f"WARNING: Ignoring invalid file: {p}")
 
     if len(valid_ps) < 1:
-        raise click.UsageError("Error: No valid files.")
+        raise click.UsageError("ERROR: No valid files.")
 
     return (valid_ps, invalid_ps)

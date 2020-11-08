@@ -58,6 +58,45 @@ def test_small_with_merge():
         assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
 
+def test_no_link_id():
+    # macpie link tests/cli/link/pidn_date_only.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/pidn_date_only.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    expected_result = read_multiindex(current_dir / "small_no_link_id_expected_result.xlsx")
+    expected_result.mac.flatten_multiindex(axis=1)
+
+    runner = CliRunner()
+
+    cli_args = [
+        '--id2-col', 'pidn',
+        '--date-col', 'dcdate',
+        'link',
+        '--primary-keep', 'all',
+        '--secondary-get', 'closest',
+        '--secondary-days', 90,
+        '--secondary-when', 'earlier_or_later',
+        str((current_dir / "pidn_date_only.xlsx").resolve()),
+        str((data_dir / "instr2_all.csv").resolve()),
+        str((data_dir / "instr3_all.csv").resolve())
+    ]
+
+    with runner.isolated_filesystem():
+        results = runner.invoke(main, cli_args)
+
+        assert results.exit_code == 0
+
+        # get the results file
+        results_path = next(Path(".").glob('**/result*xlsx'))
+
+        # copy file to current dir if you want to debug more
+        if output_dir is not None:
+            copy(results_path, current_dir)
+
+        results = read_multiindex(results_path)
+        results.mac.flatten_multiindex(axis=1)
+
+        assert_dfs_equal(results, expected_result, output_dir=output_dir)
+
+
 def test_small():
     # macpie link --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv

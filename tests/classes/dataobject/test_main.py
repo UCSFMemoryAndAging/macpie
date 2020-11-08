@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from macpie.classes import DataObject
-
+from macpie.exceptions import DataObjectIDColKeyError, DataObjectID2ColKeyError
 
 current_dir = Path("tests/classes/dataobject/")
 
@@ -28,7 +28,7 @@ def test_dataobject():
         )
 
     # invalid id_col raises KeyError
-    with pytest.raises(KeyError):
+    with pytest.raises(DataObjectIDColKeyError):
         do = DataObject(
             name="test_name",
             id_col="doesnt_exist",
@@ -37,7 +37,7 @@ def test_dataobject():
         )
 
     # invalid id2_col raises KeyError
-    with pytest.raises(KeyError):
+    with pytest.raises(DataObjectID2ColKeyError):
         do = DataObject(
             name="test_name",
             id_col="COL1",
@@ -46,12 +46,14 @@ def test_dataobject():
             df=df
         )
 
-    # blank id_col is fine
+    # blank id_col creates an id_col called 'mp_id_col' with index starting from 1
     do = DataObject(
         name="test_name",
         date_col="col3",
         df=df
     )
+    assert do.id_col == 'mp_id_col'
+    assert do.df[do.id_col].equals(pd.Series([1, 2, 3]))
 
     # dataframe lacks date column but created without error
     do = DataObject(

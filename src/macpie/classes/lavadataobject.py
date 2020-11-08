@@ -26,7 +26,7 @@ class LavaDataObject(DataObject):
         super().__init__(
             name,
             df,
-            id_col if id_col is not None else LavaDataObject.FIELD_ID_COL_VALUE_DEFAULT,
+            id_col,
             date_col if date_col is not None else LavaDataObject.FIELD_DATE_COL_VALUE_DEFAULT,
             id2_col if id2_col is not None else LavaDataObject.FIELD_ID2_COL_VALUE_DEFAULT,
             filepath
