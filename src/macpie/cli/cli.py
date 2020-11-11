@@ -11,6 +11,8 @@ from macpie.io import allowed_file, get_files_from_dir
 from macpie.pandas import date_proximity, group_by_keep_one
 from macpie.util import add_suffix
 
+from .excel import write_results_basic, write_link_results_with_merge
+
 
 class ClickPath(click.Path):
     """
@@ -191,9 +193,9 @@ def link(ctx,
     click.echo("Writing query results...")
 
     if ctx.obj['merge_results']:
-        output_filepath = Q.write_excel_cli_link_results_with_merge()
+        output_filepath = write_link_results_with_merge(Q)
     else:
-        output_filepath = Q.write_excel_cli_basic()
+        output_filepath = write_results_basic(Q)
 
     click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
 
@@ -238,7 +240,7 @@ def keepone(ctx, keep, primary):
     click.echo("Executing query...")
     Q.execute()
     click.echo("Writing query results...")
-    output_filepath = Q.write_excel_cli_basic()
+    output_filepath = write_results_basic(Q)
     click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
 
     if ctx.obj['verbose']:

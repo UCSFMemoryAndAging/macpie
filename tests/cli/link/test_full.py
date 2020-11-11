@@ -5,7 +5,7 @@ from click.testing import CliRunner
 import pandas as pd
 import pytest
 
-from macpie.cli import main
+from macpie.cli.cli import main
 from macpie.testing import assert_dfs_equal
 
 

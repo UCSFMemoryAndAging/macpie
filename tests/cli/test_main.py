@@ -2,7 +2,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from macpie.cli import main
+from macpie.cli.cli import main
 
 
 current_dir = Path("tests/cli/data/").resolve()

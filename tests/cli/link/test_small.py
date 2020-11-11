@@ -4,8 +4,8 @@ from shutil import copy
 from click.testing import CliRunner
 import pandas as pd
 
-from macpie.cli import main
-from macpie.io import read_multiindex
+from macpie.cli.cli import main
+from macpie.cli.excel import read_multiindex
 from macpie.testing import assert_dfs_equal
 
 

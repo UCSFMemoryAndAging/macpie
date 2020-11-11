@@ -2,7 +2,6 @@ from functools import partial
 from pathlib import Path
 
 import networkx as nx
-import pytest
 
 from macpie.classes import LavaDataObject, Query
 from macpie.pandas import group_by_keep_one
@@ -21,6 +20,11 @@ def test_query():
     do2 = LavaDataObject.from_file(
         current_dir / "pidn_date_2.xlsx",
         "pidn_date_2"
+    )
+
+    do3 = LavaDataObject.from_file(
+        current_dir / "pidn_date_3.xlsx",
+        "pidn_date_3"
     )
 
     g = nx.DiGraph()
@@ -46,22 +50,38 @@ def test_query():
 
     Q.add_node(do2)
 
-    assert Q.g.number_of_nodes() == 2
+    Q.add_node(do3)
+
+    assert Q.g.number_of_nodes() == 3
 
     Q.add_edge(
         do1,
         do2
     )
 
+    Q.add_edge(
+        do1,
+        do3
+    )
+
     assert Q.get_root_node().name == "pidn_date_1"
 
     assert Q.g.edges[do1, do2]['name'] == do1.name + "->" + do2.name
 
-    assert Q.g.number_of_edges() == 1
+    assert Q.g.number_of_edges() == 2
 
-    # need to run Q.execute() before writing to excel
-    with pytest.raises(RuntimeError):
-        Q.write_excel_cli_basic()
+    nodes_with_operations = Q.get_all_node_data('operation')
+    assert len(nodes_with_operations) == 1
+
+    edges_with_names = Q.get_all_edge_data('name')
+    assert len(edges_with_names) == 2
 
     Q.execute()
-    # Q.write_excel_cli_basic(output_dir=current_dir)
+
+    assert Q.get_node(do1)['name'] == 'pidn_date_1'
+
+    assert Q.get_node(do1, 'name') == 'pidn_date_1'
+
+    # Q.print_graph()
+
+    # Q.draw_graph()

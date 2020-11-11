@@ -3,7 +3,7 @@ from pathlib import Path
 from click.testing import CliRunner
 import pytest
 
-from macpie.cli import main
+from macpie.cli.cli import main
 
 
 @pytest.mark.slow

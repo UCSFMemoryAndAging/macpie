@@ -17,10 +17,9 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
     return df
 
 
-def any_duplicates(df: pd.DataFrame):
-    if '_duplicates' not in df.columns:
-        raise KeyError("_duplicates col not found. First call 'mark_duplicates...'")
-    return df['_duplicates'].any()
+def any_duplicates(df: pd.DataFrame, col: str):
+    col = get_col_name(df, col)
+    return df[col].any()
 
 
 def assimilate(a: pd.DataFrame, b: pd.DataFrame):

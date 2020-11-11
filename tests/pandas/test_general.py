@@ -30,9 +30,9 @@ def test_any_duplicates():
     }
     df = pd.DataFrame(data=d)
 
-    # no _duplicates column raises KeyError
+    # no col4 column raises KeyError
     with pytest.raises(KeyError):
-        df.mac.any_duplicates()
+        df.mac.any_duplicates('col4')
 
     d = {
         '_duplicates': [False, False, False],
@@ -42,7 +42,7 @@ def test_any_duplicates():
     df = pd.DataFrame(data=d)
 
     # pandas sometimes uses numpy's bool, which behaves differently than Python's built-in bool
-    assert df.mac.any_duplicates() == numpy.bool(False)
+    assert df.mac.any_duplicates('_duplicates') == numpy.bool(False)
 
     d = {
         '_duplicates': [True, False, False],
@@ -52,7 +52,7 @@ def test_any_duplicates():
     df = pd.DataFrame(data=d)
 
     # pandas sometimes uses numpy's bool, which behaves differently than Python's built-in bool
-    assert df.mac.any_duplicates() == numpy.bool(True)
+    assert df.mac.any_duplicates('_duplicates') == numpy.bool(True)
 
 
 def test_assimilate():

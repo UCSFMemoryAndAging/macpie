@@ -1,10 +1,6 @@
+import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
-import pandas as pd
-from pathlib import Path
 
-from macpie.io import create_output_dir
-from macpie.io import format_excel_cli_basic, format_excel_cli_link_results_with_merge
 from macpie.util import add_suffix
 
 
@@ -30,11 +26,10 @@ class Query:
         name=None,
         operation=None
     ):
-        self.g.add_node(
-            do,
-            name=name if name is not None else do.name,
-            operation=operation
-        )
+        self.g.add_node(do)
+        self.g.nodes[do]['name'] = name if name is not None else do.name
+        if operation is not None:
+            self.g.nodes[do]['operation'] = operation
 
     def add_edge(
         self,
@@ -43,18 +38,17 @@ class Query:
         name=None,
         operation=None
     ):
+        self.g.add_edge(do1, do2)
+
         if name is None:
             if operation is not None:
                 name = operation.func.__name__
             else:
                 name = add_suffix(do1.name + "->", do2.name)
+        self.g[do1][do2]['name'] = name
 
-        self.g.add_edge(
-            do1,
-            do2,
-            name=name,
-            operation=operation
-        )
+        if operation is not None:
+            self.g[do1][do2]['operation'] = operation
 
     def execute(self):
         self.execute_nodes()
@@ -62,36 +56,67 @@ class Query:
         self.executed = True
 
     def execute_nodes(self):
-        # iterate through all nodes
-        for node, node_operation in self.g.nodes.data('operation'):
-            self.log_node(node)
-            if node_operation is not None:
-                self.g.nodes[node]['operation_result'] = node_operation(node.df)
-
+        for n, d in self.g.nodes.items():
+            self.log_node(n)
+            if 'operation' in d:
+                node_operation = d['operation']
+                self.g.nodes[n]['operation_result'] = node_operation(n.df)
                 # log the node operation
-                self.log_node_operation(node, node_operation)
+                self.log_node_operation(n, node_operation)
 
     def execute_edges(self):
-        # iterate through all edges
-        for left_node, right_node, edge_operation in self.g.edges.data('operation'):
+        for u, v, edge_operation in self.g.edges.data('operation'):
             if edge_operation is not None:
-                left_df = (self.g.nodes[left_node]['operation_result']
-                           if self.g.nodes[left_node]['operation']
-                           else left_node.df)
-                right_df = (self.g.nodes[right_node]['operation_result']
-                            if self.g.nodes[right_node]['operation']
-                            else right_node.df)
-
+                left_df = (self.g.nodes[u]['operation_result']
+                           if 'operation_result' in self.g.nodes[u]
+                           else u.df)
+                right_df = (self.g.nodes[v]['operation_result']
+                            if 'operation_result' in self.g.nodes[v]
+                            else v.df)
                 operation_result = edge_operation(left_df, right_df)
-
-                self.g.edges[left_node, right_node]['operation_result'] = operation_result
-                self.g.edges[left_node, right_node]['duplicates'] = operation_result.mac.any_duplicates()
-
+                self.g.edges[u, v]['operation_result'] = operation_result
+                self.g.edges[u, v]['duplicates'] = operation_result.mac.any_duplicates('_duplicates')
                 # log the edge operation
-                self.log_edge_operation(left_node, right_node, edge_operation)
+                self.log_edge_operation(u, v, edge_operation)
 
     def get_root_node(self):
         return list(nx.topological_sort(self.g))[0]
+
+    def get_node(self, n, attr: str = None):
+        node = self.g.nodes[n]
+        if attr is not None:
+            if attr in node:
+                return node[attr]
+            else:
+                return None
+        else:
+            return node
+
+    def get_all_node_data(self, attr: str = None):
+        """Get the data dict of all nodes. If attr is specified, get the
+        data dict of all nodes that have that attr in its data dict.
+        """
+        if attr is not None:
+            results = []
+            for n, d in self.g.nodes.items():
+                if attr in d:
+                    results.append(d)
+            return results
+        else:
+            return [d for n, d in self.g.nodes.items()]
+
+    def get_all_edge_data(self, attr: str = None):
+        """Get the data dict of all edges. If attr is specified, get the
+        data dict of all edges that have that attr in its data dict.
+        """
+        if attr is not None:
+            results = []
+            for e, d in self.g.edges.items():
+                if attr in d:
+                    results.append(d)
+            return results
+        else:
+            return [d for e, d in self.g.edges.items()]
 
     def log_node(self, a):
         self.log_dataobjects.append(a.to_dict())
@@ -121,91 +146,50 @@ class Query:
 
         self.log_operations.append(entry)
 
-    def write_excel_cli_basic(self, output_dir: Path = None):
-        if self.executed is False:
-            raise RuntimeError("should not write results file without first calling 'execute()'")
+    def print_nodes(self):
+        counter = 1
+        for n, d in self.g.nodes.items():
+            print('\nNODE ' + str(counter))
+            print(n)
+            print(d)
+            counter += 1
 
-        final_dir = create_output_dir(output_dir)
-        final_file = final_dir / (final_dir.stem + '.xlsx')
+    def print_edges(self):
+        counter = 1
+        for e, d in self.g.edges.items():
+            print('\nEDGE ' + str(counter))
+            print(e)
+            print(d)
+            counter += 1
 
-        writer = pd.ExcelWriter(final_file, engine='openpyxl')
+    def print_graph(self):
+        self.print_nodes()
+        self.print_edges()
 
-        # nodes
-        for node, node_operation in self.g.nodes.data('operation'):
-            # only output nodes that have been operated on to reduce bloated files
-            if node_operation is not None:
-                result = self.g.nodes[node]['operation_result']
-                result.to_excel(excel_writer=writer, sheet_name=self.g.nodes[node]['name'], index=False)
+    def draw_graph(self):
+        pos = nx.shell_layout(self.g)
+        # pos = nx.spring_layout(self.g)
 
-        # edges with operations like linking
-        for left_node, right_node, operation_result in self.g.edges.data('operation_result'):
-            if operation_result is not None:
-                sheet_name = self.g.edges[left_node, right_node]['name']
-                if self.g.edges[left_node, right_node]['duplicates']:
-                    sheet_name = add_suffix(sheet_name, "(DUPS)", 31)
-                operation_result.to_excel(excel_writer=writer, sheet_name=sheet_name, index=False)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.axis('equal')
 
-        log_dataobjects = pd.DataFrame(self.log_dataobjects)
-        log_operations = pd.DataFrame(self.log_operations)
+        nx.draw_networkx_nodes(self.g, pos, node_size=500)
+        nx.draw_networkx_edges(self.g, pos, arrowsize=30)
+        nx.draw_networkx_edge_labels(
+            self.g,
+            pos,
+            edge_labels=nx.get_edge_attributes(self.g, 'name'),
+            verticalalignment='center',
+            horizontalalignment='center'
+        )
+        nx.draw_networkx_labels(
+            self.g,
+            pos,
+            labels={n: d['name'] for n, d in self.g.nodes.items() if n in pos},
+            font_size=10,
+            horizontalalignment="left"
+        )
 
-        log_dataobjects.to_excel(excel_writer=writer, sheet_name='_log_dataobjects', index=False)
-        log_operations.to_excel(excel_writer=writer, sheet_name='_log_operations', index=False)
-
-        writer.save()
-
-        format_excel_cli_basic(final_file)
-
-        return final_file
-
-    def write_excel_cli_link_results_with_merge(self, output_dir: Path = None):
-        if self.executed is False:
-            raise RuntimeError("should not write results file without first calling 'execute()'")
-
-        final_dir = create_output_dir(output_dir)
-        final_file = final_dir / (final_dir.stem + '.xlsx')
-
-        writer = pd.ExcelWriter(final_file, engine='openpyxl')
-
-        primary_node = self.get_root_node()
-        primary_result = self.g.nodes[primary_node]['operation_result']
-        primary_result.columns = pd.MultiIndex.from_product([[primary_node.name], primary_result.columns])
-
-        final_result = primary_result
-
-        for left_node, right_node, operation_result in self.g.edges.data('operation_result'):
-            if operation_result is not None:
-                if self.g.edges[left_node, right_node]['duplicates']:
-                    # put secondary results that have duplicates as separate worksheets after the results worksheet
-                    sheet_name = self.g.edges[left_node, right_node]['name']
-                    sheet_name = add_suffix(sheet_name, "(DUPS)", 31)
-                    operation_result.to_excel(excel_writer=writer, sheet_name=sheet_name, index=False)
-                else:
-                    # merge all secondary results that do not have any duplicates
-                    final_result = final_result.mac.merge(
-                        operation_result,
-                        left_on=[
-                            (primary_node.name, primary_node.id2_col),
-                            (primary_node.name, primary_node.date_col),
-                            (primary_node.name, primary_node.id_col)
-                        ],
-                        right_on=[col + '_link' for col in [primary_node.id2_col,
-                                                            primary_node.date_col,
-                                                            primary_node.id_col]],
-                        add_indexes=(None, right_node.name)
-                    )
-
-        final_result_sheet_name = 'MERGED_RESULTS'
-        final_result.index = np.arange(1, len(final_result) + 1)
-        final_result.to_excel(excel_writer=writer, sheet_name=final_result_sheet_name, index=True)
-
-        log_dataobjects = pd.DataFrame(self.log_dataobjects)
-        log_operations = pd.DataFrame(self.log_operations)
-
-        log_dataobjects.to_excel(excel_writer=writer, sheet_name='_log_dataobjects', index=False)
-        log_operations.to_excel(excel_writer=writer, sheet_name='_log_operations', index=False)
-
-        writer.save()
-
-        format_excel_cli_link_results_with_merge(final_file, final_result_sheet_name)
-
-        return final_file
+        # plt.tight_layout()
+        plt.axis("off")
+        plt.show()
