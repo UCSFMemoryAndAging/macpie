@@ -1,6 +1,7 @@
 """Path utilities"""
 
 from pathlib import Path
+from typing import Callable
 
 from macpie.exceptions import PathError
 from macpie.util import append_current_datetime_str
@@ -34,32 +35,41 @@ def get_files_from_dir(p):
     return [f.resolve() for f in Path(p).iterdir() if f.is_file()]
 
 
-def validate_filepath(p, allowed_file):
+def validate_filepath(p, allowed_file: Callable = None):
     if not p.exists():
         raise PathError('ERROR: File does not exist.')
     if p.is_dir():
         raise PathError('ERROR: File is not a file but a directory.')
-    if not allowed_file(p):
-        raise PathError('ERROR: File extension is not allowed.')
+    if allowed_file is not None:
+        if not allowed_file(p):
+            raise PathError('ERROR: File is specified as not allowed.')
     return p
 
 
-def validate_filepaths(ps, allowed_file):
-    all_ps = []
+def validate_filepaths(ps, allowed_file: Callable = None):
+    """ps should be an iterable, like a list of files"""
+
+    if allowed_file is None:
+        def allowed_file(p):
+            return True
+
+    to_validate = []
+    valid = []
+    invalid = []
+
     for p in ps:
         if p.is_dir():
-            all_ps.extend(get_files_from_dir(p))
+            to_validate.extend(get_files_from_dir(p))
         else:
-            all_ps.append(p)
+            to_validate.append(p)
 
-    valid_ps = []
-    invalid_ps = []
-    for p in all_ps:
-        if p in valid_ps:
+    for p in to_validate:
+        if p in valid or p in invalid:
             continue
-        elif not allowed_file(p):
-            invalid_ps.append(p)
-        else:
-            valid_ps.append(p)
+        try:
+            vp = validate_filepath(p, allowed_file)
+            valid.append(vp)
+        except PathError:
+            invalid.append(p)
 
-    return (valid_ps, invalid_ps)
+    return (valid, invalid)

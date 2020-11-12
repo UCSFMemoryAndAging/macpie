@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from macpie.exceptions import PathError
-from macpie.io import create_output_dir, get_files_from_dir
+from macpie.io import create_output_dir, get_files_from_dir, validate_filepaths
 
 
 def test_create_output_dir(tmp_path):
@@ -36,3 +36,35 @@ def test_get_files_from_dir():
 
     assert 'badfile.csv' in file_names
     assert 'test.txt' in file_names
+
+
+def test_validate_filepaths():
+    p = Path('tests/io/data')
+
+    (valid, invalid) = validate_filepaths([p])
+
+    assert len(valid) == 7
+    assert len(invalid) == 0
+
+    def allowed_file(p):
+        if p.stem.startswith('test'):
+            return False
+        return True
+
+    (valid, invalid) = validate_filepaths([p], allowed_file)
+
+    assert len(valid) == 4
+    assert len(invalid) == 3
+
+
+def est_validate_filepaths_2():
+    ps = [
+        Path('tests/io/data/test.txt'),
+        Path('tests/io/data/not_there.txt'),
+        Path('tests/io/data/test.csv')
+    ]
+
+    (valid, invalid) = validate_filepaths(ps)
+
+    assert len(valid) == 2
+    assert len(invalid) == 1
