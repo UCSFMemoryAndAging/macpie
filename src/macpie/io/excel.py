@@ -1,4 +1,5 @@
 from openpyxl.styles import PatternFill
+import pandas as pd
 
 
 def get_row_by_col_val(ws, col_index, val):
@@ -33,3 +34,10 @@ def ws_highlight_row(ws, row):
     for row in rows_iter:
         for cell in row:
             cell.fill = PatternFill("solid", fgColor="00FFFF00")
+
+
+def ws_to_df(ws):
+    data = ws.values
+    cols = next(data)
+    df = pd.DataFrame(data, columns=cols)
+    return df

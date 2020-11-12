@@ -11,6 +11,24 @@ current_dir = Path("tests/cli/data/").resolve()
 def test_basic():
     runner = CliRunner()
 
+    temp_file = 'link ' + str((current_dir / '~$test.csv').resolve())
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, temp_file)
+        # print(result.output)
+        assert result.exit_code != 0
+
+    results_file = 'link ' + str((current_dir / 'results_test.csv').resolve())
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, results_file)
+        # print(result.output)
+        assert result.exit_code != 0
+
+    bad_suffix = 'link ' + str((current_dir / 'test.zzz').resolve())
+    with runner.isolated_filesystem():
+        result = runner.invoke(main, bad_suffix)
+        # print(result.output)
+        assert result.exit_code != 0
+
     file_no_exist = 'link ' + str((current_dir / "not_exists.xlsx").resolve())
     with runner.isolated_filesystem():
         result = runner.invoke(main, file_no_exist)

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from macpie.exceptions import DataObjectIDColKeyError, DataObjectID2ColKeyError
-from macpie.io import import_file
+from macpie.io import file_to_dataframe
 
 
 class DataObject:
@@ -99,5 +99,5 @@ class DataObject:
 
     @classmethod
     def from_file(cls, filepath, name, id_col=None, date_col=None, id2_col=None) -> "DataObject":
-        df = import_file(filepath)
+        df = file_to_dataframe(filepath)
         return cls(name, id_col=id_col, date_col=date_col, id2_col=id2_col, df=df, filepath=filepath)

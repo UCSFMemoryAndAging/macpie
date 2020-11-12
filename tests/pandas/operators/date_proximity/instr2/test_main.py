@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from macpie.io import import_file
+from macpie.io import file_to_dataframe
 from macpie.testing import assert_dfs_equal
 
 
@@ -31,7 +31,7 @@ primary = dfs_dict['LINK_INSTR2']
 @pytest.mark.slow
 def test_secondary_instr1():
 
-    secondary_instr1 = import_file(data_dir / "instr1_all.csv")
+    secondary_instr1 = file_to_dataframe(data_dir / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr1_result = primary.mac.date_proximity(
@@ -55,7 +55,7 @@ def test_secondary_instr1():
 @pytest.mark.slow
 def test_secondary_instr3():
 
-    secondary_instr3 = import_file(data_dir / "instr3_all.csv")
+    secondary_instr3 = file_to_dataframe(data_dir / "instr3_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr3_result = primary.mac.date_proximity(

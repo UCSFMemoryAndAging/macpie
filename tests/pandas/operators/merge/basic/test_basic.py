@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.io import import_file
+from macpie.io import file_to_dataframe
 from macpie.testing import assert_dfs_equal
 
 
@@ -11,7 +11,7 @@ current_dir = Path("tests/pandas/operators/merge/basic/")
 # output_dir = current_dir
 output_dir = None
 
-primary = import_file(current_dir / "small.xlsx")
+primary = file_to_dataframe(current_dir / "small.xlsx")
 
 
 dfs_dict = pd.read_excel(

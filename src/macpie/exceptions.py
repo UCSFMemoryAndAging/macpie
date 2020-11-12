@@ -26,11 +26,6 @@ class DateProximityError(ValueError):
     """
 
 
-class FileImportError(Exception):
-    def __init__(self, message):
-        self.message = message
-
-
 class MergeError(ValueError):
     """
     Error raised when problems arise during DateProximity
@@ -38,6 +33,11 @@ class MergeError(ValueError):
     """
 
 
-class WriteError(Exception):
+class ParserError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+class PathError(Exception):
     def __init__(self, message):
         self.message = message

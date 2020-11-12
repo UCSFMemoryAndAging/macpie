@@ -4,10 +4,9 @@ from typing import Any, Optional
 
 import click
 
-from macpie.classes import LavaDataObject
-from macpie.classes import Query
-from macpie.exceptions import DataObjectIDColKeyError, FileImportError
-from macpie.io import allowed_file, get_files_from_dir
+from macpie.classes import LavaDataObject, Query
+from macpie.exceptions import DataObjectIDColKeyError, ParserError
+from macpie.io import has_csv_extension, has_excel_extension, validate_filepath, validate_filepaths
 from macpie.pandas import date_proximity, group_by_keep_one
 from macpie.util import add_suffix
 
@@ -109,12 +108,17 @@ def link(ctx,
     ctx.obj['merge_results'] = merge_results
     ctx.obj['keep_original'] = keep_original
 
-    _primary = _validate_filepath(primary)
+    _primary = validate_filepath(primary, allowed_file)
 
     if secondary:
-        (_secondary_valid, _secondary_invalid) = _validate_filepaths(secondary)
+        (_secondary_valid, _secondary_invalid) = validate_filepaths(secondary, allowed_file)
 
-        if len(_secondary_valid) == 1:
+        for p in _secondary_invalid:
+            click.echo(f"WARNING: Ignoring invalid file: {p}")
+
+        if len(_secondary_valid) < 1:
+            raise click.UsageError("ERROR: No valid files.")
+        elif len(_secondary_valid) == 1:
             if _primary == _secondary_valid[0]:
                 raise click.UsageError(f"ERROR: Primary file is {_primary}. No secondary files to link to.")
 
@@ -183,7 +187,7 @@ def link(ctx,
                                       )
                 )
 
-            except FileImportError:
+            except ParserError:
                 click.echo(f"WARNING: Ignoring un-importable file: {sec}")
 
     click.echo("Executing query...")
@@ -214,7 +218,13 @@ def link(ctx,
 def keepone(ctx, keep, primary):
     ctx.obj['primary_keep'] = keep
 
-    _primary_valid, _primary_invalid = _validate_filepaths(primary)
+    _primary_valid, _primary_invalid = validate_filepaths(primary, allowed_file)
+
+    for p in _primary_invalid:
+        click.echo(f"WARNING: Ignoring invalid file: {p}")
+
+    if len(_primary_valid) < 1:
+        raise click.UsageError("ERROR: No valid files.")
 
     Q = Query()
 
@@ -265,38 +275,12 @@ def _print_ctx(ctx):
     click.echo()
 
 
-def _validate_filepath(p):
-    if not p.exists():
-        raise click.UsageError('ERROR: File does not exist.')
-    if p.is_dir():
-        raise click.UsageError('ERROR: File is not a file but a directory.')
-    if not allowed_file(p):
-        raise click.UsageError('ERROR: File extension is not allowed.')
-    return p
-
-
-def _validate_filepaths(ps):
-    all_ps = []
-    for p in ps:
-        if p.is_dir():
-            all_ps.extend(get_files_from_dir(p))
-        else:
-            all_ps.append(p)
-
-    valid_ps = []
-    invalid_ps = []
-    for p in all_ps:
-        if p in valid_ps:
-            continue
-        elif not allowed_file(p):
-            invalid_ps.append(p)
-        else:
-            valid_ps.append(p)
-
-    for p in invalid_ps:
-        click.echo(f"WARNING: Ignoring invalid file: {p}")
-
-    if len(valid_ps) < 1:
-        raise click.UsageError("ERROR: No valid files.")
-
-    return (valid_ps, invalid_ps)
+def allowed_file(p):
+    """Determines if a file is considered allowed
+    """
+    stem = p.stem
+    if stem.startswith('~') or stem.startswith('results_'):
+        return False
+    if has_csv_extension(p) or has_excel_extension(p):
+        return True
+    return False

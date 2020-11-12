@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from macpie.io import import_file
+from macpie.io import file_to_dataframe
 from macpie.testing import assert_dfs_equal
 
 
@@ -34,7 +34,7 @@ def test_instr1():
     )
 
     primary = dfs_dict['primary']
-    secondary = import_file(data_dir / "instr1_all.csv")
+    secondary = file_to_dataframe(data_dir / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     closest_earlier_or_later_90_result = primary.mac.date_proximity(

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from macpie.io import import_file
+from macpie.io import file_to_dataframe
 from macpie.testing import assert_dfs_equal
 
 
@@ -9,9 +9,9 @@ current_dir = Path("tests/pandas/operators/date_proximity/basic/")
 # output_dir = current_dir
 output_dir = None
 
-primary = import_file(current_dir / "primary.xlsx")
+primary = file_to_dataframe(current_dir / "primary.xlsx")
 
-secondary = import_file(current_dir / "secondary.xlsx")
+secondary = file_to_dataframe(current_dir / "secondary.xlsx")
 
 
 def test_merge_partial():
@@ -29,7 +29,7 @@ def test_merge_partial():
     )
 
     # merge_partial_result.to_excel(current_dir / "merge_partial_result.xlsx", index=False)
-    merge_partial_expected_result = import_file(current_dir / "merge_partial_expected_result.xlsx")
+    merge_partial_expected_result = file_to_dataframe(current_dir / "merge_partial_expected_result.xlsx")
     assert_dfs_equal(merge_partial_result, merge_partial_expected_result, output_dir=output_dir)
 
     # test that results are same when using equivalent id and date params
@@ -79,5 +79,5 @@ def test_merge_full():
     )
 
     # merge_full_result.to_excel(current_dir / "merge_full_result.xlsx", index=False)
-    merge_full_expected_result = import_file(current_dir / "merge_full_expected_result.xlsx")
+    merge_full_expected_result = file_to_dataframe(current_dir / "merge_full_expected_result.xlsx")
     assert_dfs_equal(merge_full_result, merge_full_expected_result, output_dir=output_dir)

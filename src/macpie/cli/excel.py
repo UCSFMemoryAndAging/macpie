@@ -12,7 +12,7 @@ def write_link_results_with_merge(Q, output_dir: Path = None):
     if Q.executed is False:
         raise RuntimeError("should not write results file without first calling 'execute()'")
 
-    final_dir = create_output_dir(output_dir)
+    final_dir = create_output_dir(output_dir, "results")
     final_file = final_dir / (final_dir.stem + '.xlsx')
 
     writer = pd.ExcelWriter(final_file, engine='openpyxl')
@@ -73,7 +73,7 @@ def write_results_basic(Q, output_dir: Path = None):
     if Q.executed is False:
         raise RuntimeError("should not write results file without first calling 'execute()'")
 
-    final_dir = create_output_dir(output_dir)
+    final_dir = create_output_dir(output_dir, "results")
     final_file = final_dir / (final_dir.stem + '.xlsx')
 
     writer = pd.ExcelWriter(final_file, engine='openpyxl')
