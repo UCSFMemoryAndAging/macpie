@@ -4,9 +4,6 @@ import networkx as nx
 from macpie.util import add_suffix
 
 
-SHEET_CHARS_LIMIT = 31
-
-
 class Query:
 
     def __init__(self, g=None):

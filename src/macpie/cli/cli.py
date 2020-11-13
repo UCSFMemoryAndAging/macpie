@@ -10,7 +10,16 @@ from macpie.io import has_csv_extension, has_excel_extension, validate_filepath,
 from macpie.pandas import date_proximity, group_by_keep_one
 from macpie.util import add_suffix
 
-from .excel import write_results_basic, write_link_results_with_merge
+from .excel import (
+    format_results_basic,
+    format_link_results_with_merge,
+    link_id_col,
+    primary_sheet_name_suffix,
+    secondary_sheet_name_suffix,
+    sheet_name_chars_limit,
+    write_keepone_results,
+    write_link_results
+)
 
 
 class ClickPath(click.Path):
@@ -108,10 +117,10 @@ def link(ctx,
     ctx.obj['merge_results'] = merge_results
     ctx.obj['keep_original'] = keep_original
 
-    _primary = validate_filepath(primary, allowed_file)
+    _primary = validate_filepath(primary, _allowed_file)
 
     if secondary:
-        (_secondary_valid, _secondary_invalid) = validate_filepaths(secondary, allowed_file)
+        (_secondary_valid, _secondary_invalid) = validate_filepaths(secondary, _allowed_file)
 
         for p in _secondary_invalid:
             click.echo(f"WARNING: Ignoring invalid file: {p}")
@@ -144,11 +153,11 @@ def link(ctx,
             date_col=ctx.obj['date_col'],
             id2_col=ctx.obj['id2_col'],
         )
-        primary_do.rename_id_col('link_id')
+        primary_do.rename_id_col(link_id_col)
 
     Q.add_node(
         primary_do,
-        name=add_suffix(primary_do.name, "_anchor", 31),
+        name=add_suffix(primary_do.name, primary_sheet_name_suffix, sheet_name_chars_limit),
         operation=partial(group_by_keep_one,
                           group_by_col=primary_do.id2_col,
                           date_col=primary_do.date_col,
@@ -174,7 +183,7 @@ def link(ctx,
                 Q.add_edge(
                     primary_do,
                     secondary_do,
-                    name=add_suffix(secondary_do.name, "_linked", 31),
+                    name=add_suffix(secondary_do.name, secondary_sheet_name_suffix, sheet_name_chars_limit),
                     operation=partial(date_proximity,
                                       id_left_on=primary_do.id2_col,
                                       id_right_on=secondary_do.id2_col,
@@ -196,12 +205,14 @@ def link(ctx,
 
     click.echo("Writing query results...")
 
-    if ctx.obj['merge_results']:
-        output_filepath = write_link_results_with_merge(Q)
-    else:
-        output_filepath = write_results_basic(Q)
+    results_file = write_link_results(Q, merge=ctx.obj['merge_results'])
 
-    click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
+    if ctx.obj['merge_results'] is True:
+        format_link_results_with_merge(results_file)
+    else:
+        format_results_basic(results_file)
+
+    click.echo(f'\nLook for results in: {results_file.resolve()}\n')
 
     if ctx.obj['verbose']:
         _print_ctx(ctx)
@@ -218,7 +229,7 @@ def link(ctx,
 def keepone(ctx, keep, primary):
     ctx.obj['primary_keep'] = keep
 
-    _primary_valid, _primary_invalid = validate_filepaths(primary, allowed_file)
+    _primary_valid, _primary_invalid = validate_filepaths(primary, _allowed_file)
 
     for p in _primary_invalid:
         click.echo(f"WARNING: Ignoring invalid file: {p}")
@@ -250,9 +261,29 @@ def keepone(ctx, keep, primary):
     click.echo("Executing query...")
     Q.execute()
     click.echo("Writing query results...")
-    output_filepath = write_results_basic(Q)
-    click.echo(f'\nLook for results in: {output_filepath.resolve()}\n')
 
+    results_file = write_keepone_results(Q)
+    format_results_basic(results_file)
+    click.echo(f'\nLook for results in: {results_file.resolve()}\n')
+
+    if ctx.obj['verbose']:
+        _print_ctx(ctx)
+
+
+@main.command()
+@click.option('-k', '--keep',
+              default='all',
+              type=click.Choice(['all', 'first', 'latest'], case_sensitive=False))
+@click.argument('primary',
+                nargs=-1,
+                type=ClickPath(exists=True, file_okay=True, dir_okay=True))
+@click.pass_context
+def merge(ctx, keep, primary):
+    ctx.obj['primary_keep'] = keep
+    Q = Query()
+    results_file = write_link_results(Q)
+    print('end merge')
+    print(results_file)
     if ctx.obj['verbose']:
         _print_ctx(ctx)
 
@@ -275,7 +306,7 @@ def _print_ctx(ctx):
     click.echo()
 
 
-def allowed_file(p):
+def _allowed_file(p):
     """Determines if a file is considered allowed
     """
     stem = p.stem
