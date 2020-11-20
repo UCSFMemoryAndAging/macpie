@@ -3,6 +3,7 @@ from .excel import (
     ws_autoadjust_colwidth,
     ws_get_col,
     ws_highlight_row,
+    ws_highlight_rows_with_col,
     ws_to_df
 )
 

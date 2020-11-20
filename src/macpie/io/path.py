@@ -66,6 +66,12 @@ def validate_filepaths(ps, allowed_file: Callable = None):
     for p in to_validate:
         if p in valid or p in invalid:
             continue
+        # ignore hidden files
+        if p.stem.startswith('.'):
+            continue
+        # ignore temp excel files
+        if p.stem.startswith('~') and p.suffix.startswith('.xls'):
+            continue
         try:
             vp = validate_filepath(p, allowed_file)
             valid.append(vp)

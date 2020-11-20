@@ -25,7 +25,7 @@ def test_dropna_true():
         days=90,
         dropna=True,
         merge='partial'
-    )
+    ).reset_index(drop=True)
 
     # result.to_excel(current_dir / "dropna_true_result.xlsx", index=False)
     expected_result = file_to_dataframe(current_dir / "dropna_true_expected_result.xlsx")
@@ -43,7 +43,7 @@ def test_dropna_true_merge_full():
         days=90,
         dropna=True,
         merge='full'
-    )
+    ).reset_index(drop=True)
 
     # result.to_excel(current_dir / "dropna_true_merge_full_result.xlsx", index=False)
     expected_result = file_to_dataframe(current_dir / "dropna_true_merge_full_expected_result.xlsx")

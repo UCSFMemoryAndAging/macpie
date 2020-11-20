@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from macpie.util import is_list_like, list_like_str_equal
+from macpie.util import is_list_like, list_like_str_equal, strip_suffix
 
 COL_KEYWORDS = {'_abs_diff_days', '_diff_days', '_duplicates', '_merge'}
 
@@ -26,6 +26,11 @@ def assimilate(a: pd.DataFrame, b: pd.DataFrame):
     # assimilate b to look like a
     # give me all the elments in a that are also in b
 
+    # if one set of columns are MultiIndex, then both should be
+    if isinstance(a.columns, pd.MultiIndex) or isinstance(b.columns, pd.MultiIndex):
+        if not isinstance(a.columns, pd.MultiIndex) or not isinstance(b.columns, pd.MultiIndex):
+            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+
     a_columns = set(a.columns)
     b_columns = set(b.columns)
 
@@ -40,7 +45,7 @@ def assimilate(a: pd.DataFrame, b: pd.DataFrame):
     return b.astype(a_dtypes)
 
 
-def diff_cols(a: pd.DataFrame, b: pd.DataFrame, cols_ignore: List[str] = None):
+def diff_cols(a: pd.DataFrame, b: pd.DataFrame, cols_ignore=None):
     a_columns = set(a.columns)
     a_columns = a_columns.difference(COL_KEYWORDS)
 
@@ -58,32 +63,39 @@ def diff_cols(a: pd.DataFrame, b: pd.DataFrame, cols_ignore: List[str] = None):
     return (left_only_cols, right_only_cols)
 
 
-def diff_rows(a: pd.DataFrame, b: pd.DataFrame, cols_ignore: List[str] = None):
-    _a = a.drop(COL_KEYWORDS, axis=1, errors='ignore')
-    _b = b.drop(COL_KEYWORDS, axis=1, errors='ignore')
+def diff_rows(a: pd.DataFrame, b: pd.DataFrame, cols_ignore=None):
+    # if one set of columns are MultiIndex, then both should be
+    if isinstance(a.columns, pd.MultiIndex) or isinstance(b.columns, pd.MultiIndex):
+        if not isinstance(a.columns, pd.MultiIndex) or not isinstance(b.columns, pd.MultiIndex):
+            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+
+    if isinstance(a.columns, pd.MultiIndex):
+        level = len(a.columns.levels) - 1
+        _a = a.drop(columns=COL_KEYWORDS, level=level, errors='ignore')
+        _b = b.drop(columns=COL_KEYWORDS, level=level, errors='ignore')
+        _a.columns = _a.columns.to_flat_index()
+        _b.columns = _b.columns.to_flat_index()
+    else:
+        _a = a.drop(columns=COL_KEYWORDS, errors='ignore')
+        _b = b.drop(columns=COL_KEYWORDS, errors='ignore')
 
     if cols_ignore is not None and len(cols_ignore) > 0:
-        _a.drop(cols_ignore, axis=1, inplace=True, errors='ignore')
-        _b.drop(cols_ignore, axis=1, inplace=True, errors='ignore')
+        _a.drop(columns=cols_ignore, inplace=True, errors='ignore')
+        _b.drop(columns=cols_ignore, inplace=True, errors='ignore')
 
     a_columns = _a.columns
     b_columns = _b.columns
 
-    if len(a_columns) == len(b_columns):
-        a_columns = set(a_columns)
-        b_columns = set(b_columns)
-        intersection = list(a_columns.intersection(b_columns))
-
-        if len(a_columns) == len(intersection):
-            merged_df = _a.merge(_b, indicator=True, how='outer')
-            changed_rows_df = merged_df[merged_df['_merge'] != 'both']
-            return changed_rows_df
+    if set(a_columns) == set(b_columns):
+        merged_df = pd.merge(_a, _b, indicator=True, how='outer')
+        changed_rows_df = merged_df[merged_df['_merge'] != 'both']
+        return changed_rows_df
 
     raise KeyError('Dataframes do not share the same columns')
 
 
 def drop_suffix(df: pd.DataFrame, suffix):
-    return df.rename(columns=lambda x: x[:-len(suffix)] if x.endswith(suffix) else x)
+    return df.rename(columns=lambda x: strip_suffix(x, suffix))
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
@@ -95,7 +107,7 @@ def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
             df.columns = [delimiter.join(str(col) for col in col_tup) for col_tup in df.columns]
 
 
-def get_col_name(df: pd.DataFrame, col_name: str):
+def get_col_name(df: pd.DataFrame, col_name):
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
@@ -105,9 +117,14 @@ def get_col_name(df: pd.DataFrame, col_name: str):
                 return col
         raise KeyError(f"column not found: {col_name}")
 
-    for col in df.columns:
-        if col.lower() == col_name.lower():
-            return col
+    if isinstance(col_name, str):
+        for col in df.columns:
+            if isinstance(col, str) and col.lower() == col_name.lower():
+                return col
+    else:
+        for col in df.columns:
+            if col == col_name:
+                return col
 
     raise KeyError(f"column not found: {col_name}")
 

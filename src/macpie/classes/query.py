@@ -190,3 +190,10 @@ class Query:
         # plt.tight_layout()
         plt.axis("off")
         plt.show()
+
+    def __repr__(self) -> str:
+        return (
+            f'{self.__class__.__name__}('
+            f'num_nodes={self.g.number_of_nodes()!r}, '
+            f'num_edges={self.g.number_of_edges()!r})'
+        )

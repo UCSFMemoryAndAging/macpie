@@ -95,8 +95,4 @@ def test_with_index():
 
     assert(result.columns.equals(expected_result.columns))
 
-    # flatten multiindexes so can compare
-    result.mac.flatten_multiindex(axis=1)
-    expected_result.mac.flatten_multiindex(axis=1)
-
     assert_dfs_equal(result, expected_result, output_dir=output_dir)

@@ -57,7 +57,7 @@ def test_validate_filepaths():
     assert len(invalid) == 3
 
 
-def est_validate_filepaths_2():
+def test_validate_filepaths_2():
     ps = [
         Path('tests/io/data/test.txt'),
         Path('tests/io/data/not_there.txt'),

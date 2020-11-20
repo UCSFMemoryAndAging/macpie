@@ -5,7 +5,7 @@ from click.testing import CliRunner
 import pandas as pd
 
 from macpie.cli.cli import main
-from macpie.cli.excel import read_multiindex
+from macpie.cli.subcommands.link.writer import CliLinkResults
 from macpie.testing import assert_dfs_equal
 
 
@@ -21,8 +21,7 @@ cols_ignore = ['PIDN', 'VType', '_merge', '_abs_diff_days', '_duplicates']
 def test_small_with_merge():
     # macpie link tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = read_multiindex(current_dir / "small_with_merge_expected_result.xlsx")
-    expected_result.mac.flatten_multiindex(axis=1)
+    expected_result = CliLinkResults.read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -51,8 +50,7 @@ def test_small_with_merge():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = read_multiindex(results_path)
-        results.mac.flatten_multiindex(axis=1)
+        results = CliLinkResults.read_merged_results(results_path)
 
         assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
@@ -60,8 +58,7 @@ def test_small_with_merge():
 def test_small_no_link_id():
     # macpie link tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = read_multiindex(current_dir / "small_no_link_id_expected_result.xlsx")
-    expected_result.mac.flatten_multiindex(axis=1)
+    expected_result = CliLinkResults.read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -90,8 +87,7 @@ def test_small_no_link_id():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = read_multiindex(results_path)
-        results.mac.flatten_multiindex(axis=1)
+        results = CliLinkResults.read_merged_results(results_path)
 
         assert_dfs_equal(results, expected_result, output_dir=output_dir)
 

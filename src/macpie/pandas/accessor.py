@@ -27,10 +27,10 @@ class MacAccessor:
     def assimilate(self, right: pd.DataFrame):
         return assimilate(self._obj, right)
 
-    def diff_cols(self, right: pd.DataFrame, cols_ignore: List[str] = None):
+    def diff_cols(self, right: pd.DataFrame, cols_ignore=None):
         return diff_cols(self._obj, right, cols_ignore)
 
-    def diff_rows(self, right: pd.DataFrame, cols_ignore: List[str] = None):
+    def diff_rows(self, right: pd.DataFrame, cols_ignore=None):
         return diff_rows(self._obj, right, cols_ignore)
 
     def drop_suffix(self, suffix: str):
