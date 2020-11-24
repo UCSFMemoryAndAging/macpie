@@ -17,9 +17,11 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
     return df
 
 
-def any_duplicates(df: pd.DataFrame, col: str):
+def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
     col = get_col_name(df, col)
-    return df[col].any()
+    if ignore_nan is True:
+        return df[col].dropna().duplicated().any()
+    return df[col].duplicated().any()
 
 
 def assimilate(a: pd.DataFrame, b: pd.DataFrame):

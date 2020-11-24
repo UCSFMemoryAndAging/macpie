@@ -12,6 +12,13 @@ class DataObjectIDColKeyError(KeyError):
     """
 
 
+class DataObjectIDColDuplicateKeyError(DataObjectIDColKeyError):
+    """
+    Error raised when there are duplicates in DataObject.id_col.
+    Subclass of `DataObjectIDColKeyError`.
+    """
+
+
 class DataObjectID2ColKeyError(KeyError):
     """
     Error raised when there is a problem with DataObject.id2_col.

@@ -1,6 +1,5 @@
 import click
 
-from macpie.classes import Query
 from macpie.io import validate_filepath
 
 from ...core import ClickPath
@@ -9,27 +8,18 @@ from .writer import CliMergeResults
 
 
 @click.command()
-@click.option('-k', '--keep',
-              default='all',
-              type=click.Choice(['all', 'first', 'latest'], case_sensitive=False))
+@click.option('--keep-original/--no-keep-original',
+              default=True)
 @click.argument('primary',
                 nargs=1,
                 type=ClickPath(exists=True, file_okay=True, dir_okay=False))
 @click.pass_context
-def merge(ctx, keep, primary):
+def merge(ctx, keep_original, primary):
     options = ctx.obj['options']
     args = ctx.obj['args']
 
-    options['keep'] = keep
-    args['primary'] = primary
-
-    _primary = validate_filepath(primary, allowed_file)
-
-    Q = Query()
-
-    click.echo("Executing query...")
-    Q.execute()
-    click.echo("Writing query results...")
+    options['keep_original'] = keep_original
+    args['primary'] = validate_filepath(primary, allowed_file)
 
     results = CliMergeResults(ctx)
     results.write()

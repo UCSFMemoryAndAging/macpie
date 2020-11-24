@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import numpy
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -42,7 +42,9 @@ def test_any_duplicates():
     df = pd.DataFrame(data=d)
 
     # pandas sometimes uses numpy's bool, which behaves differently than Python's built-in bool
-    assert df.mac.any_duplicates('_duplicates') == numpy.bool(False)
+    # this is how you test if a specific column has any values that are True,
+    # which is different from the any_duplicates function
+    assert df['_duplicates'].any() == np.bool(False)
 
     d = {
         '_duplicates': [True, False, False],
@@ -52,7 +54,22 @@ def test_any_duplicates():
     df = pd.DataFrame(data=d)
 
     # pandas sometimes uses numpy's bool, which behaves differently than Python's built-in bool
-    assert df.mac.any_duplicates('_duplicates') == numpy.bool(True)
+    assert df.mac.any_duplicates('_duplicates') == np.bool(True)
+
+    d = {
+        'col1': ['a', 'b', 'c'],
+        'col2': [None, None, 6],
+        'col3': [np.nan, np.nan, 8]
+    }
+    df = pd.DataFrame(data=d)
+
+    # nulls by default count as duplicates
+    assert df.mac.any_duplicates('col2') == np.bool(True)
+    assert df.mac.any_duplicates('col3') == np.bool(True)
+
+    # don't count nulls as duplicates
+    assert df.mac.any_duplicates('col2', ignore_nan=True) == np.bool(False)
+    assert df.mac.any_duplicates('col3', ignore_nan=True) == np.bool(False)
 
 
 def test_assimilate():

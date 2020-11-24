@@ -1,4 +1,5 @@
 
+import json
 from pathlib import Path
 from typing import ClassVar
 
@@ -9,17 +10,19 @@ import openpyxl as pyxl
 from macpie.io import get_row_by_col_val, ws_autoadjust_colwidth, ws_highlight_rows_with_col
 from macpie.util import add_suffix, validate_bool_kwarg
 
-from ...core import CliResults, SingleSheet
+from ...core import CliBaseQueryResults, SingleSheet
 
 
-class CliLinkResults(CliResults):
+class CliLinkResults(CliBaseQueryResults):
     SHEETNAME_FIELDS_AVAILABLE : ClassVar[str] = '_fields_available'
+    SHEETNAME_MERGE_INFO : ClassVar[str] = '_merge_info'
     SHEETNAME_MERGED_RESULTS : ClassVar[str] = 'MERGED_RESULTS'
     SHEETNAME_SUFFIX_DUPLICATES : ClassVar[str] = '(DUPS)'
     SHEETNAME_SUFFIX_PRIMARY : ClassVar[str] = '_anchor'
     SHEETNAME_SUFFIX_SECONDARY : ClassVar[str] = '_linked'
 
-    COL_HEADER_FIELDS_SELECTED : ClassVar[str] = 'INCLUDE?'
+    COL_HEADER_DUPLICATES: ClassVar[str] = '_duplicates'
+    COL_HEADER_FIELDS_SELECTED : ClassVar[str] = 'Merge?'
     COL_HEADER_ROW_INDEX : ClassVar[str] = 'Original_Order'
     COL_HEADER_LINK_ID : ClassVar[str] = 'link_id'
 
@@ -32,9 +35,14 @@ class CliLinkResults(CliResults):
     def pre_write(self, Q):
         primary_node = Q.get_root_node()
         primary_result = Q.get_node(primary_node, 'operation_result')
-        self.fields_list = [(primary_node.name, col)
-                            for col in primary_result.columns
-                            if col not in [primary_node.id_col, primary_node.date_col, primary_node.id2_col]]
+        self.fields_list = [(primary_node.name,
+                             col,
+                             'x' if col in (primary_node.id_col,
+                                            primary_node.date_col,
+                                            primary_node.id2_col
+                                            ) else None
+                             ) for col in primary_result.columns
+                            ]
 
         if self.merge is False:
             primary_sheetname = add_suffix(primary_node.name, self.SHEETNAME_SUFFIX_PRIMARY, self.SHEETNAME_CHARS_LIMIT)
@@ -45,9 +53,7 @@ class CliLinkResults(CliResults):
                 sheetname = add_suffix(edge['name'], self.SHEETNAME_SUFFIX_SECONDARY, self.SHEETNAME_CHARS_LIMIT)
                 if edge['duplicates']:
                     sheetname = add_suffix(sheetname, self.SHEETNAME_SUFFIX_DUPLICATES, self.SHEETNAME_CHARS_LIMIT)
-                self.fields_list.extend([(edge['name'], col)
-                                         for col in edge['operation_result'].columns
-                                         if not col.endswith('_link')])
+                self.fields_list.extend([(edge['name'], col, None) for col in edge['operation_result'].columns])
                 self.ws.append(SingleSheet(sheetname, edge['operation_result'], None))
         else:
             primary_result.columns = pd.MultiIndex.from_product([[primary_node.name], primary_result.columns])
@@ -56,19 +62,18 @@ class CliLinkResults(CliResults):
             self.fields_list_dups = []
             for left_node, right_node, operation_result in Q.g.edges.data('operation_result'):
                 if operation_result is not None:
-
                     if Q.g.edges[left_node, right_node]['duplicates']:
                         # put secondary results that have duplicates as separate worksheets after the results worksheet
-                        sheetname = add_suffix(Q.g.edges[left_node, right_node]['name'], self.SHEETNAME_SUFFIX_SECONDARY, self.SHEETNAME_CHARS_LIMIT)
+                        sheetname = add_suffix(Q.g.edges[left_node, right_node]['name'],
+                                               self.SHEETNAME_SUFFIX_SECONDARY,
+                                               self.SHEETNAME_CHARS_LIMIT)
                         sheetname = add_suffix(sheetname, self.SHEETNAME_SUFFIX_DUPLICATES, self.SHEETNAME_CHARS_LIMIT)
                         self.ws.append(SingleSheet(sheetname, operation_result, None))
-                        self.fields_list_dups.extend([(Q.g.edges[left_node, right_node]['name'], col)
-                                                      for col in operation_result.columns
-                                                      if not col.endswith('_link')])
+                        self.fields_list_dups.extend([(Q.g.edges[left_node, right_node]['name'], col, None)
+                                                      for col in operation_result.columns])
                     else:
-                        self.fields_list.extend([(Q.g.edges[left_node, right_node]['name'], col)
-                                                 for col in operation_result.columns
-                                                 if not col.endswith('_link')])
+                        self.fields_list.extend([(Q.g.edges[left_node, right_node]['name'], col, None)
+                                                 for col in operation_result.columns])
 
                         # merge all secondary results that do not have any duplicates
                         final_result = final_result.mac.merge(
@@ -107,9 +112,19 @@ class CliLinkResults(CliResults):
 
     def post_write(self, Q):
         fields_list = self.fields_list + self.fields_list_dups
-        fields_list_df = pd.DataFrame(data=fields_list, columns=['DataObject', 'Field'])
-        fields_list_df[self.COL_HEADER_FIELDS_SELECTED] = ''
+        fields_list_cols = ['DataObject', 'Field', self.COL_HEADER_FIELDS_SELECTED]
+        fields_list_df = pd.DataFrame(data=fields_list, columns=fields_list_cols)
         fields_list_df.to_excel(excel_writer=self.writer, sheet_name=self.SHEETNAME_FIELDS_AVAILABLE, index=False)
+
+        primary_node = Q.get_root_node()
+        secondary_do_names = [o['right_operand'] for o in Q.log_operations if o['operation'] == 'date_proximity']
+        merge_info_data = [
+            ('primary', primary_node.to_json()),
+            ('secondary', json.dumps(secondary_do_names)),
+            ('merged', json.dumps(self.merge))
+        ]
+        merge_info_df = pd.DataFrame(data=merge_info_data, columns=['param_name', 'param_value'])
+        merge_info_df.to_excel(excel_writer=self.writer, sheet_name=self.SHEETNAME_MERGE_INFO, index=False)
         super().post_write(Q)
 
     def format_file(self):
@@ -118,7 +133,7 @@ class CliLinkResults(CliResults):
 
         for ws in wb.worksheets:
             if ws.title.endswith(self.SHEETNAME_SUFFIX_DUPLICATES):
-                ws_highlight_rows_with_col(ws, '_duplicates')
+                ws_highlight_rows_with_col(ws, CliLinkResults.COL_HEADER_DUPLICATES)
             elif ws.title == self.SHEETNAME_MERGED_RESULTS:
                 self.format_merged_results(ws)
             elif ws.title.startswith('_'):
@@ -126,14 +141,15 @@ class CliLinkResults(CliResults):
 
         wb.save(filename)
 
-    def format_merged_results(self, ws):
+    @staticmethod
+    def format_merged_results(ws):
         # get row index where column A has value of 1 (index of the dataframe)
         row_index = get_row_by_col_val(ws, 0, 1)
         row_index = row_index - 1
         ws.delete_rows(row_index)
 
         # forced to keep the index column due to bug, so might as well give it a good name
-        ws['A2'].value = self.COL_HEADER_ROW_INDEX
+        ws['A2'].value = CliLinkResults.COL_HEADER_ROW_INDEX
         # https://stackoverflow.com/questions/54682506/openpyxl-in-python-delete-rows-function-breaks-the-merged-cell
         # ws.delete_cols(1,1)
 

@@ -72,7 +72,7 @@ class Query:
                             else v.df)
                 operation_result = edge_operation(left_df, right_df)
                 self.g.edges[u, v]['operation_result'] = operation_result
-                self.g.edges[u, v]['duplicates'] = operation_result.mac.any_duplicates('_duplicates')
+                self.g.edges[u, v]['duplicates'] = operation_result['_duplicates'].any()
                 # log the edge operation
                 self.log_edge_operation(u, v, edge_operation)
 
@@ -116,7 +116,7 @@ class Query:
             return [d for e, d in self.g.edges.items()]
 
     def log_node(self, a):
-        self.log_dataobjects.append(a.to_dict())
+        self.log_dataobjects.append(a.to_json())
 
     def log_node_operation(self, a, node_operation):
         entry = {

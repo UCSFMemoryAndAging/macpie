@@ -1,9 +1,10 @@
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from macpie.exceptions import DataObjectIDColKeyError, DataObjectID2ColKeyError
+from macpie.exceptions import DataObjectIDColKeyError, DataObjectIDColDuplicateKeyError, DataObjectID2ColKeyError
 from macpie.io import file_to_dataframe
 
 
@@ -40,8 +41,14 @@ class DataObject:
             except KeyError:
                 raise DataObjectIDColKeyError(f"ID column '{self.id_col}' in dataobject '{self.name}'' not found")
 
-            if self.df[self.id_col].duplicated().any():
+            if self.df[self.id_col].isnull().any():
                 raise DataObjectIDColKeyError(
+                    f"ID column '{self.id_col}' in dataobject '{self.name}'' has null values,"
+                    " which are not allowed"
+                )
+
+            if self.df[self.id_col].duplicated().any():
+                raise DataObjectIDColDuplicateKeyError(
                     f"ID column '{self.id_col}' in dataobject '{self.name}'' has duplicates,"
                     " which are not allowed"
                 )
@@ -96,6 +103,9 @@ class DataObject:
             'rows': self.df.mac.num_rows(),
             'cols': self.df.mac.num_cols()
         }
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
 
     @classmethod
     def from_file(cls, filepath, name, id_col=None, date_col=None, id2_col=None) -> "DataObject":

@@ -6,7 +6,7 @@ from macpie.classes import LavaDataObject, Query
 from macpie.io import validate_filepaths
 from macpie.pandas import group_by_keep_one
 
-from ...core import ClickPath, CliResults
+from ...core import ClickPath, CliBaseQueryResults
 from ...util import allowed_file, print_ctx
 
 
@@ -57,7 +57,7 @@ def keepone(ctx, keep, primary):
     Q.execute()
     click.echo("Writing query results...")
 
-    results = CliResults(ctx)
+    results = CliBaseQueryResults(ctx)
     results.write(Q)
 
     click.echo(f'\nLook for results in: {results.results_file.resolve()}\n')

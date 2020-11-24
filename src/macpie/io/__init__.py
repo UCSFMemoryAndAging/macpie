@@ -1,5 +1,6 @@
 from .excel import (
     get_row_by_col_val,
+    move_sheets,
     ws_autoadjust_colwidth,
     ws_get_col,
     ws_highlight_row,

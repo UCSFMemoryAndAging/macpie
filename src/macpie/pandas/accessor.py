@@ -21,8 +21,8 @@ class MacAccessor:
     def add_diff_days(self, col_start: str, col_end: str):
         return add_diff_days(self._obj, col_start, col_end)
 
-    def any_duplicates(self, col: str):
-        return any_duplicates(self._obj, col)
+    def any_duplicates(self, col: str, ignore_nan: bool = False):
+        return any_duplicates(self._obj, col, ignore_nan)
 
     def assimilate(self, right: pd.DataFrame):
         return assimilate(self._obj, right)

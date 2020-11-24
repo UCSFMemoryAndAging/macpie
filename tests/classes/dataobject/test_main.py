@@ -1,10 +1,11 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from macpie.classes import DataObject
-from macpie.exceptions import DataObjectIDColKeyError, DataObjectID2ColKeyError
+from macpie.exceptions import DataObjectIDColKeyError, DataObjectIDColDuplicateKeyError, DataObjectID2ColKeyError
 
 current_dir = Path("tests/classes/dataobject/")
 
@@ -16,7 +17,10 @@ def test_dataobject():
         'col3': [7, 8, 9],
         'date': ['1/1/2001', '2/2/2002', '3/3/2003'],
         'misc': ['john', 'paul', 'mary'],
-        'col6': [10, '11', 12]
+        'col6': [10, '11', 12],
+        'id_col': [1, 1, 3],
+        'id_col_with_nan': [np.nan, np.nan, 3],
+        'id_col_with_none': [None, None, 3],
     }
     df = pd.DataFrame(data=d)
 
@@ -36,6 +40,15 @@ def test_dataobject():
             df=df
         )
 
+    # duplicate ids raises DataObjectIDColDuplicateKeyError
+    with pytest.raises(DataObjectIDColDuplicateKeyError):
+        do = DataObject(
+            name="test_name",
+            id_col="id_col",
+            date_col="col3",
+            df=df
+        )
+
     # invalid id2_col raises KeyError
     with pytest.raises(DataObjectID2ColKeyError):
         do = DataObject(
@@ -43,6 +56,24 @@ def test_dataobject():
             id_col="COL1",
             date_col="col3",
             id2_col="doesnt_exist",
+            df=df
+        )
+
+    # id_col with nan values raises KeyError
+    with pytest.raises(DataObjectIDColKeyError):
+        do = DataObject(
+            name="test_name",
+            id_col="id_col_with_nan",
+            date_col="col3",
+            df=df
+        )
+
+    # id_col with None values raises KeyError
+    with pytest.raises(DataObjectIDColKeyError):
+        do = DataObject(
+            name="test_name",
+            id_col="id_col_with_none",
+            date_col="col3",
             df=df
         )
 

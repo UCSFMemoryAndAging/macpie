@@ -5,10 +5,12 @@ from .datetime import (
 )
 
 
-from .list_like import (
+from .list import (
     is_list_like,
+    list_diff,
     list_like_str_equal,
     maybe_make_list,
+    move
 )
 
 
