@@ -7,8 +7,7 @@ import pandas as pd
 import numpy as np
 import openpyxl as pyxl
 
-from macpie.io import get_row_by_col_val, ws_autoadjust_colwidth, ws_highlight_rows_with_col
-from macpie.util import add_suffix, validate_bool_kwarg
+from macpie import util
 
 from ...core import CliBaseQueryResults, SingleSheet
 
@@ -28,7 +27,7 @@ class CliLinkResults(CliBaseQueryResults):
 
     def __init__(self, cli_ctx, output_dir: Path = None):
         super().__init__(cli_ctx, output_dir)
-        self.merge = validate_bool_kwarg(cli_ctx.obj['options']['merge_results'], 'merge')
+        self.merge = util.validators.validate_bool_kwarg(cli_ctx.obj['options']['merge_results'], 'merge')
         self.fields_list = []
         self.fields_list_dups = []
 
@@ -45,14 +44,20 @@ class CliLinkResults(CliBaseQueryResults):
                             ]
 
         if self.merge is False:
-            primary_sheetname = add_suffix(primary_node.name, self.SHEETNAME_SUFFIX_PRIMARY, self.SHEETNAME_CHARS_LIMIT)
+            primary_sheetname = util.string.add_suffix(primary_node.name,
+                                                       self.SHEETNAME_SUFFIX_PRIMARY,
+                                                       self.SHEETNAME_CHARS_LIMIT)
             self.ws.append(SingleSheet(primary_sheetname, primary_result, None))
 
             edges_with_operation_results = Q.get_all_edge_data('operation_result')
             for edge in edges_with_operation_results:
-                sheetname = add_suffix(edge['name'], self.SHEETNAME_SUFFIX_SECONDARY, self.SHEETNAME_CHARS_LIMIT)
+                sheetname = util.string.add_suffix(edge['name'],
+                                                   self.SHEETNAME_SUFFIX_SECONDARY,
+                                                   self.SHEETNAME_CHARS_LIMIT)
                 if edge['duplicates']:
-                    sheetname = add_suffix(sheetname, self.SHEETNAME_SUFFIX_DUPLICATES, self.SHEETNAME_CHARS_LIMIT)
+                    sheetname = util.string.add_suffix(sheetname,
+                                                       self.SHEETNAME_SUFFIX_DUPLICATES,
+                                                       self.SHEETNAME_CHARS_LIMIT)
                 self.fields_list.extend([(edge['name'], col, None) for col in edge['operation_result'].columns])
                 self.ws.append(SingleSheet(sheetname, edge['operation_result'], None))
         else:
@@ -64,10 +69,12 @@ class CliLinkResults(CliBaseQueryResults):
                 if operation_result is not None:
                     if Q.g.edges[left_node, right_node]['duplicates']:
                         # put secondary results that have duplicates as separate worksheets after the results worksheet
-                        sheetname = add_suffix(Q.g.edges[left_node, right_node]['name'],
-                                               self.SHEETNAME_SUFFIX_SECONDARY,
-                                               self.SHEETNAME_CHARS_LIMIT)
-                        sheetname = add_suffix(sheetname, self.SHEETNAME_SUFFIX_DUPLICATES, self.SHEETNAME_CHARS_LIMIT)
+                        sheetname = util.string.add_suffix(Q.g.edges[left_node, right_node]['name'],
+                                                           self.SHEETNAME_SUFFIX_SECONDARY,
+                                                           self.SHEETNAME_CHARS_LIMIT)
+                        sheetname = util.string.add_suffix(sheetname,
+                                                           self.SHEETNAME_SUFFIX_DUPLICATES,
+                                                           self.SHEETNAME_CHARS_LIMIT)
                         self.ws.append(SingleSheet(sheetname, operation_result, None))
                         self.fields_list_dups.extend([(Q.g.edges[left_node, right_node]['name'], col, None)
                                                       for col in operation_result.columns])
@@ -133,18 +140,18 @@ class CliLinkResults(CliBaseQueryResults):
 
         for ws in wb.worksheets:
             if ws.title.endswith(self.SHEETNAME_SUFFIX_DUPLICATES):
-                ws_highlight_rows_with_col(ws, CliLinkResults.COL_HEADER_DUPLICATES)
+                util.pyxl.ws_highlight_rows_with_col(ws, CliLinkResults.COL_HEADER_DUPLICATES)
             elif ws.title == self.SHEETNAME_MERGED_RESULTS:
                 self.format_merged_results(ws)
             elif ws.title.startswith('_'):
-                ws_autoadjust_colwidth(ws)
+                util.pyxl.ws_autoadjust_colwidth(ws)
 
         wb.save(filename)
 
     @staticmethod
     def format_merged_results(ws):
         # get row index where column A has value of 1 (index of the dataframe)
-        row_index = get_row_by_col_val(ws, 0, 1)
+        row_index = util.pyxl.get_row_by_col_val(ws, 0, 1)
         row_index = row_index - 1
         ws.delete_rows(row_index)
 

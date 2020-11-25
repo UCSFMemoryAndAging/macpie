@@ -1,17 +1,16 @@
+from typing import List
+
 import pandas as pd
 
-from .general import *
-from .operators.date_proximity import date_proximity
-from .operators.filter_by_id import filter_by_id
-from .operators.group_by_keep_one import group_by_keep_one
-from .operators.merge import merge
+from . import general
+from . import operators
 
 
 @pd.api.extensions.register_dataframe_accessor("mac")
-class MacAccessor:
-    def __init__(self, pandas_obj):
-        self._validate(pandas_obj)
-        self._obj = pandas_obj
+class MacDataFrameAccessor:
+    def __init__(self, df):
+        self._validate(df)
+        self._df = df
 
     @staticmethod
     def _validate(obj):
@@ -19,49 +18,49 @@ class MacAccessor:
 
     # general functions
     def add_diff_days(self, col_start: str, col_end: str):
-        return add_diff_days(self._obj, col_start, col_end)
+        return general.add_diff_days(self._df, col_start, col_end)
 
     def any_duplicates(self, col: str, ignore_nan: bool = False):
-        return any_duplicates(self._obj, col, ignore_nan)
+        return general.any_duplicates(self._df, col, ignore_nan)
 
     def assimilate(self, right: pd.DataFrame):
-        return assimilate(self._obj, right)
+        return general.assimilate(self._df, right)
 
     def diff_cols(self, right: pd.DataFrame, cols_ignore=None):
-        return diff_cols(self._obj, right, cols_ignore)
+        return general.diff_cols(self._df, right, cols_ignore)
 
     def diff_rows(self, right: pd.DataFrame, cols_ignore=None):
-        return diff_rows(self._obj, right, cols_ignore)
+        return general.diff_rows(self._df, right, cols_ignore)
 
     def drop_suffix(self, suffix: str):
-        return drop_suffix(self._obj, suffix)
+        return general.drop_suffix(self._df, suffix)
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = '_'):
-        return flatten_multiindex(self._obj, axis)
+        return general.flatten_multiindex(self._df, axis)
 
     def get_col_name(self, col_name: str):
-        return get_col_name(self._obj, col_name)
+        return general.get_col_name(self._df, col_name)
 
     def get_col_names(self, col_names: List[str]):
-        return get_col_names(self._obj, col_names)
+        return general.get_col_names(self._df, col_names)
 
     def is_date_col(self, arr_or_dtype):
-        return is_date_col(self._obj[arr_or_dtype])
+        return general.is_date_col(self._df[arr_or_dtype])
 
     def mark_duplicates_by_cols(self, cols: List[str]):
-        return mark_duplicates_by_cols(self._obj, cols)
+        return general.mark_duplicates_by_cols(self._df, cols)
 
     def num_rows(self):
-        return num_rows(self._obj)
+        return general.num_rows(self._df)
 
     def num_cols(self):
-        return num_cols(self._obj)
+        return general.num_cols(self._df)
 
     def replace_suffix(self, old_suffix, new_suffix):
-        return replace_suffix(self._obj, old_suffix, new_suffix)
+        return general.replace_suffix(self._df, old_suffix, new_suffix)
 
     def to_datetime(self, date_col):
-        return to_datetime(self._obj, date_col)
+        return general.to_datetime(self._df, date_col)
 
     # operators
     def date_proximity(
@@ -81,8 +80,8 @@ class MacAccessor:
         merge='partial',
         merge_suffixes=('_x', '_y')
     ):
-        return date_proximity(
-            self._obj,
+        return operators.date_proximity.date_proximity(
+            self._df,
             right,
             id_on=id_on,
             id_left_on=id_left_on,
@@ -104,8 +103,8 @@ class MacAccessor:
         id_col: str,
         ids: List[int]
     ):
-        return filter_by_id(
-            self._obj,
+        return operators.filter_by_id.filter_by_id(
+            self._df,
             id_col,
             ids
         )
@@ -118,8 +117,8 @@ class MacAccessor:
         id_col: str = None,
         drop_duplicates: bool = False
     ):
-        return group_by_keep_one(
-            self._obj,
+        return operators.group_by_keep_one.group_by_keep_one(
+            self._df,
             group_by_col=group_by_col,
             date_col=date_col,
             keep=keep,
@@ -137,8 +136,8 @@ class MacAccessor:
         add_suffixes=False,
         add_indexes=(None, None)
     ):
-        return merge(
-            self._obj,
+        return operators.merge.merge(
+            self._df,
             right,
             on=on,
             left_on=left_on,

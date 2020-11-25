@@ -5,8 +5,7 @@ from click.testing import CliRunner
 import pandas as pd
 import pytest
 
-from macpie.cli.cli import main
-from macpie.testing import assert_dfs_equal
+from macpie import cli, util
 
 
 data_dir = Path("tests/data/").resolve()
@@ -53,7 +52,7 @@ def test_full_no_link_id():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
+        results = runner.invoke(cli.cli.main, cli_args)
 
         assert results.exit_code == 0
 
@@ -76,15 +75,15 @@ def test_full_no_link_id():
         result_secondary_instr2 = results_dict['instr2_all_linked(DUPS)']
         result_secondary_instr3 = results_dict['instr3_all_linked(DUPS)']
 
-        assert_dfs_equal(result_secondary_instr2,
-                         expected_secondary_instr2,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr2,
+                                      expected_secondary_instr2,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)
 
-        assert_dfs_equal(result_secondary_instr3,
-                         expected_secondary_instr3,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr3,
+                                      expected_secondary_instr3,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)
 
 
 @pytest.mark.slow
@@ -110,7 +109,7 @@ def test_full():
 
     with runner.isolated_filesystem():
 
-        results = runner.invoke(main, cli_args)
+        results = runner.invoke(cli.cli.main, cli_args)
 
         assert results.exit_code == 0
 
@@ -135,14 +134,14 @@ def test_full():
         result_secondary_instr2 = results_dict['instr2_all_linked(DUPS)']
         result_secondary_instr3 = results_dict['instr3_all_linked(DUPS)']
 
-        assert_dfs_equal(result_primary, expected_primary, output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_primary, expected_primary, output_dir=output_dir)
 
-        assert_dfs_equal(result_secondary_instr2,
-                         expected_secondary_instr2,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr2,
+                                      expected_secondary_instr2,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)
 
-        assert_dfs_equal(result_secondary_instr3,
-                         expected_secondary_instr3,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr3,
+                                      expected_secondary_instr3,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)

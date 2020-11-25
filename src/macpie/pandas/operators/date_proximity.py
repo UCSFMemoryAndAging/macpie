@@ -1,8 +1,6 @@
 import pandas as pd
 
-from macpie.util import is_list_like, maybe_make_list
-from macpie.exceptions import DateProximityError
-from macpie.util import validate_bool_kwarg
+from macpie import errors, util
 
 
 def date_proximity(
@@ -68,9 +66,9 @@ class _DateProximityOperation:
         self.left = self.orig_left = left
         self.right = self.orig_right = right
 
-        self.id_on = maybe_make_list(id_on)
-        self.id_left_on = maybe_make_list(id_left_on)
-        self.id_right_on = maybe_make_list(id_right_on)
+        self.id_on = util.list.maybe_make_list(id_on)
+        self.id_left_on = util.list.maybe_make_list(id_left_on)
+        self.id_right_on = util.list.maybe_make_list(id_right_on)
 
         self.date_on = date_on
         self.date_left_on = date_left_on
@@ -82,7 +80,7 @@ class _DateProximityOperation:
 
         self.left_link_id = left_link_id
 
-        self.dropna = validate_bool_kwarg(dropna, "dropna")
+        self.dropna = util.validators.validate_bool_kwarg(dropna, "dropna")
 
         self.merge = merge
         self.merge_suffixes = merge_suffixes
@@ -196,7 +194,7 @@ class _DateProximityOperation:
     def _validate_specification(self):
         if self.id_on is not None:
             if self.id_left_on is not None or self.id_right_on is not None:
-                raise DateProximityError(
+                raise errors.DateProximityError(
                     'Must pass argument "id_on" OR "id_left_on" '
                     'and "id_right_on", but not a combination of both.'
                 )
@@ -208,14 +206,14 @@ class _DateProximityOperation:
             self.id_left_on = self.left.mac.get_col_names(self.id_left_on)
             self.id_right_on = self.right.mac.get_col_names(self.id_right_on)
         else:
-            raise DateProximityError(
+            raise errors.DateProximityError(
                 'Must pass argument "id_on" OR "id_left_on" '
                 'and "id_right_on", but not a combination of both.'
             )
 
         if self.date_on is None:
             if self.date_left_on is None or self.date_right_on is None:
-                raise DateProximityError(
+                raise errors.DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -223,7 +221,7 @@ class _DateProximityOperation:
             self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
         else:
             if self.date_left_on is not None or self.date_right_on is not None:
-                raise DateProximityError(
+                raise errors.DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -263,7 +261,7 @@ class _DateProximityOperation:
         if self.merge not in ['partial', 'full']:
             raise ValueError(f"invalid merge option: {self.merge}")
 
-        if not is_list_like(self.merge_suffixes):
+        if not util.list.is_list_like(self.merge_suffixes):
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )

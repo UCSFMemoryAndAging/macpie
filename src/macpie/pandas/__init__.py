@@ -1,4 +1,4 @@
-from .accessor import MacAccessor
+from .accessor_df import MacDataFrameAccessor
 from .general import (
     add_diff_days,
     any_duplicates,

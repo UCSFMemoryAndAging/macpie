@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from macpie.io import file_to_dataframe
+from macpie import io
 
 
 def test_filter_by_id():
 
-    df = file_to_dataframe(Path("tests/pandas/operators/filter_by_id/basic.xlsx"))
+    df = io.file_to_dataframe(Path("tests/pandas/operators/filter_by_id/basic.xlsx"))
     # ids list with invalid integer should raise ValueError
     ids = [1, 2, 'hello']
     with pytest.raises(ValueError):

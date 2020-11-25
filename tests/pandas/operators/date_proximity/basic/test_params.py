@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import pytest
 
-from macpie.exceptions import DateProximityError
+from macpie import errors
 
 
 def test_params_1():
@@ -22,7 +22,7 @@ def test_params_1():
     secondary = pd.DataFrame(data=d2)
 
     # Must pass argument "id_on" OR "id_left_on" and "id_right_on"
-    with pytest.raises(DateProximityError):
+    with pytest.raises(errors.DateProximityError):
         primary.mac.date_proximity(
             secondary,
             id_on='pidn',
@@ -35,7 +35,7 @@ def test_params_1():
         )
 
     # Must pass argument "id_on" OR "id_left_on" and "id_right_on"
-    with pytest.raises(DateProximityError):
+    with pytest.raises(errors.DateProximityError):
         primary.mac.date_proximity(
             secondary,
             id_left_on='pidn',
@@ -60,7 +60,7 @@ def test_params_1():
         )
 
     # Must pass argument "date_on" OR "date_left_on" and "date_right_on"
-    with pytest.raises(DateProximityError):
+    with pytest.raises(errors.DateProximityError):
         primary.mac.date_proximity(
             secondary,
             id_on='pidn',
@@ -73,7 +73,7 @@ def test_params_1():
         )
 
     # Must pass argument "date_on" OR "date_left_on" and "date_right_on"
-    with pytest.raises(DateProximityError):
+    with pytest.raises(errors.DateProximityError):
         primary.mac.date_proximity(
             secondary,
             id_on='pidn',
@@ -85,7 +85,7 @@ def test_params_1():
         )
 
     # Must pass argument "date_on" OR "date_left_on" and "date_right_on"
-    with pytest.raises(DateProximityError):
+    with pytest.raises(errors.DateProximityError):
         primary.mac.date_proximity(
             secondary,
             id_on='pidn',

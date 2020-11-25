@@ -2,9 +2,8 @@ from functools import partial
 
 import click
 
-from macpie.classes import LavaDataObject, Query
-from macpie.io import validate_filepaths
-from macpie.pandas import group_by_keep_one
+from macpie import io, pandas
+from macpie.core import LavaDataObject, Query
 
 from ...core import ClickPath, CliBaseQueryResults
 from ...util import allowed_file, print_ctx
@@ -25,7 +24,7 @@ def keepone(ctx, keep, primary):
     options['keep'] = keep
     args['primary'] = primary
 
-    _primary_valid, _primary_invalid = validate_filepaths(primary, allowed_file)
+    _primary_valid, _primary_invalid = io.validate_filepaths(primary, allowed_file)
 
     for p in _primary_invalid:
         click.echo(f"WARNING: Ignoring invalid file: {p}")
@@ -46,7 +45,7 @@ def keepone(ctx, keep, primary):
 
         Q.add_node(
             primary_do,
-            operation=partial(group_by_keep_one,
+            operation=partial(pandas.group_by_keep_one,
                               group_by_col=primary_do.id2_col,
                               date_col=primary_do.date_col,
                               keep=options['keep'],

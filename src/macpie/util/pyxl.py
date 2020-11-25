@@ -3,7 +3,7 @@ from itertools import islice
 from openpyxl.styles import PatternFill
 import pandas as pd
 
-from macpie.util import move
+from . import list as list_util
 
 
 def get_row_by_col_val(ws, col_index, val):
@@ -15,7 +15,7 @@ def get_row_by_col_val(ws, col_index, val):
 def move_sheets(wb, sheets_to_move, to_sheet):
     ws_order = wb.sheetnames.copy()
     for sheetname in sheets_to_move:
-        move(ws_order, sheetname, to_sheet)
+        list_util.move(ws_order, sheetname, to_sheet)
     wb._sheets = [wb[sheetname] for sheetname in ws_order]
 
 

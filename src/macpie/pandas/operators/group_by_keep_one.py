@@ -1,6 +1,6 @@
 import pandas as pd
 
-from macpie.util import validate_bool_kwarg
+from macpie import util
 
 
 def group_by_keep_one(
@@ -25,7 +25,7 @@ def group_by_keep_one(
 
     _id_col = df.mac.get_col_name(id_col) if id_col is not None else None
 
-    _drop_duplicates = validate_bool_kwarg(drop_duplicates, "drop_duplicates")
+    _drop_duplicates = util.validators.validate_bool_kwarg(drop_duplicates, "drop_duplicates")
 
     _cols = [_group_by_col, _date_col]
 

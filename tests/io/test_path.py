@@ -2,35 +2,34 @@ from pathlib import Path
 
 import pytest
 
-from macpie.exceptions import PathError
-from macpie.io import create_output_dir, get_files_from_dir, validate_filepaths
+from macpie import errors, io
 
 
 def test_create_output_dir(tmp_path):
     # not a valid path
-    with pytest.raises(PathError):
-        create_output_dir("non_dir")
+    with pytest.raises(errors.PathError):
+        io.create_output_dir("non_dir")
 
     # not a valid directory
-    with pytest.raises(PathError):
-        create_output_dir(Path('tests/io/data/test.csv'))
+    with pytest.raises(errors.PathError):
+        io.create_output_dir(Path('tests/io/data/test.csv'))
 
-    none_param_test_dir = create_output_dir()
+    none_param_test_dir = io.create_output_dir()
     assert str(none_param_test_dir.name).startswith("new_folder_")
     none_param_test_dir.rmdir()
 
-    with_param_test_dir = create_output_dir(tmp_path)
+    with_param_test_dir = io.create_output_dir(tmp_path)
     assert str(with_param_test_dir.name).startswith("new_folder_")
     with_param_test_dir.rmdir()
 
-    with_param_test_dir = create_output_dir(tmp_path, 'something_else')
+    with_param_test_dir = io.create_output_dir(tmp_path, 'something_else')
     assert str(with_param_test_dir.name).startswith("something_else_")
     with_param_test_dir.rmdir()
 
 
 def test_get_files_from_dir():
     p = Path('tests/io/data')
-    files = get_files_from_dir(p)
+    files = io.get_files_from_dir(p)
 
     file_names = [f.name for f in files]
 
@@ -41,7 +40,7 @@ def test_get_files_from_dir():
 def test_validate_filepaths():
     p = Path('tests/io/data')
 
-    (valid, invalid) = validate_filepaths([p])
+    (valid, invalid) = io.validate_filepaths([p])
 
     assert len(valid) == 7
     assert len(invalid) == 0
@@ -51,7 +50,7 @@ def test_validate_filepaths():
             return False
         return True
 
-    (valid, invalid) = validate_filepaths([p], allowed_file)
+    (valid, invalid) = io.validate_filepaths([p], allowed_file)
 
     assert len(valid) == 4
     assert len(invalid) == 3
@@ -64,7 +63,7 @@ def test_validate_filepaths_2():
         Path('tests/io/data/test.csv')
     ]
 
-    (valid, invalid) = validate_filepaths(ps)
+    (valid, invalid) = io.validate_filepaths(ps)
 
     assert len(valid) == 2
     assert len(invalid) == 1

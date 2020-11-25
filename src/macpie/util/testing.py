@@ -4,7 +4,7 @@ Public testing utility functions.
 
 from pandas.testing import assert_index_equal
 
-from macpie.util import append_current_datetime_ms_str
+from . import datetime
 
 
 def assert_dfs_equal(df1, df2, cols_ignore=None, output_dir=None):
@@ -21,7 +21,7 @@ def assert_dfs_equal(df1, df2, cols_ignore=None, output_dir=None):
 
     drows = df1.mac.diff_rows(df2_assimilated, cols_ignore=cols_ignore)
 
-    row_diffs_filename = append_current_datetime_ms_str("row_diffs") + ".xlsx"
+    row_diffs_filename = datetime.append_current_datetime_ms_str("row_diffs") + ".xlsx"
 
     if output_dir is not None:
         drows.to_excel(output_dir / row_diffs_filename, index=False)

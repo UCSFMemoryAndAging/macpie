@@ -1,12 +1,3 @@
-from .excel import (
-    get_row_by_col_val,
-    move_sheets,
-    ws_autoadjust_colwidth,
-    ws_get_col,
-    ws_highlight_row,
-    ws_highlight_rows_with_col,
-    ws_to_df
-)
 
 from .parser import (
     file_to_dataframe,

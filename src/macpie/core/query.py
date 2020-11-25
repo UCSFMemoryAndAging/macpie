@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from macpie.util import add_suffix
+from macpie import util
 
 
 class Query:
@@ -41,7 +41,7 @@ class Query:
             if operation is not None:
                 name = operation.func.__name__
             else:
-                name = add_suffix(do1.name + "->", do2.name)
+                name = util.string.add_suffix(do1.name + "->", do2.name)
         self.g[do1][do2]['name'] = name
 
         if operation is not None:

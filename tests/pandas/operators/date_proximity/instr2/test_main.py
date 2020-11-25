@@ -3,8 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from macpie.io import file_to_dataframe
-from macpie.testing import assert_dfs_equal
+from macpie import io, util
 
 
 data_dir = Path("tests/data/")
@@ -31,7 +30,7 @@ primary = dfs_dict['LINK_INSTR2']
 @pytest.mark.slow
 def test_secondary_instr1():
 
-    secondary_instr1 = file_to_dataframe(data_dir / "instr1_all.csv")
+    secondary_instr1 = io.file_to_dataframe(data_dir / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr1_result = primary.mac.date_proximity(
@@ -49,13 +48,13 @@ def test_secondary_instr1():
     # instr1_result.to_excel(current_dir / "instr1_result.xlsx", index=False)
 
     instr1_expected_result = dfs_dict['INSTR1_linked']
-    assert_dfs_equal(instr1_result, instr1_expected_result, cols_ignore=cols_ignore)
+    util.testing.assert_dfs_equal(instr1_result, instr1_expected_result, cols_ignore=cols_ignore)
 
 
 @pytest.mark.slow
 def test_secondary_instr3():
 
-    secondary_instr3 = file_to_dataframe(data_dir / "instr3_all.csv")
+    secondary_instr3 = io.file_to_dataframe(data_dir / "instr3_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr3_result = primary.mac.date_proximity(
@@ -73,4 +72,4 @@ def test_secondary_instr3():
     # instr3_result.to_excel(current_dir / "instr3_result.xlsx", index=False)
 
     instr3_expected_result = dfs_dict['INSTR3_linked']
-    assert_dfs_equal(instr3_result, instr3_expected_result, cols_ignore=cols_ignore)
+    util.testing.assert_dfs_equal(instr3_result, instr3_expected_result, cols_ignore=cols_ignore)

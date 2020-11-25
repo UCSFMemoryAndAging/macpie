@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macpie.classes import DataObject
-from macpie.exceptions import DataObjectIDColKeyError, DataObjectIDColDuplicateKeyError, DataObjectID2ColKeyError
+from macpie import errors
+from macpie.core import DataObject
 
-current_dir = Path("tests/classes/dataobject/")
+
+current_dir = Path("tests/core/dataobject/")
 
 
 def test_dataobject():
@@ -32,7 +33,7 @@ def test_dataobject():
         )
 
     # invalid id_col raises KeyError
-    with pytest.raises(DataObjectIDColKeyError):
+    with pytest.raises(errors.DataObjectIDColKeyError):
         do = DataObject(
             name="test_name",
             id_col="doesnt_exist",
@@ -41,7 +42,7 @@ def test_dataobject():
         )
 
     # duplicate ids raises DataObjectIDColDuplicateKeyError
-    with pytest.raises(DataObjectIDColDuplicateKeyError):
+    with pytest.raises(errors.DataObjectIDColDuplicateKeyError):
         do = DataObject(
             name="test_name",
             id_col="id_col",
@@ -50,7 +51,7 @@ def test_dataobject():
         )
 
     # invalid id2_col raises KeyError
-    with pytest.raises(DataObjectID2ColKeyError):
+    with pytest.raises(errors.DataObjectID2ColKeyError):
         do = DataObject(
             name="test_name",
             id_col="COL1",
@@ -60,7 +61,7 @@ def test_dataobject():
         )
 
     # id_col with nan values raises KeyError
-    with pytest.raises(DataObjectIDColKeyError):
+    with pytest.raises(errors.DataObjectIDColKeyError):
         do = DataObject(
             name="test_name",
             id_col="id_col_with_nan",
@@ -69,7 +70,7 @@ def test_dataobject():
         )
 
     # id_col with None values raises KeyError
-    with pytest.raises(DataObjectIDColKeyError):
+    with pytest.raises(errors.DataObjectIDColKeyError):
         do = DataObject(
             name="test_name",
             id_col="id_col_with_none",

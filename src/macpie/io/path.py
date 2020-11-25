@@ -3,8 +3,7 @@
 from pathlib import Path
 from typing import Callable
 
-from macpie.exceptions import PathError
-from macpie.util import append_current_datetime_str
+from macpie import errors, util
 
 
 def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
@@ -13,14 +12,14 @@ def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
 
     try:
         if not output_dir.is_dir():
-            raise PathError(f'Error writing output. Path is not a valid directory: {output_dir}')
+            raise errors.PathError(f'Error writing output. Path is not a valid directory: {output_dir}')
     except Exception:
-        raise PathError(f'Error writing output. Path is not a valid path: {output_dir}')
+        raise errors.PathError(f'Error writing output. Path is not a valid path: {output_dir}')
 
     if output_dir_name is None:
-        output_dir_name = append_current_datetime_str("new_folder")
+        output_dir_name = util.datetime.append_current_datetime_str("new_folder")
     else:
-        output_dir_name = append_current_datetime_str(output_dir_name)
+        output_dir_name = util.datetime.append_current_datetime_str(output_dir_name)
 
     final_dir = output_dir / output_dir_name
     final_dir.mkdir(exist_ok=False)
@@ -37,12 +36,12 @@ def get_files_from_dir(p):
 
 def validate_filepath(p, allowed_file: Callable = None):
     if not p.exists():
-        raise PathError('ERROR: File does not exist.')
+        raise errors.PathError('ERROR: File does not exist.')
     if p.is_dir():
-        raise PathError('ERROR: File is not a file but a directory.')
+        raise errors.PathError('ERROR: File is not a file but a directory.')
     if allowed_file is not None:
         if not allowed_file(p):
-            raise PathError('ERROR: File is specified as not allowed.')
+            raise errors.PathError('ERROR: File is specified as not allowed.')
     return p
 
 
@@ -75,7 +74,7 @@ def validate_filepaths(ps, allowed_file: Callable = None):
         try:
             vp = validate_filepath(p, allowed_file)
             valid.append(vp)
-        except PathError:
+        except errors.PathError:
             invalid.append(p)
 
     return (valid, invalid)

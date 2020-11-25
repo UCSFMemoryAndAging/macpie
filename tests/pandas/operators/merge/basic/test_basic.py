@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.io import file_to_dataframe
-from macpie.testing import assert_dfs_equal
+from macpie import io, util
 
 
 current_dir = Path("tests/pandas/operators/merge/basic/")
@@ -11,7 +10,7 @@ current_dir = Path("tests/pandas/operators/merge/basic/")
 # output_dir = current_dir
 output_dir = None
 
-primary = file_to_dataframe(current_dir / "small.xlsx")
+primary = io.file_to_dataframe(current_dir / "small.xlsx")
 
 
 dfs_dict = pd.read_excel(
@@ -46,7 +45,7 @@ def test_add_suffixes_false():
 
     # result.to_excel(current_dir / "add_suffixes_false_result.xlsx", index=False)
     expected_result = pd.read_excel(current_dir / "add_suffixes_false_expected_result.xlsx", engine='openpyxl')
-    assert_dfs_equal(result, expected_result, output_dir=output_dir)
+    util.testing.assert_dfs_equal(result, expected_result, output_dir=output_dir)
 
 
 def test_add_suffixes_true():
@@ -66,7 +65,7 @@ def test_add_suffixes_true():
 
     # result.to_excel(current_dir / "add_suffixes_true_result.xlsx", index=False)
     expected_result = pd.read_excel(current_dir / "add_suffixes_true_expected_result.xlsx", engine='openpyxl')
-    assert_dfs_equal(result, expected_result, output_dir=output_dir)
+    util.testing.assert_dfs_equal(result, expected_result, output_dir=output_dir)
 
 
 def test_with_index():
@@ -95,4 +94,4 @@ def test_with_index():
 
     assert(result.columns.equals(expected_result.columns))
 
-    assert_dfs_equal(result, expected_result, output_dir=output_dir)
+    util.testing.assert_dfs_equal(result, expected_result, output_dir=output_dir)

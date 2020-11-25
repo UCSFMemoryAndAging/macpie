@@ -1,8 +1,6 @@
 import pandas as pd
 
-from macpie.util import is_list_like, maybe_make_list
-from macpie.exceptions import MergeError
-from macpie.util import validate_bool_kwarg
+from macpie import errors, util
 
 
 def merge(
@@ -51,13 +49,13 @@ class _MergeOperation:
         self.left = self.orig_left = left
         self.right = self.orig_right = right
 
-        self.on = maybe_make_list(on)
-        self.left_on = maybe_make_list(left_on)
-        self.right_on = maybe_make_list(right_on)
+        self.on = util.list.maybe_make_list(on)
+        self.left_on = util.list.maybe_make_list(left_on)
+        self.right_on = util.list.maybe_make_list(right_on)
 
         self.merge_suffixes = merge_suffixes
 
-        self.add_suffixes = validate_bool_kwarg(add_suffixes, "add_suffixes")
+        self.add_suffixes = util.validators.validate_bool_kwarg(add_suffixes, "add_suffixes")
 
         self.add_indexes = add_indexes
 
@@ -89,7 +87,7 @@ class _MergeOperation:
     def _validate_specification(self):
         if self.on is not None:
             if self.left_on is not None or self.right_on is not None:
-                raise MergeError(
+                raise errors.MergeError(
                     'Must pass argument "on" OR "left_on" '
                     'and "right_on", but not a combination of both.'
                 )
@@ -101,12 +99,12 @@ class _MergeOperation:
             self.left_on = self.left.mac.get_col_names(self.left_on)
             self.right_on = self.right.mac.get_col_names(self.right_on)
         else:
-            raise MergeError(
+            raise errors.MergeError(
                 'Must pass argument "on" OR "left_on" '
                 'and "right_on", but not a combination of both.'
             )
 
-        if not is_list_like(self.merge_suffixes):
+        if not util.list.is_list_like(self.merge_suffixes):
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )
@@ -118,7 +116,7 @@ class _MergeOperation:
         self._left_suffix = self.merge_suffixes[0]
         self._right_suffix = self.merge_suffixes[1]
 
-        if not is_list_like(self.add_indexes):
+        if not util.list.is_list_like(self.add_indexes):
             raise ValueError(
                 "'add_indexes' needs to be a tuple or list of two values (e.g. ('left','right') or (None,'right'))"
             )

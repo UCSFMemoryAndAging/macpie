@@ -8,13 +8,12 @@ import click
 import openpyxl as pyxl
 import pandas as pd
 
-from macpie.classes import LavaDataObject
-from macpie.io import move_sheets, ws_autoadjust_colwidth, ws_highlight_rows_with_col
-from macpie.util import list_diff
+from macpie import util
+from macpie.core import LavaDataObject
 
-from ..link.writer import CliLinkResults
 from ...core import CliBaseResults, SingleSheet
 from ...exceptions import CliLinkResultsParserError
+from ..link.writer import CliLinkResults
 
 
 CliMergeLogEntry = namedtuple('CliMergeLogEntry', ['sheetname',
@@ -142,7 +141,7 @@ class CliMergeResults(CliBaseResults):
 
         # items in secondary_do_names that are not in selected_do_names
         # keep as-is
-        unselected_do_names = list_diff(self.secondary_do_names, selected_do_names)
+        unselected_do_names = util.list.diff(self.secondary_do_names, selected_do_names)
 
         # quick check
         if not set(selected_do_names).issubset(set(self.secondary_do_names)):
@@ -259,7 +258,7 @@ class CliMergeResults(CliBaseResults):
             Path(path_to_link_results_copy).rename(self.results_file)
 
             wb = pyxl.load_workbook(str(self.results_file))
-            ws_to_delete = list_diff(wb.sheetnames, self.secondary_to_keep)
+            ws_to_delete = util.list.diff(wb.sheetnames, self.secondary_to_keep)
             for ws in ws_to_delete:
                 del wb[ws]
 
@@ -315,18 +314,18 @@ class CliMergeResults(CliBaseResults):
 
         if len(self.secondary_to_keep) > 0:
             insert_before_ws = next(x for x in wb.worksheets if x.title.startswith('_'))
-            move_sheets(wb, self.secondary_to_keep, insert_before_ws.title)
+            util.pyxl.move_sheets(wb, self.secondary_to_keep, insert_before_ws.title)
 
         for ws in wb.worksheets:
             if ws.title.endswith(CliLinkResults.SHEETNAME_SUFFIX_DUPLICATES):
                 if self.verbose:
                     click.echo(f"Highlighting duplicates for {ws.title}...")
-                ws_highlight_rows_with_col(ws, CliLinkResults.COL_HEADER_DUPLICATES)
+                util.pyxl.ws_highlight_rows_with_col(ws, CliLinkResults.COL_HEADER_DUPLICATES)
             elif ws.title == CliLinkResults.SHEETNAME_MERGED_RESULTS:
                 if self.verbose:
                     click.echo("Formatting merged results...")
                 CliLinkResults.format_merged_results(ws)
             elif ws.title.startswith('_'):
-                ws_autoadjust_colwidth(ws)
+                util.pyxl.ws_autoadjust_colwidth(ws)
 
         wb.save(filename)

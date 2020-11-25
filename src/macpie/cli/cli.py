@@ -4,7 +4,7 @@ import platform
 import click
 
 from macpie import __version__
-from macpie.classes import LavaDataObject
+from macpie.core import LavaDataObject
 
 from .subcommands.keepone.cli import keepone
 from .subcommands.link.cli import link

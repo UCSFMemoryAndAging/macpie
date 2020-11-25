@@ -2,14 +2,12 @@ from functools import partial
 
 import click
 
-from macpie.classes import LavaDataObject, Query
-from macpie.exceptions import DataObjectIDColKeyError, ParserError
-from macpie.io import validate_filepath, validate_filepaths
-from macpie.pandas import date_proximity, group_by_keep_one
+from macpie import errors, io, pandas
+from macpie.core import LavaDataObject, Query
 
 from ...core import ClickPath
-from .writer import CliLinkResults
 from ...util import allowed_file, print_ctx
+from .writer import CliLinkResults
 
 
 @click.command()
@@ -72,10 +70,10 @@ def link(ctx,
     args['primary'] = primary
     args['secondary'] = secondary
 
-    _primary = validate_filepath(primary, allowed_file)
+    _primary = io.validate_filepath(primary, allowed_file)
 
     if secondary:
-        (_secondary_valid, _secondary_invalid) = validate_filepaths(secondary, allowed_file)
+        (_secondary_valid, _secondary_invalid) = io.validate_filepaths(secondary, allowed_file)
 
         for p in _secondary_invalid:
             click.echo(f"WARNING: Ignoring invalid file: {p}")
@@ -96,7 +94,7 @@ def link(ctx,
             date_col=options['date_col'],
             id2_col=options['id2_col']
         )
-    except DataObjectIDColKeyError:
+    except errors.DataObjectIDColKeyError:
         click.echo('\nWARNING: ID Column Header (-i, --id-col) not specified '
                    'and default of "InstrID" not found in your PRIMARY file.')
         click.echo(f'         Creating one for you called "{CliLinkResults.COL_HEADER_LINK_ID}"\n')
@@ -113,7 +111,7 @@ def link(ctx,
     Q.add_node(
         primary_do,
         name=primary_do.name,
-        operation=partial(group_by_keep_one,
+        operation=partial(pandas.group_by_keep_one,
                           group_by_col=primary_do.id2_col,
                           date_col=primary_do.date_col,
                           keep=options['primary_keep'],
@@ -138,7 +136,7 @@ def link(ctx,
                     primary_do,
                     secondary_do,
                     name=secondary_do.name,
-                    operation=partial(date_proximity,
+                    operation=partial(pandas.date_proximity,
                                       id_left_on=primary_do.id2_col,
                                       id_right_on=secondary_do.id2_col,
                                       date_left_on=primary_do.date_col,
@@ -149,7 +147,7 @@ def link(ctx,
                                       left_link_id=primary_do.id_col)
                 )
 
-            except ParserError:
+            except errors.ParserError:
                 click.echo(f"WARNING: Ignoring un-importable file: {sec}")
 
     click.echo("Executing query...")

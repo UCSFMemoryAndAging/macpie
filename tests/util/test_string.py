@@ -1,6 +1,6 @@
 import pytest
 
-from macpie.util import add_suffix, strip_suffix
+from macpie.util.string import add_suffix, strip_suffix
 
 
 def test_add_suffix():

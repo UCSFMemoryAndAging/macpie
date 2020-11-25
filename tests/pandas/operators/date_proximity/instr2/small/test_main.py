@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.io import file_to_dataframe
-from macpie.testing import assert_dfs_equal
+from macpie import io, util
 
 data_dir = Path("tests/data/")
 current_dir = Path("tests/pandas/operators/date_proximity/instr2/small/")
@@ -26,7 +25,7 @@ def test_instr2_small():
     )
 
     primary = dfs_dict['primary']
-    secondary_instr1 = file_to_dataframe(data_dir / "instr1_all.csv")
+    secondary_instr1 = io.file_to_dataframe(data_dir / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     small_result = primary.mac.date_proximity(
@@ -44,4 +43,4 @@ def test_instr2_small():
     # small_result.to_excel(current_dir / "small_result.xlsx", index=False)
 
     small_expected_result = dfs_dict['expected_results']
-    assert_dfs_equal(small_result, small_expected_result, cols_ignore=cols_ignore)
+    util.testing.assert_dfs_equal(small_result, small_expected_result, cols_ignore=cols_ignore)

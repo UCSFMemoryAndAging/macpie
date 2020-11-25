@@ -3,7 +3,7 @@ from pathlib import Path
 from click.testing import CliRunner
 import pytest
 
-from macpie.cli.cli import main
+from macpie import cli
 
 
 @pytest.mark.slow
@@ -21,6 +21,6 @@ def test_cli_keepone():
     ]
 
     with runner.isolated_filesystem():
-        result = runner.invoke(main, cli_args)
+        result = runner.invoke(cli.cli.main, cli_args)
 
         assert result.exit_code == 0

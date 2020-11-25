@@ -3,7 +3,7 @@ from typing import ClassVar, List
 
 import pandas as pd
 
-from macpie.classes import DataObject
+from macpie.core import DataObject
 
 
 class LavaDataObject(DataObject):

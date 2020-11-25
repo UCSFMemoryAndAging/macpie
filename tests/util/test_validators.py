@@ -1,6 +1,6 @@
 import pytest
 
-from macpie.util import validate_bool_kwarg
+from macpie.util.validators import validate_bool_kwarg
 
 
 def test_validate_bool_kwarg():

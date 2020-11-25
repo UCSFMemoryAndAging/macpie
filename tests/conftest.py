@@ -1,6 +1,6 @@
 import pytest
 
-from macpie.pandas import MacAccessor
+from macpie.pandas import MacDataFrameAccessor
 
 
 def pytest_addoption(parser):

@@ -1,10 +1,10 @@
-def is_list_like(obj):
-    return isinstance(obj, (tuple, list))
-
-
-def list_diff(a, b):
+def diff(a, b):
     b = set(b)
     return [item for item in a if item not in b]
+
+
+def is_list_like(obj):
+    return isinstance(obj, (tuple, list))
 
 
 def list_like_str_equal(a, b, case_insensitive=False):

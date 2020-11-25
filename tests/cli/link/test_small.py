@@ -4,9 +4,7 @@ from shutil import copy
 from click.testing import CliRunner
 import pandas as pd
 
-from macpie.cli.cli import main
-from macpie.cli.subcommands.link.writer import CliLinkResults
-from macpie.testing import assert_dfs_equal
+from macpie import cli, util
 
 
 data_dir = Path("tests/data/").resolve()
@@ -21,7 +19,7 @@ cols_ignore = ['PIDN', 'VType', '_merge', '_abs_diff_days', '_duplicates']
 def test_small_with_merge():
     # macpie link tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = CliLinkResults.read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
+    expected_result = cli.subcommands.link.writer.CliLinkResults.read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -39,7 +37,7 @@ def test_small_with_merge():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
+        results = runner.invoke(cli.cli.main, cli_args)
 
         assert results.exit_code == 0
 
@@ -50,15 +48,15 @@ def test_small_with_merge():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = CliLinkResults.read_merged_results(results_path)
+        results = cli.subcommands.link.writer.CliLinkResults.read_merged_results(results_path)
 
-        assert_dfs_equal(results, expected_result, output_dir=output_dir)
+        util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
 
 def test_small_no_link_id():
     # macpie link tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = CliLinkResults.read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
+    expected_result = cli.subcommands.link.writer.CliLinkResults.read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -76,7 +74,7 @@ def test_small_no_link_id():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
+        results = runner.invoke(cli.cli.main, cli_args)
 
         assert results.exit_code == 0
 
@@ -87,9 +85,9 @@ def test_small_no_link_id():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = CliLinkResults.read_merged_results(results_path)
+        results = cli.subcommands.link.writer.CliLinkResults.read_merged_results(results_path)
 
-        assert_dfs_equal(results, expected_result, output_dir=output_dir)
+        util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
 
 def test_small():
@@ -126,7 +124,7 @@ def test_small():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
+        results = runner.invoke(cli.cli.main, cli_args)
 
         assert results.exit_code == 0
 
@@ -151,14 +149,14 @@ def test_small():
         result_secondary_instr2 = results_dict['instr2_all_linked']
         result_secondary_instr3 = results_dict['instr3_all_linked']
 
-        assert_dfs_equal(result_primary, expected_primary, output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_primary, expected_primary, output_dir=output_dir)
 
-        assert_dfs_equal(result_secondary_instr2,
-                         expected_secondary_instr2,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr2,
+                                      expected_secondary_instr2,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)
 
-        assert_dfs_equal(result_secondary_instr3,
-                         expected_secondary_instr3,
-                         cols_ignore=cols_ignore,
-                         output_dir=output_dir)
+        util.testing.assert_dfs_equal(result_secondary_instr3,
+                                      expected_secondary_instr3,
+                                      cols_ignore=cols_ignore,
+                                      output_dir=output_dir)

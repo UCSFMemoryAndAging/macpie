@@ -4,8 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from macpie.exceptions import DataObjectIDColKeyError, DataObjectIDColDuplicateKeyError, DataObjectID2ColKeyError
-from macpie.io import file_to_dataframe
+from macpie import errors, io
 
 
 class DataObject:
@@ -33,22 +32,26 @@ class DataObject:
             try:
                 self.id2_col = self.df.mac.get_col_name(self.id2_col)
             except KeyError:
-                raise DataObjectID2ColKeyError(f"ID2 column '{self.id2_col}' in dataobject '{self.name}'' not found")
+                raise errors.DataObjectID2ColKeyError(
+                    f"ID2 column '{self.id2_col}' in dataobject '{self.name}'' not found"
+                )
 
         if self.id_col is not None:
             try:
                 self.id_col = self.df.mac.get_col_name(self.id_col)
             except KeyError:
-                raise DataObjectIDColKeyError(f"ID column '{self.id_col}' in dataobject '{self.name}'' not found")
+                raise errors.DataObjectIDColKeyError(
+                    f"ID column '{self.id_col}' in dataobject '{self.name}'' not found"
+                )
 
             if self.df[self.id_col].isnull().any():
-                raise DataObjectIDColKeyError(
+                raise errors.DataObjectIDColKeyError(
                     f"ID column '{self.id_col}' in dataobject '{self.name}'' has null values,"
                     " which are not allowed"
                 )
 
             if self.df[self.id_col].duplicated().any():
-                raise DataObjectIDColDuplicateKeyError(
+                raise errors.DataObjectIDColDuplicateKeyError(
                     f"ID column '{self.id_col}' in dataobject '{self.name}'' has duplicates,"
                     " which are not allowed"
                 )
@@ -109,5 +112,5 @@ class DataObject:
 
     @classmethod
     def from_file(cls, filepath, name, id_col=None, date_col=None, id2_col=None) -> "DataObject":
-        df = file_to_dataframe(filepath)
+        df = io.file_to_dataframe(filepath)
         return cls(name, id_col=id_col, date_col=date_col, id2_col=id2_col, df=df, filepath=filepath)

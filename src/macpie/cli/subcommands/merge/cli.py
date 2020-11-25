@@ -1,6 +1,6 @@
 import click
 
-from macpie.io import validate_filepath
+from macpie import io
 
 from ...core import ClickPath
 from ...util import allowed_file, print_ctx
@@ -19,7 +19,7 @@ def merge(ctx, keep_original, primary):
     args = ctx.obj['args']
 
     options['keep_original'] = keep_original
-    args['primary'] = validate_filepath(primary, allowed_file)
+    args['primary'] = io.validate_filepath(primary, allowed_file)
 
     results = CliMergeResults(ctx)
     results.write()

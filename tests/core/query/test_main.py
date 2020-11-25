@@ -3,11 +3,10 @@ from pathlib import Path
 
 import networkx as nx
 
-from macpie.classes import LavaDataObject, Query
-from macpie.pandas import group_by_keep_one
+from macpie import pandas
+from macpie.core import LavaDataObject, Query
 
-
-current_dir = Path("tests/classes/query/")
+current_dir = Path("tests/core/query/")
 
 
 def test_query():
@@ -40,7 +39,7 @@ def test_query():
 
     Q.add_node(
         do1,
-        operation=partial(group_by_keep_one,
+        operation=partial(pandas.group_by_keep_one,
                           group_by_col=do1.id2_col,
                           date_col=do1.date_col,
                           keep='first',

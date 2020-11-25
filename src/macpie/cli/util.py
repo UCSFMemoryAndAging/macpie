@@ -1,6 +1,6 @@
 import click
 
-from macpie.io import has_csv_extension, has_excel_extension
+from macpie import io
 
 
 def allowed_file(p):
@@ -9,7 +9,7 @@ def allowed_file(p):
     stem = p.stem
     if stem.startswith('~') or stem.startswith('results_'):
         return False
-    if has_csv_extension(p) or has_excel_extension(p):
+    if io.has_csv_extension(p) or io.has_excel_extension(p):
         return True
     return False
 

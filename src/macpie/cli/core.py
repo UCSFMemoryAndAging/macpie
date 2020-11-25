@@ -6,9 +6,7 @@ import click
 import pandas as pd
 import openpyxl as pyxl
 
-from macpie import __version__
-from macpie.io import create_output_dir, ws_autoadjust_colwidth, ws_highlight_rows_with_col
-from macpie.util import add_suffix
+from macpie import __version__, io, util
 
 from .util import iterate_params
 
@@ -39,7 +37,7 @@ class BaseResults:
 
     def __init__(self, output_dir: Path = None):
         self.output_dir = output_dir
-        self.results_dir = create_output_dir(self.output_dir, "results")
+        self.results_dir = io.create_output_dir(self.output_dir, "results")
         self.results_file = self.results_dir / (self.results_dir.stem + '.xlsx')
         self.writer = pd.ExcelWriter(self.results_file, engine='openpyxl')
 
@@ -99,7 +97,7 @@ class CliBaseQueryResults(CliBaseResults):
         for edge in edges_with_operation_results:
             sheetname = edge['name']
             if edge['duplicates']:
-                sheetname = add_suffix(sheetname, "(DUPS)", self.SHEETNAME_CHARS_LIMIT)
+                sheetname = util.string.add_suffix(sheetname, "(DUPS)", self.SHEETNAME_CHARS_LIMIT)
             self.ws.append(SingleSheet(sheetname, edge['operation_result'], None))
 
     def write(self, Q):
@@ -125,8 +123,8 @@ class CliBaseQueryResults(CliBaseResults):
 
         for ws in wb.worksheets:
             if ws.title.startswith('_log_'):
-                ws_autoadjust_colwidth(ws)
+                util.pyxl.ws_autoadjust_colwidth(ws)
             else:
-                ws_highlight_rows_with_col(ws, '_duplicates')
+                util.pyxl.ws_highlight_rows_with_col(ws, '_duplicates')
 
         wb.save(filename)
