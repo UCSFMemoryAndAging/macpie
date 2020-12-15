@@ -1,11 +1,12 @@
 from dateutil.parser import ParserError
+import json
 from typing import List
 
 import numpy as np
 import pandas as pd
 
 from macpie import util
-
+from macpie.core import MACPieJSONEncoder, MACPieJSONDecoder
 
 COL_KEYWORDS = {'_abs_diff_days', '_diff_days', '_duplicates', '_merge'}
 
@@ -140,6 +141,14 @@ def get_col_names(df: pd.DataFrame, col_names: List[str]):
 
 def is_date_col(arr_or_dtype):
     return pd.api.types.is_datetime64_any_dtype(arr_or_dtype)
+
+
+def json_dumps_contents(df: pd.DataFrame):
+    return df.applymap(lambda a: json.dumps(a, cls=MACPieJSONEncoder))
+
+
+def json_loads_contents(df: pd.DataFrame):
+    return df.applymap(lambda a: json.loads(a, cls=MACPieJSONDecoder) if isinstance(a, str) else a)
 
 
 def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):

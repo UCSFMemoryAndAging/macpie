@@ -2,8 +2,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from macpie.cli.cli import main
-
+from macpie.cli.main import main
 
 current_dir = Path("tests/cli/data/").resolve()
 
@@ -13,7 +12,7 @@ def test_basic():
 
     temp_file = 'link ' + str((current_dir / '~$test.csv').resolve())
     with runner.isolated_filesystem():
-        result = runner.invoke(main, temp_file)
+        result = runner.invoke(main, temp_file, catch_exceptions=False)
         # print(result.output)
         assert result.exit_code != 0
 

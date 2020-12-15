@@ -1,10 +1,18 @@
+import json
+from typing import ClassVar
+
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 
 from macpie import util
+from macpie.core import Datasheet
 
 
 class Query:
+
+    SHEETNAME_QUERY_DATAOBJECTS : ClassVar[str] = '_query_dataobjects'
+    SHEETNAME_QUERY_OPERATIONS : ClassVar[str] = '_query_operations'
 
     def __init__(self, g=None):
         if g is None:
@@ -16,6 +24,13 @@ class Query:
 
         self.log_dataobjects = []
         self.log_operations = []
+
+    def __repr__(self) -> str:
+        return (
+            f'{self.__class__.__name__}('
+            f'num_nodes={self.g.number_of_nodes()!r}, '
+            f'num_edges={self.g.number_of_edges()!r})'
+        )
 
     def add_node(
         self,
@@ -72,7 +87,6 @@ class Query:
                             else v.df)
                 operation_result = edge_operation(left_df, right_df)
                 self.g.edges[u, v]['operation_result'] = operation_result
-                self.g.edges[u, v]['duplicates'] = operation_result['_duplicates'].any()
                 # log the edge operation
                 self.log_edge_operation(u, v, edge_operation)
 
@@ -80,6 +94,8 @@ class Query:
         return list(nx.topological_sort(self.g))[0]
 
     def get_node(self, n, attr: str = None):
+        """Get the node attribute if specified, otherwise get the node
+        """
         node = self.g.nodes[n]
         if attr is not None:
             if attr in node:
@@ -116,32 +132,32 @@ class Query:
             return [d for e, d in self.g.edges.items()]
 
     def log_node(self, a):
-        self.log_dataobjects.append(a.to_json())
+        self.log_dataobjects.append(a.to_dict())
 
     def log_node_operation(self, a, node_operation):
-        entry = {
+        self.log_operations.append({
             'left_operand': a.name,
             'right_operand': 'N/A',
             'operation': node_operation.func.__name__,
-            'operation_params': str(node_operation.keywords),
-            'operation_results_shape': f'({a.df.mac.num_rows()}, {a.df.mac.num_cols()})'
-        }
-
-        self.log_operations.append(entry)
+            'operation_params': node_operation.keywords,
+            'operation_results_shape': f'({a.df.mac.num_rows()}, {a.df.mac.num_cols()})'}
+        )
 
     def log_edge_operation(self, a, b, edge_operation):
         results = self.g.edges[a, b]['operation_result']
-
-        entry = {
+        self.log_operations.append({
             'left_operand': a.name,
             'right_operand': b.name,
             'operation': edge_operation.func.__name__,
-            'operation_params': str(edge_operation.keywords),
+            'operation_params': edge_operation.keywords,
             'operation_results_shape': (f'({results.mac.num_rows()}, {results.mac.num_cols()})'
-                                        if results is not None else "")
-        }
+                                        if results is not None else "")})
 
-        self.log_operations.append(entry)
+    def get_log_dataobjects(self):
+        return Datasheet(self.SHEETNAME_QUERY_DATAOBJECTS, pd.DataFrame(self.log_dataobjects))
+
+    def get_log_operations(self):
+        return Datasheet(self.SHEETNAME_QUERY_OPERATIONS, pd.DataFrame(self.log_operations))
 
     def print_nodes(self):
         counter = 1
@@ -190,10 +206,3 @@ class Query:
         # plt.tight_layout()
         plt.axis("off")
         plt.show()
-
-    def __repr__(self) -> str:
-        return (
-            f'{self.__class__.__name__}('
-            f'num_nodes={self.g.number_of_nodes()!r}, '
-            f'num_edges={self.g.number_of_edges()!r})'
-        )

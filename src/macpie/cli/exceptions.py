@@ -1,4 +1,4 @@
-class CliLinkResultsParserError(Exception):
+class MergeParserError(Exception):
     """
-    Error raised when parsing a CliLinksResults file.
+    Error raised parsing file for merge.
     """

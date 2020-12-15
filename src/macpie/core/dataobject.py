@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
+from typing import ClassVar, List
 
 import numpy as np
 import pandas as pd
 
-from macpie import errors, io
+from macpie import errors, io, util
 
 
 class DataObject:
@@ -16,7 +17,8 @@ class DataObject:
         id_col: str = None,
         date_col: str = None,
         id2_col: str = None,
-        filepath: Path = None
+        filepath: Path = None,
+        display_name: str = None
     ):
         self.name = name
         self.df = self._df_orig = df
@@ -24,6 +26,7 @@ class DataObject:
         self.date_col = date_col
         self.id2_col = id2_col
         self.filepath = filepath
+        self.display_name = name if display_name is None else display_name
 
         if self.date_col is not None:
             self.date_col = self.df.mac.to_datetime(self.date_col)
@@ -103,6 +106,7 @@ class DataObject:
             'date_col': self.date_col,
             'id2_col': self.id2_col,
             'filepath': str(self.filepath.resolve()),
+            'display_name': self.display_name,
             'rows': self.df.mac.num_rows(),
             'cols': self.df.mac.num_cols()
         }
@@ -111,6 +115,49 @@ class DataObject:
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_file(cls, filepath, name, id_col=None, date_col=None, id2_col=None) -> "DataObject":
+    def from_file(cls,
+                  filepath,
+                  name,
+                  id_col=None,
+                  date_col=None,
+                  id2_col=None,
+                  display_name=None) -> "DataObject":
+
         df = io.file_to_dataframe(filepath)
-        return cls(name, id_col=id_col, date_col=date_col, id2_col=id2_col, df=df, filepath=filepath)
+
+        return cls(name,
+                   id_col=id_col,
+                   date_col=date_col,
+                   id2_col=id2_col,
+                   df=df,
+                   filepath=filepath,
+                   display_name=display_name)
+
+
+class LavaDataObject(DataObject):
+
+    FIELD_ID_COL_VALUE_DEFAULT : ClassVar[str] = 'instrid'
+    FIELD_ID2_COL_VALUE_DEFAULT : ClassVar[str] = 'pidn'
+    FIELD_ID_COL_VALUES_POSSIBLE : ClassVar[List[str]] = ['ID', 'PIDN', 'VID', 'INSTRID', 'SPECID']
+    FIELD_DATE_COL_VALUE_DEFAULT : ClassVar[str] = 'dcdate'
+    FIELD_DATE_COL_VALUES_POSSIBLE : ClassVar[List[str]] = ['DATE', 'DCDATE']
+
+    def __init__(
+        self,
+        name: str,
+        df: pd.DataFrame,
+        id_col: str = None,
+        date_col: str = None,
+        id2_col: str = None,
+        filepath: Path = None,
+        display_name: str = None
+    ):
+        super().__init__(
+            name,
+            df,
+            id_col,
+            date_col if date_col is not None else LavaDataObject.FIELD_DATE_COL_VALUE_DEFAULT,
+            id2_col if id2_col is not None else LavaDataObject.FIELD_ID2_COL_VALUE_DEFAULT,
+            filepath,
+            display_name
+        )

@@ -1,6 +1,12 @@
-import click
+from collections import OrderedDict
+import json
+import platform
 
-from macpie import io
+import click
+import openpyxl as pyxl
+
+from macpie import __version__
+from macpie import core, io, util
 
 
 def allowed_file(p):
@@ -14,7 +20,15 @@ def allowed_file(p):
     return False
 
 
-def iterate_params(params):
+def format_basic(filepath):
+    wb = pyxl.load_workbook(filepath)
+    for ws in wb.worksheets:
+        if ws.title.startswith('_'):
+            util.pyxl.ws_autoadjust_colwidth(ws)
+    wb.save(filepath)
+
+
+def iterate_params(params, jsonify: bool = False):
     results = []
     for k, v in params.items():
         if isinstance(v, tuple):
@@ -22,6 +36,9 @@ def iterate_params(params):
                 results.append((k, a))
         else:
             results.append((k, v))
+
+    if jsonify:
+        return [(r[0], json.dumps(r[1], cls=core.MACPieJSONEncoder)) for r in results]
     return results
 
 
@@ -35,6 +52,15 @@ def print_params(d):
             click.echo(f'{k}: {v}')
 
 
+def get_sys_info():
+    sys_info = OrderedDict()
+    sys_info['python_version'] = platform.python_version()
+    sys_info['platform'] = platform.platform()
+    sys_info['computer_network_name'] = platform.node()
+    sys_info['macpie_version'] = __version__
+    return sys_info
+
+
 def print_ctx(ctx):
     click.echo('COMMAND SUMMARY')
     click.echo('===============')
@@ -42,14 +68,14 @@ def print_ctx(ctx):
 
     click.echo('\nOptions')
     click.echo('-------')
-    print_params(ctx.obj['options'])
+    print_params(ctx.obj.opts)
 
     click.echo('\nArguments')
     click.echo('---------')
-    print_params(ctx.obj['args'])
+    print_params(ctx.obj.args)
 
     click.echo('\nSystem')
     click.echo('-------')
-    print_params(ctx.obj['system'])
+    print_params(get_sys_info())
 
     click.echo()

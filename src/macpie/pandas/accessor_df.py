@@ -47,6 +47,12 @@ class MacDataFrameAccessor:
     def is_date_col(self, arr_or_dtype):
         return general.is_date_col(self._df[arr_or_dtype])
 
+    def json_dumps_contents(self):
+        return general.json_dumps_contents(self._df)
+
+    def json_loads_contents(self):
+        return general.json_loads_contents(self._df)
+
     def mark_duplicates_by_cols(self, cols: List[str]):
         return general.mark_duplicates_by_cols(self._df, cols)
 

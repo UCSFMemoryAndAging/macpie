@@ -9,6 +9,8 @@ from .general import (
     get_col_name,
     get_col_names,
     is_date_col,
+    json_dumps_contents,
+    json_loads_contents,
     mark_duplicates_by_cols,
     num_cols,
     num_rows,

@@ -5,7 +5,9 @@ from click.testing import CliRunner
 import pandas as pd
 import pytest
 
-from macpie import cli, util
+from macpie import util
+
+from macpie.cli.main import main
 
 
 data_dir = Path("tests/data/").resolve()
@@ -52,7 +54,7 @@ def test_full_no_link_id():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(cli.cli.main, cli_args)
+        results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
 
@@ -109,7 +111,7 @@ def test_full():
 
     with runner.isolated_filesystem():
 
-        results = runner.invoke(cli.cli.main, cli_args)
+        results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
 

@@ -2,10 +2,13 @@ from pathlib import Path
 from shutil import copy
 
 from click.testing import CliRunner
+import openpyxl as pyxl
 import pandas as pd
 
-from macpie import cli, util
+from macpie import util
 
+from macpie.cli.main import main
+from macpie.cli.subcommands.link import COL_HEADER_ROW_INDEX, SHEETNAME_MERGED_RESULTS
 
 data_dir = Path("tests/data/").resolve()
 current_dir = Path("tests/cli/link/").resolve()
@@ -16,10 +19,20 @@ output_dir = None
 cols_ignore = ['PIDN', 'VType', '_merge', '_abs_diff_days', '_duplicates']
 
 
+def read_merged_results(f, sheetname: str = SHEETNAME_MERGED_RESULTS):
+    filename = str(f)
+    wb = pyxl.load_workbook(filename)
+    ws = wb[sheetname]
+    if ws['A2'].value == COL_HEADER_ROW_INDEX:
+        return pd.read_excel(filename, index_col=0, header=[0, 1], engine='openpyxl')
+    else:
+        return pd.read_excel(filename, index_col=None, header=[0, 1], engine='openpyxl')
+
+
 def test_small_with_merge():
     # macpie link tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = cli.subcommands.link.writer.CliLinkResults.read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
+    expected_result = read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -37,7 +50,7 @@ def test_small_with_merge():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(cli.cli.main, cli_args)
+        results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
 
@@ -48,7 +61,7 @@ def test_small_with_merge():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = cli.subcommands.link.writer.CliLinkResults.read_merged_results(results_path)
+        results = read_merged_results(results_path)
 
         util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
@@ -56,7 +69,7 @@ def test_small_with_merge():
 def test_small_no_link_id():
     # macpie link tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    expected_result = cli.subcommands.link.writer.CliLinkResults.read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
+    expected_result = read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
 
     runner = CliRunner()
 
@@ -74,7 +87,7 @@ def test_small_no_link_id():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(cli.cli.main, cli_args)
+        results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
 
@@ -85,7 +98,7 @@ def test_small_no_link_id():
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = cli.subcommands.link.writer.CliLinkResults.read_merged_results(results_path)
+        results = read_merged_results(results_path)
 
         util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
 
@@ -124,7 +137,7 @@ def test_small():
     ]
 
     with runner.isolated_filesystem():
-        results = runner.invoke(cli.cli.main, cli_args)
+        results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
 

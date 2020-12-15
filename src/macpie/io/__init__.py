@@ -1,4 +1,3 @@
-
 from .parser import (
     file_to_dataframe,
     has_csv_extension,
