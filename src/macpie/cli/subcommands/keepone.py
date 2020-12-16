@@ -20,6 +20,7 @@ from macpie.cli.common import allowed_file, format_basic
 @click.pass_context
 def keepone(ctx, keep, primary):
     invoker = ctx.obj
+    invoker.command_name = ctx.info_name
     invoker.add_opt('keep', keep)
     invoker.add_arg('primary', primary)
 
@@ -32,8 +33,10 @@ def keepone(ctx, keep, primary):
 
     query = KeepOneQuery(params.opts, params.args)
     query.execute_query()
-    databook = query.get_results()
 
+    databook = query.get_results()
+    databook.add_metadata_sheet(invoker.get_command_info())
+    databook.add_metadata_sheet(invoker.get_system_info())
     databook.to_excel(invoker.results_file)
 
     format_basic(invoker.results_file)

@@ -52,7 +52,7 @@ def print_params(d):
             click.echo(f'{k}: {v}')
 
 
-def get_sys_info():
+def get_system_info():
     sys_info = OrderedDict()
     sys_info['python_version'] = platform.python_version()
     sys_info['platform'] = platform.platform()
@@ -76,6 +76,6 @@ def print_ctx(ctx):
 
     click.echo('\nSystem')
     click.echo('-------')
-    print_params(get_sys_info())
+    print_params(get_system_info())
 
     click.echo()

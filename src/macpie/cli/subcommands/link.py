@@ -70,6 +70,7 @@ def link(ctx,
          primary,
          secondary):
     invoker = ctx.obj
+    invoker.command_name = ctx.info_name
     invoker.add_opt('primary_keep', primary_keep)
     invoker.add_opt('secondary_get', secondary_get)
     invoker.add_opt('secondary_days', secondary_days)
@@ -100,9 +101,12 @@ def link(ctx,
 
     query = LinkQuery(params.opts, params.args)
     query.execute_query()
-    databook = query.get_results()
 
+    databook = query.get_results()
+    databook.add_metadata_sheet(invoker.get_command_info())
+    databook.add_metadata_sheet(invoker.get_system_info())
     databook.to_excel(invoker.results_file)
+
     format(invoker.results_file)
     format_dups(invoker.results_file)
 

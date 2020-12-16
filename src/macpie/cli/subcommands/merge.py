@@ -26,6 +26,7 @@ from macpie.cli.subcommands import link
 @click.pass_context
 def merge(ctx, keep_original, primary):
     invoker = ctx.obj
+    invoker.command_name = ctx.info_name
     invoker.add_opt('keep_original', keep_original)
     invoker.add_arg('primary', primary)
 
@@ -37,7 +38,10 @@ def merge(ctx, keep_original, primary):
                             invoker.get_arg('primary'))
 
     merge_parser = MergeParser(params.opts, params.args)
+
     databook = merge_parser.get_results()
+    databook.add_metadata_sheet(invoker.get_command_info())
+    databook.add_metadata_sheet(invoker.get_system_info())
 
     # if we need to keep some worksheets, best to copy the original file
     # and delete the rest since no easy way to currently copy worksheets
