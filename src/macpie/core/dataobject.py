@@ -5,7 +5,7 @@ from typing import ClassVar, List
 import numpy as np
 import pandas as pd
 
-from macpie import errors, io, util
+from macpie import errors, io
 
 
 class DataObject:

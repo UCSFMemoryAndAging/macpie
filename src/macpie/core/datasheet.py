@@ -1,7 +1,4 @@
 import re
-from typing import ClassVar, List
-
-from openpyxl.utils.dataframe import dataframe_to_rows
 
 from macpie import util
 
@@ -10,17 +7,6 @@ SHEETNAME_CHARS_LIMIT = 31
 
 
 class Datasheet:
-
-    metadata_col_headers: ClassVar[List[str]] = [
-        'worksheet',
-        'display_header',
-        'display_index',
-        'index_label',
-        'startrow',
-        'startcol',
-        'num_header_rows',
-        'num_index_cols'
-    ]
 
     def __init__(self,
                  name,
@@ -69,22 +55,19 @@ class Datasheet:
         self.name = util.string.add_suffix(self.name, suffix)
         self.display_name = util.string.add_suffix(self.display_name, suffix, SHEETNAME_CHARS_LIMIT)
 
-    def metadata_list(self):
-        return [
-            self.display_name,
-            self.display_header,
-            self.display_index,
-            self.index_label,
-            self.startrow,
-            self.startcol,
-            self.num_header_rows,
-            self.num_index_cols
-        ]
-
-    def to_excel_pyxl(self, wb):
-        ws = wb.create_sheet(self.display_name)
-        for r in dataframe_to_rows(self.df, index=True, header=True):
-            ws.append(r)
+    def to_dict(self):
+        return {
+            'sheetname': self.display_name,
+            'display_header': self.display_header,
+            'display_index': self.display_index,
+            'index_label': self.index_label,
+            'startrow': self.startrow,
+            'startcol': self.startcol,
+            'num_header_rows': self.num_header_rows,
+            'num_index_cols': self.num_index_cols,
+            'df_rows': self.df.mac.num_rows(),
+            'df_cols': self.df.mac.num_cols()
+        }
 
     def to_excel(self, excel_writer):
         self.df.to_excel(

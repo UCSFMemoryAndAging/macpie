@@ -1,5 +1,4 @@
 from functools import partial
-import json
 
 import click
 import numpy as np

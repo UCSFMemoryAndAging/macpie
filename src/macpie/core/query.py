@@ -1,4 +1,3 @@
-import json
 from typing import ClassVar
 
 import matplotlib.pyplot as plt

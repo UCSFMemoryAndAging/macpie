@@ -27,3 +27,24 @@ def assert_dfs_equal(df1, df2, cols_ignore=None, output_dir=None):
         drows.to_excel(output_dir / row_diffs_filename, index=False)
 
     assert drows.mac.num_rows() == 0
+
+
+def assert_excels_equal(wb1, wb2):
+    # same sheets?
+    assert set(wb1.sheetnames) == set(wb2.sheetnames)
+
+    # each sheet has same range of data?
+    for sheet in wb1.sheetnames:
+        assert wb1[sheet].max_column == wb2[sheet].max_column
+        assert wb1[sheet].max_row == wb2[sheet].max_row
+
+    # each sheet has same data in each cell?
+    for sheet in wb1.sheetnames:
+        ws1 = wb1[sheet]
+        ws2 = wb2[sheet]
+        for x in range(1, ws1.max_row + 1):
+            for y in range(1, ws1.max_column + 1):
+                c1 = ws1.cell(row=x, column=y)
+                c2 = ws2.cell(row=x, column=y)
+                assert c1.value == c2.value, \
+                    f'{sheet}.{c1.coordinate}: {c1.value} != {c2.value}'

@@ -48,21 +48,19 @@ class Databook:
         filepath = self._validate_filepath(filepath)
         writer = pd.ExcelWriter(str(filepath), engine='openpyxl', mode=mode)
 
-        sheet_metadata = []
+        log_sheets = []
         for ds in self._sheets:
-            sheet_metadata.append(ds.metadata_list())
+            log_sheets.append(ds.to_dict())
             ds.to_excel(writer)
 
-        sheet_metadata_df = pd.DataFrame(data=sheet_metadata, columns=Datasheet.metadata_col_headers).mac.json_dumps_contents()
-        Datasheet(self.SHEETNAME_SHEETS, sheet_metadata_df, display_index=False).to_excel(writer)
-
+        Datasheet(self.SHEETNAME_SHEETS, pd.DataFrame(log_sheets).mac.json_dumps_contents()).to_excel(writer)
         writer.save()
-        self.format_excel(filepath)
+        self._format_excel(filepath)
 
-    def format_excel(self, filepath):
+    def _format_excel(self, filepath):
         wb = pyxl.load_workbook(filepath)
-        sheet_metadata_dict = self.read_metadata_sheet(filepath, self.SHEETNAME_SHEETS, index='worksheet')
-        for sheetname, sheetprops in sheet_metadata_dict.items():
+        sheet_log_dict = self.read_metadata_sheet(filepath, self.SHEETNAME_SHEETS, index='sheetname')
+        for sheetname, sheetprops in sheet_log_dict.items():
             ws = wb[sheetname]
             if not sheetname.startswith('_'):
                 if sheetprops['display_header'] is True:
