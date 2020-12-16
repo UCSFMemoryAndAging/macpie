@@ -9,7 +9,7 @@ from macpie import errors, io, pandas, util
 from macpie.core import Databook, Datasheet, LavaDataObject, Query
 
 from macpie.cli.base import ClickPath, CmdParams
-from macpie.cli.common import allowed_file
+from macpie.cli.common import allowed_file, format_basic
 
 
 COL_HEADER_DUPLICATES = '_duplicates'
@@ -107,6 +107,7 @@ def link(ctx,
     databook.add_metadata_sheet(invoker.get_system_info())
     databook.to_excel(invoker.results_file)
 
+    format_basic(invoker.results_file)
     format(invoker.results_file)
     format_dups(invoker.results_file)
 
@@ -274,6 +275,7 @@ class LinkQuery:
 
     def get_results(self):
         db = Databook()
+        db_dups = Databook()
 
         primary_node = self.Q.get_root_node()
         primary_result = self.Q.get_node(primary_node, 'operation_result')
@@ -314,10 +316,13 @@ class LinkQuery:
                         dup_sheet.add_suffix(SHEETNAME_SUFFIX_SECONDARY)
                         dup_sheet.add_suffix(SHEETNAME_SUFFIX_DUPLICATES)
                         # put dups as separate worksheets after the results worksheet
-                        db.add_sheet(dup_sheet)
+                        db_dups.add_sheet(dup_sheet)
                         fields_list_dups.extend([(self.Q.g.edges[left_node, right_node]['name'], col, None)
                                                  for col in operation_result.columns])
                     else:
+                        fields_list.extend([(self.Q.g.edges[left_node, right_node]['name'], col, None)
+                                            for col in operation_result.columns])
+
                         # merge all secondary results that do not have any duplicates
                         final_result = final_result.mac.merge(
                             operation_result,
@@ -332,12 +337,11 @@ class LinkQuery:
                                                                 primary_node.id_col]],
                             add_indexes=(None, right_node.name)
                         )
-                        fields_list.extend([(self.Q.g.edges[left_node, right_node]['name'], col, None)
-                                            for col in operation_result.columns])
 
             final_result.index = np.arange(1, len(final_result) + 1)
             merged_results_sheet = Datasheet(SHEETNAME_MERGED_RESULTS, final_result, display_index=True)
             db.add_sheet(merged_results_sheet)
+            db.add_book(db_dups)
 
         # create meta sheets
         db.add_sheet(self.create_fields_available_sheet(fields_list, fields_list_dups))

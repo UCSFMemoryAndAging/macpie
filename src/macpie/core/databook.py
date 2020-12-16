@@ -26,6 +26,10 @@ class Databook:
             f'sheets={self._sheets!r})'
         )
 
+    def add_book(self, another_book: "Databook"):
+        for ds in another_book:
+            self.add_sheet(ds)
+
     def add_sheet(self, datasheet: Datasheet):
         for d in self._sheets:
             if d.name == datasheet.name:
