@@ -1,6 +1,32 @@
+import openpyxl as pyxl
+import pandas as pd
 import pytest
 
 from macpie.pandas import MacDataFrameAccessor
+from macpie.cli.subcommands import link
+
+# import fixtures needed across files
+from tests.cli.link.test_small import (
+    link_small_with_merge,
+    link_small_no_merge
+)
+
+
+class Helpers:
+    @staticmethod
+    def read_merged_results(f, sheetname: str = link.SHEETNAME_MERGED_RESULTS):
+        filename = str(f)
+        wb = pyxl.load_workbook(filename)
+        ws = wb[sheetname]
+        if ws['A2'].value == link.COL_HEADER_ROW_INDEX:
+            return pd.read_excel(filename, index_col=0, header=[0, 1], engine='openpyxl')
+        else:
+            return pd.read_excel(filename, index_col=None, header=[0, 1], engine='openpyxl')
+
+
+@pytest.fixture
+def helpers():
+    return Helpers
 
 
 def pytest_addoption(parser):

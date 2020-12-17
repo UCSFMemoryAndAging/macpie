@@ -41,12 +41,16 @@ class Databook:
         datasheet.df = datasheet.df.mac.json_dumps_contents()
         self._sheets.append(datasheet)
 
-    def read_metadata_sheet(self, filepath, sheetname, index=None):
+    @staticmethod
+    def read_metadata_sheet(filepath, sheetname, index=None, parse_json=True, to_dict=True):
         sheet_data = pd.read_excel(filepath, sheet_name=sheetname, engine='openpyxl')
-        sheet_data = sheet_data.mac.json_loads_contents()
+        if parse_json is True:
+            sheet_data = sheet_data.mac.json_loads_contents()
         if index is not None:
             sheet_data = sheet_data.set_index(index)
-        return sheet_data.to_dict('index')
+        if to_dict is True:
+            return sheet_data.to_dict('index')
+        return sheet_data
 
     def to_excel(self, filepath: Path = None, mode='w'):
         filepath = self._validate_filepath(filepath)
@@ -57,13 +61,17 @@ class Databook:
             log_sheets.append(ds.to_dict())
             ds.to_excel(writer)
 
-        Datasheet(self.SHEETNAME_SHEETS, pd.DataFrame(log_sheets).mac.json_dumps_contents()).to_excel(writer)
+        Datasheet(
+            self.SHEETNAME_SHEETS,
+            pd.DataFrame(log_sheets).mac.json_dumps_contents()
+        ).to_excel(writer)
+
         writer.save()
         self._format_excel(filepath)
 
     def _format_excel(self, filepath):
         wb = pyxl.load_workbook(filepath)
-        sheet_log_dict = self.read_metadata_sheet(filepath, self.SHEETNAME_SHEETS, index='sheetname')
+        sheet_log_dict = Databook.read_metadata_sheet(filepath, self.SHEETNAME_SHEETS, index='sheetname')
         for sheetname, sheetprops in sheet_log_dict.items():
             ws = wb[sheetname]
             if not sheetname.startswith('_'):

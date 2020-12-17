@@ -19,7 +19,7 @@ def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
     if output_dir_name is None:
         output_dir_name = util.datetime.append_current_datetime_str("new_folder")
     else:
-        output_dir_name = util.datetime.append_current_datetime_str(output_dir_name)
+        output_dir_name = util.datetime.append_current_datetime_ms_str(output_dir_name)
 
     final_dir = output_dir / output_dir_name
     final_dir.mkdir(exist_ok=False)

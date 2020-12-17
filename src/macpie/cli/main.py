@@ -28,6 +28,8 @@ class Invoker:
         self.results_dir = io.create_output_dir(output_dir, "results")
         self.results_file = self.results_dir / (self.results_dir.stem + '.xlsx')
 
+        self.post_messages = [f'\nLook for results in: {self.results_file.resolve()}']
+
     def add_opt(self, k, v):
         self.opts[k] = v
 
@@ -53,6 +55,13 @@ class Invoker:
         system_info_data = [row for row in iterate_params(get_system_info())]
         df = pd.DataFrame.from_records(system_info_data, columns=system_info_columns)
         return Datasheet(self.SHEETNAME_SYSTEM_INFO, df)
+
+    def add_post_message(self, msg):
+        self.post_messages.append(msg)
+
+    def print_post_messages(self):
+        for msg in self.post_messages:
+            click.echo(msg)
 
 
 @click.group()
@@ -82,11 +91,12 @@ def main(ctx, verbose, id_col, date_col, id2_col):
 
     ctx.obj = Invoker(command_name, opts, args)
 
+    if verbose:
+        print_ctx(ctx)
+
     @ctx.call_on_close
-    def print_summary():
-        if verbose:
-            print_ctx(ctx)
-        click.echo(f'\nLook for results in: {ctx.obj.results_file.resolve()}\n')
+    def on_close():
+        ctx.obj.print_post_messages()
 
 
 main.add_command(keepone)

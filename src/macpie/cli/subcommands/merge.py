@@ -1,11 +1,11 @@
 from collections import namedtuple
-import json
 from pathlib import Path
 from shutil import copy
 from typing import ClassVar
 
 import click
 import openpyxl as pyxl
+import numpy as np
 import pandas as pd
 
 from macpie import io, util
@@ -57,15 +57,16 @@ def merge(ctx, keep_original, primary):
 
         wb.save(invoker.results_file)
         databook.to_excel(invoker.results_file, mode='a')
-        format(invoker.results_file, merge_parser.secondary_to_keep)
+        format_order(invoker.results_file, merge_parser.secondary_to_keep)
     else:
         databook.to_excel(invoker.results_file)
 
     format_basic(invoker.results_file)
     link.format_dups(invoker.results_file)
+    link.format_merged_results(invoker.results_file)
 
 
-def format(filepath, secondary_to_keep):
+def format_order(filepath, secondary_to_keep):
     # move sheets into correct order
     wb = pyxl.load_workbook(filepath)
     insert_before_ws = next(x for x in wb.worksheets if x.title.startswith('_'))
@@ -136,13 +137,18 @@ class MergeParser:
         self.link_results_filename = str(self.link_results)
         self.link_results_wb = pyxl.load_workbook(self.link_results_filename)
 
-        fields_available = pd.read_excel(self.link_results_filename,
-                                         sheet_name=link.SHEETNAME_FIELDS_AVAILABLE,
-                                         engine='openpyxl')
+        fields_available = Databook.read_metadata_sheet(
+            self.link_results_filename,
+            link.SHEETNAME_FIELDS_AVAILABLE,
+            parse_json=False,
+            to_dict=False
+        )
 
-        merge_info = pd.read_excel(self.link_results_filename,
-                                   sheet_name=link.SHEETNAME_MERGE_INFO,
-                                   engine='openpyxl')
+        merge_info = Databook.read_metadata_sheet(
+            self.link_results_filename,
+            link.SHEETNAME_MERGE_INFO,
+            index='param_name'
+        )
 
         # get selected fields
         self.fields_selected = fields_available.loc[
@@ -151,15 +157,9 @@ class MergeParser:
         if self.fields_selected.mac.num_rows() < 1:
             raise MergeParserError("No fields selected to merge.")
 
-        self.primary_do_info = json.loads(
-            merge_info.loc[merge_info['param_name'] == 'primary', 'param_value'].item()
-        )
-        self.secondary_do_names = json.loads(
-            merge_info.loc[merge_info['param_name'] == 'secondary', 'param_value'].item()
-        )
-        self.merged = json.loads(
-            merge_info.loc[merge_info['param_name'] == 'merged', 'param_value'].item()
-        )
+        self.primary_do_info = merge_info['primary']['param_value']
+        self.secondary_do_names = merge_info['secondary']['param_value']
+        self.merged = merge_info['merged']['param_value']
 
         self.link_id_col = self.primary_do_info['id_col'] + '_link'
         self.link_date_col = self.primary_do_info['date_col'] + '_link'
@@ -354,12 +354,21 @@ class MergeParser:
 
         fields_selected_records = self.fields_selected.to_dict('records')
         fields_selected = [(field['DataObject'], field['Field']) for field in fields_selected_records]
+        # always include primary link fields
+        primary_link_fields = [
+            (self.primary_do_info['name'], self.primary_do_info['id2_col']),
+            (self.primary_do_info['name'], self.primary_do_info['date_col']),
+            (self.primary_do_info['name'], self.primary_do_info['id_col'])
+        ]
+        fields_selected = primary_link_fields + fields_selected
+
         if self.opts['verbose']:
             click.echo("Removing unwanted fields...")
         final_result = final_result.filter(items=fields_selected, axis='columns')
 
         if self.opts['verbose']:
             click.echo("Writing merged results...")
+        final_result.index = np.arange(1, len(final_result) + 1)
         db.add_sheet(Datasheet(link.SHEETNAME_MERGED_RESULTS, final_result, display_index=True))
 
         for secondary in self.secondary_with_dups:

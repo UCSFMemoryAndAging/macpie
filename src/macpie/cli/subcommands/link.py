@@ -108,8 +108,26 @@ def link(ctx,
     databook.to_excel(invoker.results_file)
 
     format_basic(invoker.results_file)
-    format(invoker.results_file)
+    format_merged_results(invoker.results_file)
     format_dups(invoker.results_file)
+
+    post_msg1 = ('\nNOTE: If you want to merge/filter fields from the linked data in the '
+                 'above results file, perform the following steps:')
+
+    post_msg2 = (f'\t1. Open the results file and go to the "{SHEETNAME_FIELDS_AVAILABLE}" tab')
+    post_msg3 = (f'\t2. In the column "{COL_HEADER_FIELDS_SELECTED}", '
+                 'mark an "x" in each field you want to merge/keep')
+    post_msg4 = ('\t3. Save the file')
+    post_msg5 = ('\t4. Execute this command: "macpie merge FILE", '
+                 'where FILE is the file you just saved.')
+    post_msg6 = ('\t5. A new results file will be created containing the merged results\n')
+
+    invoker.add_post_message(post_msg1)
+    invoker.add_post_message(post_msg2)
+    invoker.add_post_message(post_msg3)
+    invoker.add_post_message(post_msg4)
+    invoker.add_post_message(post_msg5)
+    invoker.add_post_message(post_msg6)
 
 
 def format_dups(filepath):
@@ -121,7 +139,7 @@ def format_dups(filepath):
     wb.save(filepath)
 
 
-def format(filepath):
+def format_merged_results(filepath):
     wb = pyxl.load_workbook(filepath)
     if SHEETNAME_MERGED_RESULTS in wb.sheetnames:
         ws = wb[SHEETNAME_MERGED_RESULTS]
@@ -284,8 +302,9 @@ class LinkQuery:
                         col,
                         'x' if col in (primary_node.id_col,
                                        primary_node.date_col,
-                                       primary_node.id2_col) else None
-                        ) for col in primary_result.columns]
+                                       primary_node.id2_col) else None)
+                       for col in primary_result.columns
+                       if col not in [primary_node.id_col, primary_node.date_col, primary_node.id2_col]]
         fields_list_dups = []
 
         if self.opts['merge_results'] is False:
@@ -302,7 +321,9 @@ class LinkQuery:
                 if operation_result[COL_HEADER_DUPLICATES].any():
                     secondary_sheet.add_suffix(SHEETNAME_SUFFIX_DUPLICATES)
                 db.add_sheet(secondary_sheet)
-                fields_list.extend([(edge['name'], col, None) for col in edge['operation_result'].columns])
+                fields_list.extend([(edge['name'], col, None)
+                                    for col in edge['operation_result'].columns
+                                    if not col.endswith('_link')])
         else:
             # logic for creating a merged results sheet
             primary_result.columns = pd.MultiIndex.from_product([[primary_node.name], primary_result.columns])
@@ -318,10 +339,12 @@ class LinkQuery:
                         # put dups as separate worksheets after the results worksheet
                         db_dups.add_sheet(dup_sheet)
                         fields_list_dups.extend([(self.Q.g.edges[left_node, right_node]['name'], col, None)
-                                                 for col in operation_result.columns])
+                                                 for col in operation_result.columns
+                                                 if not col.endswith('_link')])
                     else:
                         fields_list.extend([(self.Q.g.edges[left_node, right_node]['name'], col, None)
-                                            for col in operation_result.columns])
+                                            for col in operation_result.columns
+                                            if not col.endswith('_link')])
 
                         # merge all secondary results that do not have any duplicates
                         final_result = final_result.mac.merge(
@@ -344,7 +367,7 @@ class LinkQuery:
             db.add_book(db_dups)
 
         # create meta sheets
-        db.add_sheet(self.create_fields_available_sheet(fields_list, fields_list_dups))
+        db.add_sheet(LinkQuery.create_fields_available_sheet(fields_list, fields_list_dups))
         db.add_metadata_sheet(self.create_merge_info_sheet())
 
         # create log sheets
@@ -353,8 +376,10 @@ class LinkQuery:
 
         return db
 
-    def create_fields_available_sheet(self, fields_list, fields_list_dups):
-        fields_list = fields_list + fields_list_dups
+    @staticmethod
+    def create_fields_available_sheet(fields_list, fields_list_dups=None):
+        if fields_list_dups is not None:
+            fields_list = fields_list + fields_list_dups
         fields_list_cols = ['DataObject', 'Field', COL_HEADER_FIELDS_SELECTED]
         fields_list_df = pd.DataFrame(data=fields_list, columns=fields_list_cols)
         return Datasheet(SHEETNAME_FIELDS_AVAILABLE, fields_list_df)

@@ -13,7 +13,7 @@ def allowed_file(p):
     """Determines if a file is considered allowed
     """
     stem = p.stem
-    if stem.startswith('~') or stem.startswith('results_'):
+    if stem.startswith('~'):
         return False
     if io.has_csv_extension(p) or io.has_excel_extension(p):
         return True
