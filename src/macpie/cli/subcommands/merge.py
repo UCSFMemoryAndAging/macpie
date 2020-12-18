@@ -237,6 +237,7 @@ class MergeParser:
 
         # check to see if any worksheets with duplicates have had them removed
         # if so, they can be merged; if not, leave them as is
+        merge_description = "merged"  # for log entry purposes
         for do_name in selected_do_names:
             secondary_sheetname = do_name + link.SHEETNAME_SUFFIX_SECONDARY
             secondary_sheetname_dup = secondary_sheetname + link.SHEETNAME_SUFFIX_DUPLICATES
@@ -266,16 +267,7 @@ class MergeParser:
                     )
                     continue
                 else:
-                    self.log_merge.append(
-                        MergeParser.LOG_ENTRY(
-                            sheetname=secondary_sheetname,
-                            do_name=do_name,
-                            do_type='secondary',
-                            do_description='merged: had duplicates before but all duplicates have been removed',
-                            rows=secondary_do_df.mac.num_rows(),
-                            cols=secondary_do_df.mac.num_cols()
-                        )
-                    )
+                    merge_description = 'merged: had duplicates before but all duplicates have been removed'
             else:
                 # these should already be in the MERGED_RESULTS worksheet so no need to merge them
                 self.log_merge.append(
@@ -310,7 +302,7 @@ class MergeParser:
                     sheetname=secondary_sheetname,
                     do_name=do_name,
                     do_type='secondary',
-                    do_description='merged',
+                    do_description=merge_description,
                     rows=secondary_do_df.mac.num_rows(),
                     cols=secondary_do_df.mac.num_cols()
                 )
@@ -354,6 +346,10 @@ class MergeParser:
 
         fields_selected_records = self.fields_selected.to_dict('records')
         fields_selected = [(field['DataObject'], field['Field']) for field in fields_selected_records]
+
+        # for new fields_available metadata sheet
+        pre_filled_fields_available = [tup + ('x',) for tup in fields_selected]
+
         # always include primary link fields
         primary_link_fields = [
             (self.primary_do_info['name'], self.primary_do_info['id2_col']),
@@ -374,9 +370,21 @@ class MergeParser:
         for secondary in self.secondary_with_dups:
             if self.opts['verbose']:
                 click.echo("Writing results that still have duplicates...")
-            db.add_sheet(Datasheet(secondary.sheetname, secondary.df))
+            db.add_sheet(secondary)
 
-        log_merge = pd.DataFrame(self.log_merge)
-        db.add_metadata_sheet(Datasheet(self.SHEETNAME_LOG_MERGE, log_merge))
+        # metadata sheets
+        db.add_sheet(link.LinkQuery.create_fields_available_sheet(pre_filled_fields_available))
+        db.add_metadata_sheet(self.create_merge_info_sheet())
+        db.add_metadata_sheet(Datasheet(self.SHEETNAME_LOG_MERGE, pd.DataFrame(self.log_merge)))
 
         return db
+
+    def create_merge_info_sheet(self):
+        # create merge info sheet
+        merge_info_data = [
+            ('primary', self.primary_do_info),
+            ('secondary', self.secondary_do_names),
+            ('merged', True)
+        ]
+        merge_info_df = pd.DataFrame(data=merge_info_data, columns=['param_name', 'param_value'])
+        return Datasheet(link.SHEETNAME_MERGE_INFO, merge_info_df)

@@ -5,7 +5,6 @@ import platform
 import click
 import openpyxl as pyxl
 
-from macpie import __version__
 from macpie import core, io, util
 
 
@@ -57,8 +56,13 @@ def get_system_info():
     sys_info['python_version'] = platform.python_version()
     sys_info['platform'] = platform.platform()
     sys_info['computer_network_name'] = platform.node()
-    sys_info['macpie_version'] = __version__
+    sys_info['macpie_version'] = get_version()
     return sys_info
+
+
+def get_version():
+    from macpie import __version__
+    return __version__
 
 
 def print_ctx(ctx):

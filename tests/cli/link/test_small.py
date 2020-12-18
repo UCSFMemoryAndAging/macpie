@@ -3,7 +3,6 @@ from shutil import copy
 
 from click.testing import CliRunner
 import pandas as pd
-import pytest
 
 from macpie import util
 
@@ -18,60 +17,7 @@ output_dir = None
 cols_ignore = ['PIDN', 'VType', '_merge', '_abs_diff_days', '_duplicates']
 
 
-@pytest.fixture
-def link_small_with_merge(scope="session"):
-    runner = CliRunner()
-
-    cli_args = [
-        '--id2-col', 'pidn',
-        '--date-col', 'dcdate',
-        'link',
-        '--primary-keep', 'all',
-        '--secondary-get', 'closest',
-        '--secondary-days', 90,
-        '--secondary-when', 'earlier_or_later',
-        str((current_dir / "small.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve())
-    ]
-
-    with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
-        assert results.exit_code == 0
-        # get the results file
-        results_path = next(Path(".").glob('**/result*xlsx'))
-        yield results_path
-
-
-@pytest.fixture
-def link_small_no_merge(scope="session"):
-    runner = CliRunner()
-
-    cli_args = [
-        '--id2-col', 'pidn',
-        '--date-col', 'dcdate',
-        'link',
-        '--no-merge-results',
-        '--primary-keep', 'all',
-        '--secondary-get', 'closest',
-        '--secondary-days', 90,
-        '--secondary-when', 'earlier_or_later',
-        str((current_dir / "small.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve())
-    ]
-
-    with runner.isolated_filesystem():
-        results = runner.invoke(main, cli_args)
-        assert results.exit_code == 0
-        # get the results file
-        results_path = next(Path(".").glob('**/result*xlsx'))
-        yield results_path
-
-
 def test_small_with_merge(link_small_with_merge, helpers):
-    # macpie link tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     expected_result = helpers.read_merged_results(current_dir / "small_with_merge_expected_result.xlsx")
 
     # copy file to current dir if you want to debug more
@@ -84,8 +30,6 @@ def test_small_with_merge(link_small_with_merge, helpers):
 
 
 def test_small_no_merge(link_small_no_merge):
-    # macpie link --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     expected_dict = pd.read_excel(
         current_dir / "small.xlsx",
         sheet_name=[
@@ -132,8 +76,7 @@ def test_small_no_merge(link_small_no_merge):
 
 
 def test_small_no_link_id(helpers):
-    # macpie link tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
-    # macpie -j pidn -d dcdate link -k all -g closest -d 90 -w earlier_or_later tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie link -g closest tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
     expected_result = helpers.read_merged_results(current_dir / "small_no_link_id_expected_result.xlsx")
 
     runner = CliRunner()

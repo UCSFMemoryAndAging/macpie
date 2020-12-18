@@ -5,8 +5,8 @@ import pandas as pd
 
 from macpie import util
 
-data_dir = Path("tests/data/")
-current_dir = Path('tests/io/data/')
+data_dir = Path("tests/data/").resolve()
+current_dir = Path('tests/io/data/').resolve()
 
 
 def test():

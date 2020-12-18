@@ -6,8 +6,8 @@ import pytest
 from macpie import io, util
 
 
-data_dir = Path("tests/data/")
-current_dir = Path("tests/pandas/operators/date_proximity/instr2/")
+data_dir = Path("tests/data/").resolve()
+current_dir = Path("tests/pandas/operators/date_proximity/instr2/").resolve()
 
 # output_dir = current_dir
 output_dir = None

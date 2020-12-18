@@ -8,7 +8,7 @@ from macpie import util
 from macpie.core import Datasheet, Databook
 
 
-current_dir = Path("tests/core/datasheet/")
+current_dir = Path("tests/core/datasheet/").resolve()
 
 # output_dir = current_dir
 output_dir = None

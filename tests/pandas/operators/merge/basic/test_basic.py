@@ -5,7 +5,7 @@ import pandas as pd
 from macpie import io, util
 
 
-current_dir = Path("tests/pandas/operators/merge/basic/")
+current_dir = Path("tests/pandas/operators/merge/basic/").resolve()
 
 # output_dir = current_dir
 output_dir = None

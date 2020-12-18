@@ -4,8 +4,8 @@ import pandas as pd
 
 from macpie import io, util
 
-data_dir = Path("tests/data/")
-current_dir = Path("tests/pandas/operators/date_proximity/instr2/small/")
+data_dir = Path("tests/data/").resolve()
+current_dir = Path("tests/pandas/operators/date_proximity/instr2/small/").resolve()
 
 # output_dir = current_dir
 output_dir = None

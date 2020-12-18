@@ -8,7 +8,7 @@ from macpie import errors
 from macpie.core import DataObject
 
 
-current_dir = Path("tests/core/dataobject/")
+current_dir = Path("tests/core/dataobject/").resolve()
 
 
 def test_dataobject():

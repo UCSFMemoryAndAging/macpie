@@ -10,10 +10,10 @@ setup(
     version=version,
     install_requires=[
         "click>=7.1.2",
-        "matplotlib>=3.3.2",
+        "matplotlib>=3.3.3",
         "networkx>=2.5",
         "openpyxl>=3.0.5",
-        "pandas>=1.1.2",
+        "pandas>=1.1.5",
     ],
     extras_require={
         "dev": [

@@ -3,7 +3,7 @@ from pathlib import Path
 from macpie import io, util
 
 
-current_dir = Path("tests/pandas/operators/date_proximity/basic/")
+current_dir = Path("tests/pandas/operators/date_proximity/basic/").resolve()
 
 # output_dir = current_dir
 output_dir = None

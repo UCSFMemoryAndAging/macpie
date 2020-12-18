@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import openpyxl as pyxl
 import pandas as pd
 import pytest
@@ -6,10 +8,7 @@ from macpie.pandas import MacDataFrameAccessor
 from macpie.cli.subcommands import link
 
 # import fixtures needed across files
-from tests.cli.link.test_small import (
-    link_small_with_merge,
-    link_small_no_merge
-)
+from tests.cli.link.fixtures import link_full_no_merge, link_small_no_merge, link_small_with_merge
 
 
 class Helpers:

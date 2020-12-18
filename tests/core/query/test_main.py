@@ -6,7 +6,7 @@ import networkx as nx
 from macpie import pandas
 from macpie.core import LavaDataObject, Query
 
-current_dir = Path("tests/core/query/")
+current_dir = Path("tests/core/query/").resolve()
 
 
 def test_query():
