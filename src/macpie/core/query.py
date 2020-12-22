@@ -1,24 +1,29 @@
-from typing import ClassVar
+from typing import Callable, ClassVar
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
 
 from macpie import util
-from macpie.core import Datasheet
+from macpie.core import DataObject, Datasheet
 
 
 class Query:
+    """
+    A query representation stored in a directed graph structure.
+    """
 
     SHEETNAME_QUERY_DATAOBJECTS : ClassVar[str] = '_query_dataobjects'
     SHEETNAME_QUERY_OPERATIONS : ClassVar[str] = '_query_operations'
 
-    def __init__(self, g=None):
+    def __init__(self, g: nx.DiGraph = None):
         if g is None:
+            #: Directed graph data structure representing the query.
             self.g = nx.DiGraph()
         else:
             self.g = g
 
+        #: Whether :meth:`execute` has been called
         self.executed = False
 
         self.log_dataobjects = []
@@ -33,10 +38,18 @@ class Query:
 
     def add_node(
         self,
-        do,
+        do: DataObject,
         name=None,
-        operation=None
+        operation: Callable = None
     ):
+        """
+        Add a single DataObject node to the query.
+
+        :param operation: A callable to be called on the DataObject. Typically
+                          a data transformation function that expects a single
+                          pandas.DataFrame object and arbitrary keyword arguments.
+                          See :meth:`execute_nodes`
+        """
         self.g.add_node(do)
         self.g.nodes[do]['name'] = name if name is not None else do.name
         if operation is not None:
@@ -44,11 +57,19 @@ class Query:
 
     def add_edge(
         self,
-        do1,
-        do2,
+        do1: DataObject,
+        do2: DataObject,
         name=None,
         operation=None
     ):
+        """
+        Add an edge between do1 and do2.
+
+        :param operation: A callable to be called on the two DataObjects. Typically
+                          a data transformation function that expects two pandas.DataFrame
+                          objects and arbitrary keyword arguments.
+                          See :meth:`execute_edges`
+        """
         self.g.add_edge(do1, do2)
 
         if name is None:
@@ -62,11 +83,17 @@ class Query:
             self.g[do1][do2]['operation'] = operation
 
     def execute(self):
+        """
+        Execute query by calling all ``operation`` functions on each node and edge.
+        """
         self.execute_nodes()
         self.execute_edges()
         self.executed = True
 
     def execute_nodes(self):
+        """
+        Execute all the nodes, calling the ``operation`` on each node if it exists.
+        """
         for n, d in self.g.nodes.items():
             self.log_node(n)
             if 'operation' in d:
@@ -76,6 +103,9 @@ class Query:
                 self.log_node_operation(n, node_operation)
 
     def execute_edges(self):
+        """
+        Execute all the edges, calling the ``operation`` on each edge if it exists.
+        """
         for u, v, edge_operation in self.g.edges.data('operation'):
             if edge_operation is not None:
                 left_df = (self.g.nodes[u]['operation_result']
@@ -90,10 +120,14 @@ class Query:
                 self.log_edge_operation(u, v, edge_operation)
 
     def get_root_node(self):
+        """
+        If the query is a rooted tree, get the root node.
+        """
         return list(nx.topological_sort(self.g))[0]
 
     def get_node(self, n, attr: str = None):
-        """Get the node attribute if specified, otherwise get the node
+        """
+        Get the node attribute if specified, otherwise get the node.
         """
         node = self.g.nodes[n]
         if attr is not None:
@@ -105,8 +139,8 @@ class Query:
             return node
 
     def get_all_node_data(self, attr: str = None):
-        """Get the data dict of all nodes. If attr is specified, get the
-        data dict of all nodes that have that attr in its data dict.
+        """Get the data dict of all nodes. If ``attr`` is specified, get the
+        data dict of all nodes that have that ``attr`` in its data dict.
         """
         if attr is not None:
             results = []
@@ -118,8 +152,8 @@ class Query:
             return [d for n, d in self.g.nodes.items()]
 
     def get_all_edge_data(self, attr: str = None):
-        """Get the data dict of all edges. If attr is specified, get the
-        data dict of all edges that have that attr in its data dict.
+        """Get the data dict of all edges. If ``attr`` is specified, get the
+        data dict of all edges that have that ``attr`` in its data dict.
         """
         if attr is not None:
             results = []
@@ -175,10 +209,16 @@ class Query:
             counter += 1
 
     def print_graph(self):
+        """
+        Print a text representation of the query.
+        """
         self.print_nodes()
         self.print_edges()
 
     def draw_graph(self):
+        """
+        Print a graph representation of the query using matplotlib.
+        """
         pos = nx.shell_layout(self.g)
         # pos = nx.spring_layout(self.g)
 

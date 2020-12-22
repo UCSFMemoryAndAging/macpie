@@ -15,12 +15,5 @@ setup(
         "openpyxl>=3.0.5",
         "pandas>=1.1.5",
     ],
-    extras_require={
-        "dev": [
-            "coverage",
-            "pytest",
-            "sphinx"
-            "tox",
-        ]
-    },
+    extras_require={"dotenv": ["python-dotenv"]},
 )

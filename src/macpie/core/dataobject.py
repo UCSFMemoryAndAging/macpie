@@ -9,6 +9,10 @@ from macpie import errors, io
 
 
 class DataObject:
+    """
+    Two-dimensional tabular data with key fields common in
+    clinical research data. The primary MACPie data structure.
+    """
 
     def __init__(
         self,
@@ -20,12 +24,30 @@ class DataObject:
         filepath: Path = None,
         display_name: str = None
     ):
+
+        #: The name of this DataObject.
         self.name = name
+
+        #: The :class:`pandas.DataFrame` representing the actual data.
         self.df = self._df_orig = df
+
+        #: The column in the dataframe representing the primary key/index
+        #: of the DataObject. Typically used for unique IDs of a subject's
+        #: assessment, assay, or form data.
         self.id_col = id_col
+
+        #: The column in the dataframe representing the primary date column
+        #: of the DataObject. Typically used for the date the data was collected.
         self.date_col = date_col
+
+        #: The column in the dataframe representing the secondary key/index
+        #: of the DataObject. Typically used for the ID of the subject themselves.
         self.id2_col = id2_col
+
+        #: The :class:`pathlib.Path` of the data file if importing from a file.
         self.filepath = filepath
+
+        #: The name to display in the output to the user.
         self.display_name = name if display_name is None else display_name
 
         if self.date_col is not None:
@@ -60,6 +82,7 @@ class DataObject:
                 )
 
         if self.id_col is None:
+            # create an id_col called 'mp_id_col' with index starting from 1
             self.id_col = 'mp_id_col'
             sort_cols = []
             if self.id2_col is not None:
@@ -67,7 +90,8 @@ class DataObject:
             if self.date_col is not None:
                 sort_cols.append(self.date_col)
 
-            self.df = self.df.sort_values(by=sort_cols)
+            if len(sort_cols) > 0:
+                self.df = self.df.sort_values(by=sort_cols)
             self.df.insert(0, self.id_col, np.arange(1, len(self.df) + 1))
 
     @property
@@ -94,12 +118,18 @@ class DataObject:
         )
 
     def rename_id_col(self, new_id_col):
+        """
+        Reset the ``id_col`` field to ``new_id_col``
+        """
         old_id_col = self.id_col
         self.id_col = new_id_col
         if old_id_col is not None and old_id_col in self._df.columns:
             self.df = self.df.rename(columns={old_id_col: new_id_col})
 
     def to_dict(self):
+        """
+        Convert the DataObject to a dictionary.
+        """
         return {
             'name': self.name,
             'id_col': self.id_col,
@@ -112,6 +142,9 @@ class DataObject:
         }
 
     def to_json(self):
+        """
+        Convert the DataObject to a JSON string.
+        """
         return json.dumps(self.to_dict())
 
     @classmethod
@@ -122,6 +155,9 @@ class DataObject:
                   date_col=None,
                   id2_col=None,
                   display_name=None) -> "DataObject":
+        """
+        Construct DataObject from a file.
+        """
 
         df = io.file_to_dataframe(filepath)
 

@@ -1,6 +1,3 @@
-
-
-======================
 Command Line Interface
 ======================
 
@@ -43,7 +40,7 @@ Inside the folder will contain a single results file in Excel format with the sa
 as the folder: ``results_YYYYMMDD_HHMMSS.xlsx``.
 
 Depending on the command executed, there may be other files (e.g. log files) placed in the
-results folder, or other hidden worksheets (e.g. containing log information) in the results file.
+results folder, or other worksheets (e.g. containing log information) in the results file.
 
 
 Examples
@@ -59,6 +56,7 @@ For more examples specific to each command, go to the command's examples section
 
 #. :ref:`keepone <examples-keepone>` examples
 #. :ref:`link <examples-link>` examples
+#. :ref:`merge <examples-merge>` examples
 
 
 .. _global-options:
@@ -73,20 +71,20 @@ If they are not specified using these options, then defaults (as described below
 
 .. option:: -i <STRING>, --id-col=<STRING>
 
-   ``Default=InstrID``. ID Column header. The column header of the primary ID column.
+   ``Default=InstrID``. ID column header. The column header of the primary ID column.
    In general, this column contains the primary key/index (unique identifiers) of the data
    object. In a research data management system, this is typically the ID of a specific
    data form or assessment.
 
 .. option:: -d <STRING>, --date-col=<STRING>
 
-   ``Default=DCDate``. Date column header. The column header of the primary date column.
+   ``Default=DCDate``. Date column header. The column header of the primary Date column.
    In a research data management system, this is typically the date the form or assessment
    was completed or collected.
 
 .. option:: -j <STRING>, --id2-col=<STRING>
 
-   ``Default=PIDN``. ID2 column header. The column header of the secondary ID column.
+   ``Default=PIDN``. ID2 column header. The column header of the primary ID2 column.
    In general, this column contains the secondary key/index of the data object. In a research
    data management system, this is typically the ID of the patient, subject, or participant
    who completed the form or assessment.
@@ -116,13 +114,13 @@ Usage
 Options
 ~~~~~~~
 
-.. option:: -k <STRING>, --keep=<STRING> (all|first|latest)
+.. option:: -k <STRING>, --keep=<STRING> (all|earliest|latest)
 
    Specify which rows of the ``PRIMARY`` file to keep.
 
    - ``all`` (`default`): keep all rows
-   - ``first``: for each unique value in the column specified by the :option:`--id2-col` option, keep only the first (i.e. earliest) row (determined by the values in the :option:`--date-col` column)
-   - ``latest``: for each unique value in the column specified by the :option:`--id2-col` option, keep only the last (i.e. latest) row (determined by the values in the :option:`--date-col` column)
+   - ``earliest``: for each unique value in the column specified by the :option:`--id2-col` option, keep only the earliest row (determined by the values in the :option:`--date-col` column)
+   - ``latest``: for each unique value in the column specified by the :option:`--id2-col` option, keep only the latest row (determined by the values in the :option:`--date-col` column)
 
 Arguments
 ~~~~~~~~~
@@ -142,13 +140,13 @@ The results of each data object will be stored in a corresponding worksheet insi
 Examples
 ~~~~~~~~
 
-#. For each ``PIDN``, keep only the first CDR record as determined by its ``DCDate``. ::
+#. For each ``PIDN``, keep only the earliest CDR record as determined by its ``DCDate``. ::
 
-      $ macpie keepone --keep=first cdr.csv
+      $ macpie keepone --keep=earliest cdr.csv
 
    Equivalent command but using shorter single-dash option names for brevity::
 
-      $ macpie keepone -k first cdr.csv
+      $ macpie keepone -k earliest cdr.csv
 
 #. For each ``VID`` (a column containing Visit IDs), keep the latest record
    as determined by its ``VDate`` (a column containing the Visit Dates) values. ::
@@ -157,7 +155,7 @@ Examples
 
    Equivalent command but using shorter single-dash option names for brevity::
 
-      $ macpie -j VID -d VDate keepone -k first visits.csv
+      $ macpie -j VID -d VDate keepone -k earliest visits.csv
 
 
 .. _command-link:
@@ -181,14 +179,14 @@ Usage
 Options
 ~~~~~~~
 
-.. option:: -k <STRING>, --primary-keep=<STRING> (all|first|latest)
+.. option:: -k <STRING>, --primary-keep=<STRING> (all|earliest|latest)
 
    Specify which rows of the ``PRIMARY`` file to keep. These rows will serve as the timepoint anchor.
 
     - ``all`` (`default`): keep all rows
-    - ``first``: for each group of unique :option:`--id2-col` values, keep the first (i.e. earliest) row,
+    - ``earliest``: for each group of unique :option:`--id2-col` values, keep the earliest row,
       as determined by the :option:`--date-col` values
-    - ``latest``: for each group of unique :option:`--id2-col` value, keep the latest (i.e. most recent) row,
+    - ``latest``: for each group of unique :option:`--id2-col` value, keep the latest row,
       as determined by the :option:`--date-col` values
 
 .. option:: -g <STRING>, --secondary-get=<STRING> (all|closest)
@@ -213,11 +211,30 @@ Options
    - ``earlier_or_later`` (`default`): get rows that are earlier or later (more recent)
      than the timepoint anchor
 
+.. option:: -i <STRING>, --secondary-id-col=<STRING>
+
+   Default = :option:`--id-col` value. Secondary ID column header. The column header of the secondary ID column,
+   if different from the primary ID column.
+
+.. option:: -d <STRING>, --secondary-date-col=<STRING>
+
+   Default = :option:`--date-col` value. Secondary Date column header. The column header of the secondary date column,
+   if different from the primary Date column.
+
+.. option:: -j <STRING>, --secondary-id2-col=<STRING>
+
+   Default = :option:`--id2-col` value. Secondary ID2 column header. The column header of the secondary ID2 column,
+   if different from the primary ID2 column.
+
+.. option:: --merge-results/--no-merge-results
+
+   ``Default=--merge-results``. Whether the linked results should be merged into one dataset. Otherwise, the linked
+   data objects will remain in their worksheets.
+
 .. option:: --help
 
     Show a short summary of the usage and options.
    
-
 
 Arguments
 ~~~~~~~~~
@@ -286,3 +303,67 @@ Examples
    in ``cdr.csv`` ::
 
     $ macpie link -g closest -d 60 -w earlier cdr.csv faq.csv
+
+
+.. _command-merge:
+
+Command - ``merge``
+-------------------
+
+This command is a common follow-up to the :ref:`link <command-link>` command, as it allows you to select specific fields 
+across various data objects to merge together into one dataset (thereby removing unwanted fields, which can be many).
+
+The output file of the ``link`` command includes a worksheet named ``_fields_available``. This provides
+a view of all the fields across all the data objects that you input into the ``link`` command. By placing an ``"x"``
+next to a particular field, the ``merge`` command will attempt to merge only those fields you marked into one single dataset.
+The linking fields (i.e. PIDN, DCDate, InstrID) will always be included.
+
+NOTE: The output file of this command can also be an input to this same command.
+
+
+Usage
+~~~~~
+.. code-block:: bash
+
+    $ macpie merge PRIMARY
+
+Options
+~~~~~~~
+
+.. option:: --help
+
+    Show a short summary of the usage and options.
+
+
+Arguments
+~~~~~~~~~
+
+.. option:: PRIMARY 
+
+   *Required*. Filename of the results file created by the ``link`` command OR this command.
+
+
+Output
+~~~~~~
+
+In the results file, all the merged fields will be in a single worksheet. Any data object that was not
+merged (by choice or because there were duplicates), will remain in its own worksheet. If a data object
+could not be merged because there were duplicates, you can remove the duplicates, save the file, and use
+this same command to attempt the merge again.
+
+.. _examples-merge:
+
+Examples
+~~~~~~~~
+#. After linking ``cdr.csv`` and ``faq.csv`` together, I decide only want the the following fields in my dataset:
+
+    * ``CDRTot`` and ``BoxScore`` from ``cdr.csv``
+
+    * ``FAQTot`` from ``faq.csv``
+
+   #. So first, open the results file from the ``link`` command and navigate to the ``_fields_available`` worksheet.
+   #. Mark an ``"x"`` next to those fields.
+   #. Save the file.
+   #. Run the following command: ::
+
+      $ macpie merge results_XXX.xlsx

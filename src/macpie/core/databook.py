@@ -8,6 +8,9 @@ from .datasheet import Datasheet
 
 
 class Databook:
+    """
+    A collection of Datasheet objects similar to an Excel workbook.
+    """
 
     SHEETNAME_SHEETS : ClassVar[str] = '_sheets'
 
@@ -27,10 +30,16 @@ class Databook:
         )
 
     def add_book(self, another_book: "Databook"):
+        """
+        Append a Databook to this Databook
+        """
         for ds in another_book:
             self.add_sheet(ds)
 
     def add_sheet(self, datasheet: Datasheet):
+        """
+        Add a Datasheet to this Databook.
+        """
         for d in self._sheets:
             if d.name == datasheet.name:
                 raise ValueError(f"Datasheet '{d.name}' already exists")
@@ -38,11 +47,26 @@ class Databook:
         self._sheets.append(datasheet)
 
     def add_metadata_sheet(self, datasheet: Datasheet):
+        """
+        Add a Datasheet representing metadata to this Databook.
+        Converts all values to a JSON string so that they can be
+        JSON loaded later if needed.
+        """
         datasheet.df = datasheet.df.mac.json_dumps_contents()
         self._sheets.append(datasheet)
 
     @staticmethod
     def read_metadata_sheet(filepath, sheetname, index=None, parse_json=True, to_dict=True):
+        """
+        Reads in a Datasheet representing metadata and covert to a dict or DataFrame.
+
+        :param filepath: Filepath of the file containing the metadata Datasheet
+        :param sheetname: Name of the metadata Datasheet
+        :param index: Set an index on the DataFrame
+        :param parse_json: Whether to parse values as JSON strings
+        :param to_dict: Whether to return result as a dict
+
+        """
         sheet_data = pd.read_excel(filepath, sheet_name=sheetname, engine='openpyxl')
         if parse_json is True:
             sheet_data = sheet_data.mac.json_loads_contents()
@@ -53,6 +77,13 @@ class Databook:
         return sheet_data
 
     def to_excel(self, filepath: Path = None, mode='w'):
+        """
+        Write entire Databook to an Excel file.
+
+        :param filepath: fielpath to write to
+        :param mode: File mode to use (write ``'w'`` or append ``'a``')
+        """
+
         filepath = self._validate_filepath(filepath)
         writer = pd.ExcelWriter(str(filepath), engine='openpyxl', mode=mode)
 

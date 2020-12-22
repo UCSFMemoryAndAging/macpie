@@ -13,6 +13,29 @@ def merge(
     add_suffixes=False,
     add_indexes=(None, None)
 ) -> pd.DataFrame:
+    """
+    Merge :class:`pandas.DataFrame` objects with a database-style join, similar to
+    :meth:`pandas.DataFrame.merge`.
+
+    :param left: DataFrame
+    :param right: the DataFrame to merge with
+    :param on: column(s) to join on. These must be found in both
+               DataFrames.
+    :param left_on: column(s) to join on in the left DataFrame
+    :param right_on: column(s) to join on in the right DataFrame
+    :param merge_suffixes: A length-2 sequence where the first element is
+                           suffix to add to the left DataFrame columns, and
+                           second element is suffix to add to the right DataFrame columns.
+                           Only added if ``add_suffixes`` is ``True``.
+    :param add_suffixes: Whether to add the suffixes specified in ``merge_suffixes`` or not
+    :param add_indexes: A length-2 sequence where each element is optionally a string
+                        indicating a top-level index to add to columnn indexes in ``left``
+                        and ``right`` respectively (thus creating a :class:`pandas.MultiIndex`
+                        if needed). Pass a value of ``None`` instead of a string
+                        to indicate that the column index in ``left`` or ``right`` should be
+                        left as-is. At least one of the values must not be ``None``.
+    """
+
     op = _MergeOperation(
         left,
         right,

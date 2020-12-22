@@ -6,6 +6,7 @@ from .general import (
     diff_cols,
     diff_rows,
     drop_suffix,
+    flatten_multiindex,
     get_col_name,
     get_col_names,
     is_date_col,

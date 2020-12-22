@@ -11,6 +11,33 @@ def group_by_keep_one(
     id_col: str = None,
     drop_duplicates: bool = False
 ) -> pd.DataFrame:
+    """
+    Given a :class:`pandas.DataFrame` object, group on the ``group_by_col`` column
+    and keep only the earliest or latest row in each group as determined by the date
+    in the ``date_col`` column.
+
+    :param df: the DataFrame to operate on
+    :param group_by_col: the DataFrame column to group on
+    :param date_col: the date column to determine which row is earliest or latest
+    :param keep: specify which row of each group to keep
+
+        ``all``
+             keep all rows
+
+        ``earliest``
+             in each group, keep only the earliest (i.e. oldest) row
+
+        ``latest``
+             in each group, keep only the latest (i.e. most recent) row
+
+    :param id_col: if ``drop_duplicates=True``, the column specified
+                   here will also be used for identifying duplicates
+    :param drop_duplicates: if ``True``, then if more than one row is determined to be
+                            earliest or or latest in each group, drop all duplicates
+                            except the first occurrence. If ``id_col`` is specified,
+                            then that column will also be used for identifying duplicates
+    """
+
     # groupby.first() and groupby.last() can't handle NaN values (ongoing bug)
     # use groupby.nth(0) and groupby.nth(-1) instead
 
@@ -18,7 +45,7 @@ def group_by_keep_one(
 
     _date_col = df.mac.to_datetime(date_col)
 
-    if keep not in ['all', 'first', 'latest']:
+    if keep not in ['all', 'earliest', 'latest']:
         raise ValueError("invalid keep option")
 
     _keep = keep
@@ -37,10 +64,10 @@ def group_by_keep_one(
         na_position='last'
     )
 
-    if _keep in {'first', 'latest'}:
+    if _keep in {'earliest', 'latest'}:
         pre_results = None
 
-        if _keep == 'first':
+        if _keep == 'earliest':
             pre_results = _df.groupby(_group_by_col, sort=False, as_index=False).nth(0)
         else:
             # keep == 'latest'

@@ -87,6 +87,15 @@ def test_dataobject():
     assert do.id_col == 'mp_id_col'
     assert do.df[do.id_col].equals(pd.Series([1, 2, 3]))
 
+    # blank id_col AND blank date_col
+    # creates an id_col called 'mp_id_col' with index starting from 1
+    do = DataObject(
+        name="test_name",
+        df=df
+    )
+    assert do.id_col == 'mp_id_col'
+    assert do.df[do.id_col].equals(pd.Series([1, 2, 3]))
+
     # dataframe lacks date column but created without error
     do = DataObject(
         name="test_name",

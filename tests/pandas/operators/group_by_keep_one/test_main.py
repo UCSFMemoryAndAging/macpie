@@ -14,26 +14,26 @@ output_dir = None
 cols_ignore = ['link_date', 'link_id']
 
 
-def test_keep_first_csv():
-    # test first
+def test_keep_earliest_csv():
+    # test earliest
     df = io.file_to_dataframe(data_dir / "instr1_primaryall.csv")
 
-    result = df.mac.group_by_keep_one(group_by_col='pidn', date_col='dcdate', keep='first')
+    result = df.mac.group_by_keep_one(group_by_col='pidn', date_col='dcdate', keep='earliest')
 
-    expected_result = io.file_to_dataframe(data_dir / "instr1_primaryfirst.csv")
+    expected_result = io.file_to_dataframe(data_dir / "instr1_primaryearliest.csv")
     expected_result = result.mac.assimilate(expected_result)
 
     util.testing.assert_dfs_equal(result, expected_result, cols_ignore=cols_ignore, output_dir=output_dir)
 
 
 @pytest.mark.slow
-def test_keep_first_xl():
-    # test first
+def test_keep_earliest_xl():
+    # test earliest
     df = io.file_to_dataframe(data_dir / "instr1_primaryall.xlsx")
 
-    result = df.mac.group_by_keep_one(group_by_col='pidn', date_col='dcdate', keep='first')
+    result = df.mac.group_by_keep_one(group_by_col='pidn', date_col='dcdate', keep='earliest')
 
-    expected_result = io.file_to_dataframe(data_dir / "instr1_primaryfirst.xlsx")
+    expected_result = io.file_to_dataframe(data_dir / "instr1_primaryearliest.xlsx")
     expected_result = result.mac.assimilate(expected_result)
 
     util.testing.assert_dfs_equal(result, expected_result, cols_ignore=cols_ignore, output_dir=output_dir)

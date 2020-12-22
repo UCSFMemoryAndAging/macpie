@@ -38,6 +38,14 @@ def test_get_files_from_dir():
     assert 'test.txt' in file_names
 
 
+def test_validate_filepath():
+    with pytest.raises(errors.PathError):
+        io.validate_filepath(current_dir)
+
+    p = io.validate_filepath(current_dir / "test.txt")
+    assert p.stem == "test"
+
+
 def test_validate_filepaths():
     (valid, invalid) = io.validate_filepaths([current_dir])
 

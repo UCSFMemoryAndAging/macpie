@@ -42,7 +42,7 @@ def test_query():
         operation=partial(pandas.group_by_keep_one,
                           group_by_col=do1.id2_col,
                           date_col=do1.date_col,
-                          keep='first',
+                          keep='earliest',
                           drop_duplicates=False
                           )
     )

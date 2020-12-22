@@ -20,6 +20,65 @@ def date_proximity(
     merge='partial',
     merge_suffixes=('_x', '_y')
 ) -> pd.DataFrame:
+    """
+    Links data across two :class:`pandas.DataFrame` objects by date proximity.
+
+    Specifically, a "left" DataFrame contains a timepoint anchor, and a "right" DataFrame
+    is linked to the left by retrieving all rows that match on a specified id col, and
+    whose specified date fields are within a certain time range of each other.
+
+    :param left: the DataFrame containing the timepoint anchor
+    :param right: the DataFrame to link
+    :param id_on: primary column to join on. These must be found in both
+                  DataFrames.
+    :param id_left_on: primary column to join on in the left DataFrame
+    :param id_right_on: primary column to join on in the right DataFrame
+    :param date_on: date columns to use for timepoint matching. These must
+                    be found in both DataFrames, and the one on the left
+                    will act as timepoint anchor.
+    :param date_left_on: date column in left DataFrame to act as timepoint anchor.
+    :param date_right_on: date column in the right DataFrame to compare with left's
+                          timepoint anchor
+    :param get: which rows of the right DataFrame to link in reference to the
+                timepoint anchor:
+
+        ``all``
+             keep all rows
+
+        ``closest``
+             get only the closest row that is within ``days`` days of the
+             right DataFrame timepoint anchor
+
+    :param when: which rows of the right DataFrame to link in temporal relation
+                 to the timepoint anchor
+
+        ``earlier``
+             get only rows that are earlier than the timepoint anchor
+
+        ``later``
+             get only rows that are lter (more recent) than the timepoint anchor
+
+        ``earlier_or_later``
+             get rows that are earlier or later than the timepoint anchor
+
+    :param days: the time range measured in days
+    :param left_link_id: the id column in the left DataFrame to act as the
+                         primary key of that data. This helps to ensure there
+                         are no duplicates in the left DataFrame (i.e. rows with
+                         the same ``id_left_on`` and ``date_left_on``)
+    :param dropna: whether to exclude rows that did not find any match
+    :param merge: which columns to include in result
+
+        ``partial``
+             include only columns from the right DataFrame
+
+        ``full``
+             include all columns from both left and right DataFrames
+
+    :param merge_suffixes: A length-2 sequence where the first element is
+                           suffix to add to the left DataFrame columns, and
+                           second element is suffix to add to the right DataFrame columns.
+    """
     op = _DateProximityOperation(
         left,
         right,

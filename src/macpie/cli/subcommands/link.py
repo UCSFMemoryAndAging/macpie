@@ -28,7 +28,7 @@ SHEETNAME_SUFFIX_SECONDARY = '_linked'
 @click.command()
 @click.option('-k', '--primary-keep',
               default='all',
-              type=click.Choice(['all', 'first', 'latest'], case_sensitive=False))
+              type=click.Choice(['all', 'earliest', 'latest'], case_sensitive=False))
 @click.option('-g', '--secondary-get',
               default='all',
               type=click.Choice(['all', 'closest'], case_sensitive=False))

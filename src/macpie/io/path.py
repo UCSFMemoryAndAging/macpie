@@ -1,7 +1,7 @@
 """Path utilities"""
 
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List, Tuple
 
 from macpie import errors, util
 
@@ -27,14 +27,26 @@ def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
     return final_dir
 
 
-def get_files_from_dir(p):
-    """Gets files only from a specified path
+def get_files_from_dir(d: Path) -> List[Path]:
+    """
+    Get all files only from directory
+
+    :param d: directory
+
     :return: list of files
     """
-    return [f.resolve() for f in Path(p).iterdir() if f.is_file()]
+    return [f.resolve() for f in Path(d).iterdir() if f.is_file()]
 
 
-def validate_filepath(p, allowed_file: Callable = None):
+def validate_filepath(p: Path, allowed_file: Callable = None) -> Path:
+    """
+    Validate a path to a file.
+
+    :param p: file path
+    :param allowed_file: a function that returns True if considered valid
+
+    :return: file path is valid
+    """
     if not p.exists():
         raise errors.PathError('ERROR: File does not exist.')
     if p.is_dir():
@@ -45,9 +57,16 @@ def validate_filepath(p, allowed_file: Callable = None):
     return p
 
 
-def validate_filepaths(ps, allowed_file: Callable = None):
-    """ps should be an iterable, like a list of files"""
+def validate_filepaths(ps: [Path], allowed_file: Callable = None) -> Tuple[list, list]:
+    """
+    Validate a container of file paths.
 
+    :param ps: container of file paths
+    :param allowed_file: a function that returns True if considered valid
+
+    :return: Length-2 tuple where the first element is list of valid files,
+             and second element is list of invliad files.
+    """
     if allowed_file is None:
         def allowed_file(p):
             return True

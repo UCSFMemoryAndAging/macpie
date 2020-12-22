@@ -13,7 +13,7 @@ from macpie.cli.common import allowed_file, format_basic
 @click.command()
 @click.option('-k', '--keep',
               default='all',
-              type=click.Choice(['all', 'first', 'latest'], case_sensitive=False))
+              type=click.Choice(['all', 'earliest', 'latest'], case_sensitive=False))
 @click.argument('primary',
                 nargs=-1,
                 type=ClickPath(exists=True, file_okay=True, dir_okay=True))

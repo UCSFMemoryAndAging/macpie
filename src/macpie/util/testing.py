@@ -8,6 +8,14 @@ from . import datetime
 
 
 def assert_dfs_equal(df1, df2, cols_ignore=None, output_dir=None):
+    """
+    For testing equality of :class:`pandas.DataFrame` objects
+
+    :param df1: left DataFrame to compare
+    :param df2: right DataFrame to compare
+    :param cols_ignore: DataFrame columns to ignore in comparison
+    :param output_dir: directory to write row difference results to
+    """
     df2_assimilated = df1.mac.assimilate(df2)
 
     # check columns
@@ -30,6 +38,12 @@ def assert_dfs_equal(df1, df2, cols_ignore=None, output_dir=None):
 
 
 def assert_excels_equal(wb1, wb2):
+    """
+    For testing equality of :class:`openpyxl.workbook.workbook.Workbook` objects
+
+    :param wb1: left Workbook to compare
+    :param wb2: right Workbook to compare
+    """
     # same sheets?
     assert set(wb1.sheetnames) == set(wb2.sheetnames)
 
