@@ -46,6 +46,9 @@ def validate_filepath(p: Path, allowed_file: Callable = None) -> Path:
     :param allowed_file: a function that returns True if considered valid
 
     :return: file path is valid
+
+    :raises: :class:`macpie.errors.PathError` if file doesn't exist,
+             is a directory, or not allowed in ``allowed_file``
     """
     if not p.exists():
         raise errors.PathError('ERROR: File does not exist.')

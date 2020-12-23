@@ -10,8 +10,9 @@ from macpie import errors, io
 
 class DataObject:
     """
-    Two-dimensional tabular data with key fields common in
-    clinical research data. The primary MACPie data structure.
+    Two-dimensional tabular data with key fields commonly used in
+    clinical research data: subject ID, form ID, and date.
+    The primary MACPie data structure.
     """
 
     def __init__(
@@ -32,8 +33,8 @@ class DataObject:
         self.df = self._df_orig = df
 
         #: The column in the dataframe representing the primary key/index
-        #: of the DataObject. Typically used for unique IDs of a subject's
-        #: assessment, assay, or form data.
+        #: of the DataObject. Typically used for unique IDs of a clinical
+        #: research subject's data record (e.g. form, assessment, assay)
         self.id_col = id_col
 
         #: The column in the dataframe representing the primary date column

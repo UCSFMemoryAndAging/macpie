@@ -1,0 +1,14 @@
+
+dl {
+    margin-bottom: 15px;
+}
+
+code.descname {
+    background-color: transparent;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+code.descclassname {
+    background-color: transparent;
+}

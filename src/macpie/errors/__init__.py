@@ -41,10 +41,17 @@ class MergeError(ValueError):
 
 
 class ParserError(Exception):
+    """
+    Error raised when parsing file.
+    """
     def __init__(self, message):
         self.message = message
 
 
 class PathError(Exception):
+    """
+    Generic error related to :class:`pathlib.Path`
+    """
+
     def __init__(self, message):
         self.message = message

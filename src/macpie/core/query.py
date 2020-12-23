@@ -10,7 +10,17 @@ from macpie.core import DataObject, Datasheet
 
 class Query:
     """
-    A query representation stored in a directed graph structure.
+    A data structure representing a query using a directed graph structure.
+
+    The query is composed of nodes and directed edges (i.e. the edges
+    are an ordered pair of nodes). Nodes and edges can have operations attached
+    to them. A node can attach a unary operation (i.e. the operation takes a single input).
+    An edge can attach a binary operation (i.e. the operation requires two inputs)
+    with the left and right node of the edge representing the left and right operand of
+    the operation, respectively.
+
+    When the query is executed, all operations are executed, and the operation results are
+    attached to the node and edges themselves.
     """
 
     SHEETNAME_QUERY_DATAOBJECTS : ClassVar[str] = '_query_dataobjects'

@@ -13,8 +13,7 @@ idna==2.10                # via requests
 imagesize==1.2.0          # via sphinx
 jinja2==2.11.2            # via sphinx
 markupsafe==1.1.1         # via jinja2
-packaging==20.8           # via -r requirements/docs.in, pallets-sphinx-themes, sphinx
-pallets-sphinx-themes==1.2.3  # via -r requirements/docs.in
+packaging==20.8           # via -r requirements/docs.in, sphinx
 pygments==2.7.3           # via sphinx, sphinx-tabs
 pyparsing==2.4.7          # via packaging
 pytz==2020.4              # via babel
@@ -22,7 +21,7 @@ requests==2.25.1          # via sphinx
 snowballstemmer==2.0.0    # via sphinx
 sphinx-issues==1.2.0      # via -r requirements/docs.in
 sphinx-tabs==1.3.0        # via -r requirements/docs.in
-sphinx==3.3.1             # via -r requirements/docs.in, pallets-sphinx-themes, sphinx-issues, sphinx-tabs, sphinxcontrib-log-cabinet
+sphinx==3.4.0             # via -r requirements/docs.in, sphinx-issues, sphinx-tabs, sphinxcontrib-log-cabinet
 sphinxcontrib-applehelp==1.0.2  # via sphinx
 sphinxcontrib-devhelp==1.0.2  # via sphinx
 sphinxcontrib-htmlhelp==1.0.3  # via sphinx
