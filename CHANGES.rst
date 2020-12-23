@@ -3,7 +3,7 @@
 Version 0.2
 -----------
 
-Released 2020-12-18
+Released 2020-12-23
 
 -   First public preview release.
 -   Add :ref:`merge <command-merge>` command

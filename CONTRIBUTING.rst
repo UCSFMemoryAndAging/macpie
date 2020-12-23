@@ -156,9 +156,9 @@ run all of the environments. Then run:
 .. code-block:: text
 
     $ tox
-    # or "tox -r" to force recreation of virtual environment
+    # or "tox -r" to force recreation of virtual environments
 
-If you aren't set up to install multiple version of Python, I recommend using `pyenv`_.
+If you aren't already set up to install multiple version of Python, I recommend using `pyenv`_.
 
 .. _pyenv: https://github.com/pyenv/pyenv
 
@@ -171,11 +171,29 @@ If you aren't set up to install multiple version of Python, I recommend using `p
         $ pyenv install 3.7.9
         $ pyenv install 3.8.5
     
--   Create virtual environment
+-   In your local repo root:
 
     .. code-block:: text
 
-        $ pyenv virtualenv
+        $ pyenv local 3.8.5 3.7.9 3.6.12
+
+    This will set local application-specific Python version(s) (in order of preference)
+    by writing the version name(s) to a ``.python-version`` file in the current directory.
+
+    Now you can execute the full test suite with ``tox``.
+
+    .. code-block:: text
+
+        $ tox
+
+    When you're done and/or want to unset the local version:
+
+    .. code-block:: text
+
+        $ pyenv local --unset
+
+Read more about `tox <https://tox.readthedocs.io>`__.
+
 
 Running test coverage
 ~~~~~~~~~~~~~~~~~~~~~
