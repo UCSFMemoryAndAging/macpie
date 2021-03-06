@@ -113,6 +113,8 @@ Utility Functions
 
 .. autofunction:: macpie.util.datetime.get_current_datetime_ms_str
 
+.. autofunction:: macpie.util.list.chunks
+
 .. autofunction:: macpie.util.list.diff
 
 .. autofunction:: macpie.util.list.is_list_like

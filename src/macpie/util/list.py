@@ -1,6 +1,6 @@
 def chunks(a, n):
     """
-    Generator yielding successive n-sized chunks from list ``a``.
+    Generator yielding successive n-sized chunks from list ``a``. ::
 
         $ list = [1, 2, 3, 4, 5, 6, 7]
         $ chunks = util.list.chunks(list, 3)

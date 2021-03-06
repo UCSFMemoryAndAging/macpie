@@ -316,7 +316,8 @@ across various data objects to merge together into one dataset (thereby removing
 The output file of the ``link`` command includes a worksheet named ``_fields_available``. This provides
 a view of all the fields across all the data objects that you input into the ``link`` command. By placing an ``"x"``
 next to a particular field, the ``merge`` command will attempt to merge only those fields you marked into one single dataset.
-The linking fields (i.e. PIDN, DCDate, InstrID) will always be included.
+The linking fields (i.e. ``id_col``, ``date_col``, and ``id2_col`` of the primary argument in the ``link`` command, 
+e.g. ``PIDN``, ``DCDate``, ``InstrID``) will always be included.
 
 NOTE: The output file of this command can also be an input to this same command.
 
