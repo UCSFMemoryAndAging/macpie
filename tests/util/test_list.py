@@ -1,6 +1,18 @@
 from macpie import util
 
 
+def test_chunks():
+    l1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    n1 = 3
+
+    chunks = util.list.chunks(l1, n1)
+
+    assert next(chunks) == [1, 2, 3]
+    assert next(chunks) == [4, 5, 6]
+    assert next(chunks) == [7, 8, 9]
+    assert next(chunks) == [10]
+
+
 def test_is_list_like():
 
     l1 = ['a', 'b', 'c']

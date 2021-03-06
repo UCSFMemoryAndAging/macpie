@@ -1,3 +1,20 @@
+def chunks(a, n):
+    """
+    Generator yielding successive n-sized chunks from list ``a``.
+
+        $ list = [1, 2, 3, 4, 5, 6, 7]
+        $ chunks = util.list.chunks(list, 3)
+        $ next(chunks) == [1, 2, 3]
+        $ next(chunks) == [4, 5, 6]
+        $ next(chunks) == [7]
+
+    :param a: list
+    :param n: size of chunks
+    """
+    for i in range(0, len(a), n):
+        yield a[i:i + n]
+
+
 def diff(a, b):
     """
     Return list of items in ``a`` that are not in ``b``.
