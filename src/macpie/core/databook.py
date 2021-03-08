@@ -4,6 +4,8 @@ from typing import ClassVar
 import openpyxl as pyxl
 import pandas as pd
 
+from macpie.pandas import MacDataFrameAccessor
+
 from .datasheet import Datasheet
 
 
@@ -97,7 +99,7 @@ class Databook:
             pd.DataFrame(log_sheets).mac.json_dumps_contents()
         ).to_excel(writer)
 
-        writer.save()
+        writer.close()
         self._format_excel(filepath)
 
     def _format_excel(self, filepath):

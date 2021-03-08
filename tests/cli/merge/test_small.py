@@ -50,7 +50,7 @@ def create_fields_available(filepath):
 
     writer = pd.ExcelWriter(str(filepath), engine='openpyxl', mode='a')
     fields_available_ds.to_excel(writer)
-    writer.save()
+    writer.close()
 
 
 def test_small_with_merge(link_small_with_merge, helpers, tmp_path):
