@@ -1,6 +1,7 @@
 import re
 
 from macpie import util
+from macpie.pandas import MacDataFrameAccessor
 
 
 SHEETNAME_CHARS_LIMIT = 31

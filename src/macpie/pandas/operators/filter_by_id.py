@@ -2,6 +2,8 @@ from typing import List
 
 import pandas as pd
 
+from macpie.pandas import MacDataFrameAccessor
+
 
 def filter_by_id(
     df: pd.DataFrame,

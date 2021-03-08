@@ -6,6 +6,7 @@ import pandas as pd
 
 from macpie import util
 from macpie.core import DataObject, Datasheet
+from macpie.pandas import MacDataFrameAccessor
 
 
 class Query:

@@ -13,7 +13,7 @@ install Anaconda, a popular cross platform distribution of Python.
 Python version support
 ----------------------
 
-Python version 3.6 or greater is required.
+Python version 3.7 or greater is required.
 
 
 Installing MACPie using your existing Python installation

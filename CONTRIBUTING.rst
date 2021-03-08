@@ -150,7 +150,7 @@ Running full test suite
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The full test suite takes a long time to run because it tests multiple combinations
-of Python and dependencies. You need to have Python 3.6. 3.7, and 3.8 installed to
+of Python and dependencies. You need to have Python 3.7 and 3.8 installed to
 run all of the environments. Then run:
 
 .. code-block:: text
@@ -167,7 +167,6 @@ If you aren't already set up to install multiple version of Python, I recommend 
 
     .. code-block:: text
 
-        $ pyenv install 3.6.12
         $ pyenv install 3.7.9
         $ pyenv install 3.8.5
     
@@ -175,7 +174,7 @@ If you aren't already set up to install multiple version of Python, I recommend 
 
     .. code-block:: text
 
-        $ pyenv local 3.8.5 3.7.9 3.6.12
+        $ pyenv local 3.8.5 3.7.9
 
     This will set local application-specific Python version(s) (in order of preference)
     by writing the version name(s) to a ``.python-version`` file in the current directory.

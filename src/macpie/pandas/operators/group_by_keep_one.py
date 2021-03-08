@@ -1,6 +1,7 @@
 import pandas as pd
 
 from macpie import util
+from macpie.pandas import MacDataFrameAccessor
 
 
 def group_by_keep_one(
