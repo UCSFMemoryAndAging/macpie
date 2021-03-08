@@ -5,8 +5,9 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from macpie import util
-from macpie.core import MACPieJSONEncoder, MACPieJSONDecoder
+from macpie import io, util
+from macpie.io.json import MACPieJSONDecoder, MACPieJSONEncoder
+
 
 COL_KEYWORDS = {'_abs_diff_days', '_diff_days', '_duplicates', '_merge'}
 

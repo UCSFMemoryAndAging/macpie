@@ -6,7 +6,7 @@ import click
 import openpyxl as pyxl
 
 from macpie import core, io, util
-
+from macpie.io.json import MACPieJSONEncoder
 
 def allowed_file(p):
     """Determines if a file is considered allowed
@@ -37,7 +37,7 @@ def iterate_params(params, jsonify: bool = False):
             results.append((k, v))
 
     if jsonify:
-        return [(r[0], json.dumps(r[1], cls=core.MACPieJSONEncoder)) for r in results]
+        return [(r[0], json.dumps(r[1], cls=MACPieJSONEncoder)) for r in results]
     return results
 
 
