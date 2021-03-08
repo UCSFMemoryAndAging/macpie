@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from macpie import io, util
+from macpie import util
 from macpie.io.json import MACPieJSONDecoder, MACPieJSONEncoder
 
 

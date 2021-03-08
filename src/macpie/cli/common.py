@@ -5,8 +5,9 @@ import platform
 import click
 import openpyxl as pyxl
 
-from macpie import core, io, util
+from macpie import io, util
 from macpie.io.json import MACPieJSONEncoder
+
 
 def allowed_file(p):
     """Determines if a file is considered allowed

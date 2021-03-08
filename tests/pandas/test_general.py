@@ -41,7 +41,7 @@ def test_any_duplicates():
     }
     df = pd.DataFrame(data=d)
 
-    assert df['_duplicates'].any() == False
+    assert not df['_duplicates'].any()
 
     d = {
         '_duplicates': [True, False, False],
@@ -50,7 +50,7 @@ def test_any_duplicates():
     }
     df = pd.DataFrame(data=d)
 
-    assert df.mac.any_duplicates('_duplicates') == True
+    assert df.mac.any_duplicates('_duplicates')
 
     d = {
         'col1': ['a', 'b', 'c'],
@@ -60,12 +60,12 @@ def test_any_duplicates():
     df = pd.DataFrame(data=d)
 
     # nulls by default count as duplicates
-    assert df.mac.any_duplicates('col2') == True
-    assert df.mac.any_duplicates('col3') == True
+    assert df.mac.any_duplicates('col2')
+    assert df.mac.any_duplicates('col3')
 
     # don't count nulls as duplicates
-    assert df.mac.any_duplicates('col2', ignore_nan=True) == False
-    assert df.mac.any_duplicates('col3', ignore_nan=True) == False
+    assert not df.mac.any_duplicates('col2', ignore_nan=True)
+    assert not df.mac.any_duplicates('col3', ignore_nan=True)
 
 
 def test_assimilate():
