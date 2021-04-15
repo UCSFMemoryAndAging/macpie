@@ -1,6 +1,9 @@
 import pandas as pd
 
-from macpie import errors, util
+from macpie._config import get_option
+from macpie.exceptions import MergeError
+from macpie.tools import sequence as seqtools
+from macpie.tools import validator as validatortools
 
 
 def merge(
@@ -9,7 +12,7 @@ def merge(
     on=None,
     left_on=None,
     right_on=None,
-    merge_suffixes=('_x', '_y'),
+    merge_suffixes=get_option("operators.binary.column_suffixes"),
     add_suffixes=False,
     add_indexes=(None, None)
 ) -> pd.DataFrame:
@@ -64,7 +67,7 @@ class _MergeOperation:
         on=None,
         left_on=None,
         right_on=None,
-        merge_suffixes=('_x', '_y'),
+        merge_suffixes=get_option("operators.binary.column_suffixes"),
         add_suffixes=False,
         add_indexes=(None, None)
     ):
@@ -72,13 +75,13 @@ class _MergeOperation:
         self.left = self.orig_left = left
         self.right = self.orig_right = right
 
-        self.on = util.list.maybe_make_list(on)
-        self.left_on = util.list.maybe_make_list(left_on)
-        self.right_on = util.list.maybe_make_list(right_on)
+        self.on = seqtools.maybe_make_list(on)
+        self.left_on = seqtools.maybe_make_list(left_on)
+        self.right_on = seqtools.maybe_make_list(right_on)
 
         self.merge_suffixes = merge_suffixes
 
-        self.add_suffixes = util.validators.validate_bool_kwarg(add_suffixes, "add_suffixes")
+        self.add_suffixes = validatortools.validate_bool_kwarg(add_suffixes, "add_suffixes")
 
         self.add_indexes = add_indexes
 
@@ -110,7 +113,7 @@ class _MergeOperation:
     def _validate_specification(self):
         if self.on is not None:
             if self.left_on is not None or self.right_on is not None:
-                raise errors.MergeError(
+                raise MergeError(
                     'Must pass argument "on" OR "left_on" '
                     'and "right_on", but not a combination of both.'
                 )
@@ -122,12 +125,12 @@ class _MergeOperation:
             self.left_on = self.left.mac.get_col_names(self.left_on)
             self.right_on = self.right.mac.get_col_names(self.right_on)
         else:
-            raise errors.MergeError(
+            raise MergeError(
                 'Must pass argument "on" OR "left_on" '
                 'and "right_on", but not a combination of both.'
             )
 
-        if not util.list.is_list_like(self.merge_suffixes):
+        if not seqtools.is_list_like(self.merge_suffixes):
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )
@@ -139,7 +142,7 @@ class _MergeOperation:
         self._left_suffix = self.merge_suffixes[0]
         self._right_suffix = self.merge_suffixes[1]
 
-        if not util.list.is_list_like(self.add_indexes):
+        if not seqtools.is_list_like(self.add_indexes):
             raise ValueError(
                 "'add_indexes' needs to be a tuple or list of two values (e.g. ('left','right') or (None,'right'))"
             )

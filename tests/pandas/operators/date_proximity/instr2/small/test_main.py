@@ -2,30 +2,30 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie import io, util
+from macpie.pandas import file_to_dataframe
+from macpie.testing import assert_dfs_equal
 
 data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/pandas/operators/date_proximity/instr2/small/").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None
 
+cols_ignore = []
+
 
 def test_instr2_small():
 
-    cols_ignore = ['PIDN_link', 'DCDate_link', 'VType', 'DayDiff', 'link_date']
-
     dfs_dict = pd.read_excel(
-        data_dir / "instr2_small.xlsx",
+        current_dir / "instr2_small.xlsx",
         sheet_name=[
             'primary',
             'expected_results'
-        ],
-        engine='openpyxl'
+        ]
     )
 
     primary = dfs_dict['primary']
-    secondary_instr1 = io.file_to_dataframe(data_dir / "instr1_all.csv")
+    secondary_instr1 = file_to_dataframe(data_dir / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     small_result = primary.mac.date_proximity(
@@ -38,9 +38,5 @@ def test_instr2_small():
         left_link_id='instrid'
     )
 
-    small_result.drop(columns=['PIDN'], inplace=True)
-    small_result.rename(columns={'PIDN_link': 'PIDN', 'InstrID_link': 'link_id'}, inplace=True)
-    # small_result.to_excel(current_dir / "small_result.xlsx", index=False)
-
     small_expected_result = dfs_dict['expected_results']
-    util.testing.assert_dfs_equal(small_result, small_expected_result, cols_ignore=cols_ignore)
+    assert_dfs_equal(small_result, small_expected_result, cols_ignore=cols_ignore)

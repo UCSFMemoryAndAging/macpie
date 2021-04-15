@@ -3,13 +3,14 @@ from shutil import copy
 
 from click.testing import CliRunner
 import openpyxl as pyxl
-import pandas as pd
 import pytest
 
-from macpie import util
+from macpie._config import get_option
+from macpie.core.datasetfields import DatasetFields
+from macpie.io.excel import MACPieExcelWriter
+from macpie.testing import assert_dfs_equal
 
 from macpie.cli.main import main
-from macpie.cli.subcommands import link
 
 
 current_dir = Path("tests/cli/merge/").resolve()
@@ -18,48 +19,49 @@ current_dir = Path("tests/cli/merge/").resolve()
 output_dir = None
 
 
-def create_fields_available(filepath):
+def create_available_fields(filepath):
     # manually create some fields to merge and test
     # obviously these fields should be available from the link results file
-    new_fields_available = [
-        ('full', 'link_date', 'x'),
-        ('full', 'link_id', 'x'),
-        ('full', 'DCStatus', 'x'),
-        ('full', 'Col1', 'x'),
-        ('full', 'Col2', 'x'),
-        ('full', 'Col3', 'x'),
-        ('instr2_all', 'PIDN', 'x'),
-        ('instr2_all', 'DCDate', 'x'),
-        ('instr2_all', 'DCStatus', 'x'),
-        ('instr2_all', 'InstrID', 'x'),
-        ('instr2_all', 'Col1', 'x'),
-        ('instr2_all', 'Col2', 'x'),
-        ('instr2_all', 'Col3', 'x'),
-        ('instr3_all', 'PIDN', 'x'),
-        ('instr3_all', 'DCDate', 'x'),
-        ('instr3_all', 'DCStatus', 'x'),
-        ('instr3_all', 'InstrID', 'x'),
-        ('instr3_all', 'Col1', 'x'),
-        ('instr3_all', 'Col2', 'x'),
-        ('instr3_all', 'Col3', 'x')
+    available_fields_rows = [
+        ('full', 'link_date'),
+        ('full', 'link_id'),
+        ('full', 'DCStatus'),
+        ('full', 'Col1'),
+        ('full', 'Col2'),
+        ('full', 'Col3'),
+        ('instr2_all', 'PIDN'),
+        ('instr2_all', 'DCDate'),
+        ('instr2_all', 'DCStatus'),
+        ('instr2_all', 'InstrID'),
+        ('instr2_all', 'Col1'),
+        ('instr2_all', 'Col2'),
+        ('instr2_all', 'Col3'),
+        ('instr3_all', 'PIDN'),
+        ('instr3_all', 'DCDate'),
+        ('instr3_all', 'DCStatus'),
+        ('instr3_all', 'InstrID'),
+        ('instr3_all', 'Col1'),
+        ('instr3_all', 'Col2'),
+        ('instr3_all', 'Col3')
     ]
-    fields_available_ds = link.LinkQuery.create_fields_available_sheet(new_fields_available)
+
+    available_fields = DatasetFields(*available_fields_rows, title=get_option("sheet.name.available_fields"))
+    available_fields.append_col_fill("x", header=get_option("column.to_merge"))
 
     wb = pyxl.load_workbook(filepath)
-    del wb[link.SHEETNAME_FIELDS_AVAILABLE]
+    del wb[get_option("sheet.name.available_fields")]
     wb.save(filepath)
 
-    writer = pd.ExcelWriter(str(filepath), engine='openpyxl', mode='a')
-    fields_available_ds.to_excel(writer)
-    writer.close()
+    with MACPieExcelWriter(filepath, mode='a') as writer:
+        available_fields.to_excel(writer)
 
 
 @pytest.mark.slow
-def test_full_no_merge(link_full_no_merge, helpers, tmp_path):
+def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
     expected_result = helpers.read_merged_results(current_dir / "full_expected_results.xlsx")
 
-    copied_file = Path(copy(link_full_no_merge, tmp_path))
-    create_fields_available(copied_file)
+    copied_file = Path(copy(cli_link_full_no_merge, tmp_path))
+    create_available_fields(copied_file)
 
     runner = CliRunner()
     cli_args = ['merge', str(copied_file.resolve())]
@@ -76,9 +78,17 @@ def test_full_no_merge(link_full_no_merge, helpers, tmp_path):
             copy(results_path, current_dir)
 
         results_wb = pyxl.load_workbook(results_path)
-        expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
+        # expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
 
-        assert set(results_wb.sheetnames) == set(expected_results_wb.sheetnames)
+        expected_sheetnames = [
+            'MERGED_RESULTS',
+            'instr2_all_DUPS',
+            'instr3_all_DUPS',
+            get_option("sheet.name.available_fields"),
+            get_option("sheet.name.collection_info")
+        ]
+
+        assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)
 
         results = helpers.read_merged_results(results_path)
-        util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
+        assert_dfs_equal(results, expected_result, output_dir=output_dir)

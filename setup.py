@@ -10,10 +10,11 @@ setup(
     version=version,
     install_requires=[
         "click>=7.1.2",
-        "matplotlib>=3.3.4",
         "networkx>=2.5",
         "openpyxl>=3.0.6",
         "pandas>=1.2.3",
+        "tablib>=3.0.0",
+        "xlsxwriter>=1.3.7"
     ],
     extras_require={"dotenv": ["python-dotenv"]},
 )

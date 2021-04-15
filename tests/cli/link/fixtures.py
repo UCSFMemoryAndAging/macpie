@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from shutil import copy
 from click.testing import CliRunner
 import pytest
 
@@ -11,12 +11,11 @@ current_dir = Path("tests/cli/link/").resolve()
 # output_dir = current_dir
 output_dir = None
 
-cols_ignore = ['PIDN', 'VType', '_merge', '_abs_diff_days', '_duplicates']
-
 
 @pytest.fixture(scope="session")
-def link_small_with_merge():
+def cli_link_small_with_merge(tmp_path_factory):
     # macpie link -g closest tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+
     runner = CliRunner()
 
     cli_args = [
@@ -37,12 +36,14 @@ def link_small_with_merge():
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob('**/result*xlsx'))
-        yield results_path.resolve()
+        return Path(copy(results_path.resolve(),
+                    tmp_path_factory.mktemp("cli_link_small_with_merge")))
 
 
 @pytest.fixture(scope="session")
-def link_small_no_merge():
-    # macpie link -g closest --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+def cli_link_small_no_merge(tmp_path_factory):
+    # macpie link -g closest --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+
     runner = CliRunner()
 
     cli_args = [
@@ -64,12 +65,14 @@ def link_small_no_merge():
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob('**/result*xlsx'))
-        yield results_path.resolve()
+        return Path(copy(results_path.resolve(),
+                         tmp_path_factory.mktemp("cli_link_small_no_merge")))
 
 
 @pytest.fixture(scope="session")
-def link_full_no_merge():
-    # macpie link -g closest --no-merge-results tests/cli/link/full.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+def cli_link_full_no_merge(tmp_path_factory):
+    # macpie link -g closest --no-merge-results tests/cli/link/full.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+
     runner = CliRunner()
 
     cli_args = [
@@ -91,4 +94,5 @@ def link_full_no_merge():
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob('**/result*xlsx'))
-        yield results_path.resolve()
+        return Path(copy(results_path.resolve(),
+                         tmp_path_factory.mktemp("lcli_ink_full_no_merge")))

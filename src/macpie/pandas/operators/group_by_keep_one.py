@@ -1,7 +1,7 @@
 import pandas as pd
 
-from macpie import util
-from macpie.pandas import MacDataFrameAccessor
+from macpie._config import get_option
+from macpie.tools import validator as validatortools
 
 
 def group_by_keep_one(
@@ -42,54 +42,53 @@ def group_by_keep_one(
     # groupby.first() and groupby.last() can't handle NaN values (ongoing bug)
     # use groupby.nth(0) and groupby.nth(-1) instead
 
-    _group_by_col = df.mac.get_col_name(group_by_col)
+    group_by_col = df.mac.get_col_name(group_by_col)
 
-    _date_col = df.mac.to_datetime(date_col)
+    date_col = df.mac.to_datetime(date_col)
 
     if keep not in ['all', 'earliest', 'latest']:
         raise ValueError("invalid keep option")
 
-    _keep = keep
+    id_col = df.mac.get_col_name(id_col) if id_col is not None else None
 
-    _id_col = df.mac.get_col_name(id_col) if id_col is not None else None
+    drop_duplicates = validatortools.validate_bool_kwarg(drop_duplicates, "drop_duplicates")
 
-    _drop_duplicates = util.validators.validate_bool_kwarg(drop_duplicates, "drop_duplicates")
-
-    _cols = [_group_by_col, _date_col]
+    cols = [group_by_col, date_col]
 
     # first drop rows where group_by col or date col is na and re-index
-    _df = df.dropna(subset=_cols).reset_index(drop=True)
+    df = df.dropna(subset=cols).reset_index(drop=True)
 
-    _df = _df.sort_values(
-        by=_cols + [_id_col] if _id_col is not None else _cols,
+    df = df.sort_values(
+        by=cols + [id_col] if id_col is not None else cols,
         na_position='last'
     )
 
-    if _keep in {'earliest', 'latest'}:
+    if keep in {'earliest', 'latest'}:
         pre_results = None
 
-        if _keep == 'earliest':
-            pre_results = _df.groupby(_group_by_col, sort=False, as_index=False).nth(0)
+        if keep == 'earliest':
+            pre_results = df.groupby(group_by_col, sort=False, as_index=False).nth(0)
         else:
             # keep == 'latest'
-            pre_results = _df.groupby(_group_by_col, sort=False, as_index=False).nth(-1)
+            pre_results = df.groupby(group_by_col, sort=False, as_index=False).nth(-1)
 
         # in case there are duplicates, keep them
 
-        pre_results = pre_results.filter(items=_cols)
-        _df = pd.merge(
-            _df,
+        pre_results = pre_results.filter(items=cols)
+        df = pd.merge(
+            df,
             pre_results,
             how='inner',
-            on=_cols,
+            on=cols,
             indicator=False
         )
 
-    if _drop_duplicates:
-        _df = _df.drop_duplicates(
-            subset=_cols + [_id_col] if _id_col is not None else _cols,
-            keep='first',
-            ignore_index=True
-        )
+    dup_cols = cols + [id_col] if id_col is not None else cols
+    dups = df.duplicated(subset=dup_cols, keep=False)
+    if dups.any():
+        if drop_duplicates:
+            df = df.drop_duplicates(subset=dup_cols, keep='first', ignore_index=True)
+        else:
+            df.mac.insert(get_option("column.system.duplicates"), dups)
 
-    return _df
+    return df

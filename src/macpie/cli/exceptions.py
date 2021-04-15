@@ -1,7 +1,7 @@
-from macpie import errors
+from macpie.exceptions import ParserError
 
 
-class MergeParserError(errors.ParserError):
+class MergeParserError(ParserError):
     """
     Error raised parsing file for merge.
     """

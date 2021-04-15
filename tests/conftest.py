@@ -4,23 +4,28 @@ import openpyxl as pyxl
 import pandas as pd
 import pytest
 
-from macpie.pandas import MacDataFrameAccessor
-from macpie.cli.subcommands import link
+from macpie._config import get_option, set_option
+from macpie import MacDataFrameAccessor
 
 # import fixtures needed across files
-from tests.cli.link.fixtures import link_full_no_merge, link_small_no_merge, link_small_with_merge
+from tests.cli.keepone.fixtures import cli_keepone_big
+from tests.cli.link.fixtures import (
+    cli_link_full_no_merge,
+    cli_link_small_no_merge,
+    cli_link_small_with_merge
+)
 
 
 class Helpers:
     @staticmethod
-    def read_merged_results(f, sheetname: str = link.SHEETNAME_MERGED_RESULTS):
+    def read_merged_results(f, sheetname: str = get_option("sheet.name.merged_results")):
         filename = str(f)
         wb = pyxl.load_workbook(filename)
         ws = wb[sheetname]
-        if ws['A2'].value == link.COL_HEADER_ROW_INDEX:
-            return pd.read_excel(filename, index_col=0, header=[0, 1], engine='openpyxl')
+        if ws['A2'].value == get_option("excel.row_index_header"):
+            return pd.read_excel(filename, index_col=0, header=[0, 1])
         else:
-            return pd.read_excel(filename, index_col=None, header=[0, 1], engine='openpyxl')
+            return pd.read_excel(filename, index_col=None, header=[0, 1])
 
 
 @pytest.fixture

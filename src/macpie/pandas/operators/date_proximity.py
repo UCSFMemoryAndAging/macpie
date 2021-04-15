@@ -1,6 +1,11 @@
+from typing import Optional
+
 import pandas as pd
 
-from macpie import errors, util
+from macpie._config import get_option
+from macpie.exceptions import DateProximityError
+from macpie.tools import sequence as seqtools
+from macpie.tools import validator as validatortools
 
 
 def date_proximity(
@@ -17,8 +22,10 @@ def date_proximity(
     days: int = 90,
     left_link_id=None,
     dropna: bool = False,
+    drop_duplicates: bool = False,
+    duplicates_indicator: bool = False,
     merge='partial',
-    merge_suffixes=('_x', '_y')
+    merge_suffixes=get_option("operators.binary.column_suffixes")
 ) -> pd.DataFrame:
     """
     Links data across two :class:`pandas.DataFrame` objects by date proximity.
@@ -93,6 +100,8 @@ def date_proximity(
         days=days,
         left_link_id=left_link_id,
         dropna=dropna,
+        drop_duplicates=drop_duplicates,
+        duplicates_indicator=duplicates_indicator,
         merge=merge,
         merge_suffixes=merge_suffixes
     )
@@ -100,9 +109,6 @@ def date_proximity(
 
 
 class _DateProximityOperation:
-
-    _left_suffix = "_x"
-    _right_suffix = "_y"
 
     def __init__(
         self,
@@ -119,15 +125,17 @@ class _DateProximityOperation:
         days: int = 90,
         left_link_id=None,
         dropna: bool = False,
+        drop_duplicates: bool = False,
+        duplicates_indicator: bool = False,
         merge='partial',
-        merge_suffixes=("_x", "_y")
+        merge_suffixes=get_option("operators.binary.column_suffixes")
     ):
         self.left = self.orig_left = left
         self.right = self.orig_right = right
 
-        self.id_on = util.list.maybe_make_list(id_on)
-        self.id_left_on = util.list.maybe_make_list(id_left_on)
-        self.id_right_on = util.list.maybe_make_list(id_right_on)
+        self.id_on = seqtools.maybe_make_list(id_on)
+        self.id_left_on = seqtools.maybe_make_list(id_left_on)
+        self.id_right_on = seqtools.maybe_make_list(id_right_on)
 
         self.date_on = date_on
         self.date_left_on = date_left_on
@@ -139,40 +147,42 @@ class _DateProximityOperation:
 
         self.left_link_id = left_link_id
 
-        self.dropna = util.validators.validate_bool_kwarg(dropna, "dropna")
+        self.dropna = validatortools.validate_bool_kwarg(dropna, "dropna")
+        self.drop_duplicates = validatortools.validate_bool_kwarg(drop_duplicates, "drop_duplicates")
+
+        self.duplicates_indicator = duplicates_indicator
+
+        self.duplicates_indicator_name: Optional[str]
+        if isinstance(self.duplicates_indicator, str):
+            self.duplicates_indicator_name = self.duplicates_indicator
+        elif isinstance(self.duplicates_indicator, bool):
+            self.duplicates_indicator_name = (
+                get_option("column.system.duplicates") if self.duplicates_indicator
+                else None
+            )
+        else:
+            raise ValueError(
+                "indicator option can only accept boolean or string arguments"
+            )
 
         self.merge = merge
         self.merge_suffixes = merge_suffixes
 
+        self._left_suffix = get_option("operators.binary.column_suffixes")[0]
+        self._right_suffix = get_option("operators.binary.column_suffixes")[1]
+        self._diff_days_col = get_option("column.system.diff_days")
+        self._abs_diff_days_col = get_option("column.system.abs_diff_days")
+        self._merge_indicator_col = get_option("column.system.merge")
+
         self._validate_specification()
 
-        self._add_suffixes()
-
-        link_table_cols = self.id_left_on.copy()
-        link_table_cols.append(self.date_left_on)
-        if self.left_link_id is not None:
-            link_table_cols.append(self.left_link_id)
-
-        self.link_table_cols = link_table_cols
-        self.link_table = self.left[link_table_cols]
-
     def get_result(self):
-        # print()
-        # print(self.left)
-        # print(self.right)
-        # print(self.link_table)
-
         result = self._get_all()
-
-        # print(result)
-
         if self.get == 'closest':
             result = self._get_closest(result)
-            # print(result)
-
-        result = self._format_result(result)
-
-        # print(result)
+        result = self._handle_dropna(result)
+        result = self._handle_duplicates(result)
+        result = self._handle_merge(result)
 
         return result
 
@@ -183,7 +193,7 @@ class _DateProximityOperation:
             how='left',
             left_on=self.id_left_on,
             right_on=self.id_right_on,
-            indicator=True
+            indicator=self._merge_indicator_col
         )
 
         # create a column 'diff_days' with date difference in days
@@ -194,66 +204,75 @@ class _DateProximityOperation:
 
         # keep rows where the date differences within range
         # create copy to avoid chained indexing and getting a SettingWithCopyWarning
-        all_candidates = everything.loc[abs(everything['_diff_days']) <= self.days].copy()
+        all_candidates = everything.loc[abs(everything[self._diff_days_col]) <= self.days].copy()
 
         if self.when == 'earlier':
-            all_candidates = all_candidates.loc[all_candidates['_diff_days'] <= 0]
+            all_candidates = all_candidates.loc[all_candidates[self._diff_days_col] <= 0]
         elif self.when == 'later':
-            all_candidates = all_candidates.loc[all_candidates['_diff_days'] >= 0]
+            all_candidates = all_candidates.loc[all_candidates[self._diff_days_col] >= 0]
 
         return all_candidates
 
     def _get_closest(self, all_candidates):
         # create a column containing the absoluate value of diff_days
-        all_candidates.loc[:, '_abs_diff_days'] = all_candidates['_diff_days'].abs()
+        all_candidates.loc[:, self._abs_diff_days_col] = all_candidates[self._diff_days_col].abs()
 
         all_candidates = all_candidates.sort_values(
-            by=self.link_table_cols + ['_abs_diff_days'],
-            # by=['index', '_abs_diff_days'],
+            by=self.link_table_cols + [self._abs_diff_days_col],
+            # by=['index', self._abs_diff_days_col],
             inplace=False,
             na_position='last'
         )
 
         groupby_cols = self.id_left_on + [self.date_left_on]
         closest_candidates = all_candidates[
-            (all_candidates['_abs_diff_days']
-             == all_candidates.groupby(groupby_cols)['_abs_diff_days'].transform('min'))
+            (all_candidates[self._abs_diff_days_col]
+             == all_candidates.groupby(groupby_cols)[self._abs_diff_days_col].transform('min'))
         ]
 
         return closest_candidates
 
-    def _format_result(self, result):
-
-        left_suffix = self.merge_suffixes[0]
-        right_suffix = self.merge_suffixes[1]
-
-        final = result
-
+    def _handle_dropna(self, result):
         if self.dropna is False:
             left_frame = self.left[self.link_table_cols] if self.merge == 'partial' else self.left
-            final = pd.merge(
+            result = pd.merge(
                 left_frame,
-                final,
+                result,
                 how='left',
                 on=self.link_table_cols,
                 indicator=False
             )
 
-        final = final.mac.mark_duplicates_by_cols(self.link_table_cols)
+        return result
+
+    def _handle_duplicates(self, result):
+        dups = result.duplicated(subset=self.link_table_cols, keep=False)
+
+        # handle duplicates
+        if dups.any():
+            if self.drop_duplicates:
+                result = result.drop_duplicates(subset=self.link_table_cols, keep='last', ignore_index=True)
+            elif self.duplicates_indicator:
+                result.mac.insert(self.duplicates_indicator_name, dups)
+        return result
+
+    def _handle_merge(self, result):
+        left_suffix = self.merge_suffixes[0]
+        right_suffix = self.merge_suffixes[1]
 
         if self.merge == 'partial':
-            final = final.mac.drop_suffix(self._right_suffix)
-            final = final.mac.replace_suffix(self._left_suffix, '_link')
+            result = result.mac.drop_suffix(self._right_suffix)
+            result = result.mac.replace_suffix(self._left_suffix, left_suffix)
         else:
-            final = final.mac.replace_suffix(self._left_suffix, left_suffix)
-            final = final.mac.replace_suffix(self._right_suffix, right_suffix)
+            result = result.mac.replace_suffix(self._left_suffix, left_suffix)
+            result = result.mac.replace_suffix(self._right_suffix, right_suffix)
 
-        return final
+        return result
 
     def _validate_specification(self):
         if self.id_on is not None:
             if self.id_left_on is not None or self.id_right_on is not None:
-                raise errors.DateProximityError(
+                raise DateProximityError(
                     'Must pass argument "id_on" OR "id_left_on" '
                     'and "id_right_on", but not a combination of both.'
                 )
@@ -265,14 +284,14 @@ class _DateProximityOperation:
             self.id_left_on = self.left.mac.get_col_names(self.id_left_on)
             self.id_right_on = self.right.mac.get_col_names(self.id_right_on)
         else:
-            raise errors.DateProximityError(
+            raise DateProximityError(
                 'Must pass argument "id_on" OR "id_left_on" '
                 'and "id_right_on", but not a combination of both.'
             )
 
         if self.date_on is None:
             if self.date_left_on is None or self.date_right_on is None:
-                raise errors.DateProximityError(
+                raise DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -280,7 +299,7 @@ class _DateProximityOperation:
             self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
         else:
             if self.date_left_on is not None or self.date_right_on is not None:
-                raise errors.DateProximityError(
+                raise DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -320,7 +339,7 @@ class _DateProximityOperation:
         if self.merge not in ['partial', 'full']:
             raise ValueError(f"invalid merge option: {self.merge}")
 
-        if not util.list.is_list_like(self.merge_suffixes):
+        if not seqtools.is_list_like(self.merge_suffixes):
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )
@@ -328,6 +347,9 @@ class _DateProximityOperation:
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )
+
+        self._add_suffixes()
+        self._create_link_helpers()
 
     def _add_suffixes(self):
         self.left = self.left.add_suffix(self._left_suffix)
@@ -339,3 +361,12 @@ class _DateProximityOperation:
 
         if self.left_link_id is not None:
             self.left_link_id = self.left_link_id + self._left_suffix
+
+    def _create_link_helpers(self):
+        link_table_cols = self.id_left_on.copy()
+        link_table_cols.append(self.date_left_on)
+        if self.left_link_id is not None:
+            link_table_cols.append(self.left_link_id)
+
+        self.link_table_cols = link_table_cols
+        self.link_table = self.left[link_table_cols]

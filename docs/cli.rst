@@ -313,7 +313,7 @@ Command - ``merge``
 This command is a common follow-up to the :ref:`link <command-link>` command, as it allows you to select specific fields 
 across various data objects to merge together into one dataset (thereby removing unwanted fields, which can be many).
 
-The output file of the ``link`` command includes a worksheet named ``_fields_available``. This provides
+The output file of the ``link`` command includes a worksheet named ``_available_fields``. This provides
 a view of all the fields across all the data objects that you input into the ``link`` command. By placing an ``"x"``
 next to a particular field, the ``merge`` command will attempt to merge only those fields you marked into one single dataset.
 The linking fields (i.e. ``id_col``, ``date_col``, and ``id2_col`` of the primary argument in the ``link`` command, 
@@ -362,7 +362,7 @@ Examples
 
     * ``FAQTot`` from ``faq.csv``
 
-   #. So first, open the results file from the ``link`` command and navigate to the ``_fields_available`` worksheet.
+   #. So first, open the results file from the ``link`` command and navigate to the ``_available_fields`` worksheet.
    #. Mark an ``"x"`` next to those fields.
    #. Save the file.
    #. Run the following command: ::

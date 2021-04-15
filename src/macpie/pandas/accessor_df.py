@@ -2,6 +2,8 @@ from typing import List
 
 import pandas as pd
 
+from macpie._config import get_option
+
 from . import general
 from . import operators
 
@@ -37,17 +39,25 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.assimilate`"""
         return general.assimilate(self._df, right)
 
-    def diff_cols(self, right: pd.DataFrame, cols_ignore=None):
+    def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.diff_cols`"""
-        return general.diff_cols(self._df, right, cols_ignore)
+        return general.diff_cols(self._df, right, cols_ignore, cols_ignore_pat)
 
-    def diff_rows(self, right: pd.DataFrame, cols_ignore=None):
+    def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.diff_rows`"""
-        return general.diff_rows(self._df, right, cols_ignore)
+        return general.diff_rows(self._df, right, cols_ignore, cols_ignore_pat)
+
+    def drop_cols(self, cols_list=set(), cols_pat=None):
+        """see :meth:`macpie.pandas.drop_cols`"""
+        return general.drop_cols(self._df, cols_list, cols_pat)
 
     def drop_suffix(self, suffix: str):
         """see :meth:`macpie.pandas.drop_suffix`"""
         return general.drop_suffix(self._df, suffix)
+
+    def equals(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
+        """see :meth:`macpie.pandas.equals`"""
+        return general.equals(self._df, right, cols_ignore, cols_ignore_pat)
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = '_'):
         """see :meth:`macpie.pandas.flatten_multiindex`"""
@@ -60,6 +70,10 @@ class MacDataFrameAccessor:
     def get_col_names(self, col_names: List[str]):
         """see :meth:`macpie.pandas.get_col_names`"""
         return general.get_col_names(self._df, col_names)
+
+    def insert(self, col_name, col_value, allow_duplicates=False):
+        """see :meth:`macpie.pandas.insert`"""
+        return general.insert(self._df, col_name, col_value, allow_duplicates)
 
     def is_date_col(self, arr_or_dtype):
         """see :meth:`macpie.pandas.is_date_col`"""
@@ -108,8 +122,10 @@ class MacDataFrameAccessor:
         days: int = 90,
         left_link_id=None,
         dropna: bool = False,
+        drop_duplicates: bool = False,
+        duplicates_indicator: bool = False,
         merge='partial',
-        merge_suffixes=('_x', '_y')
+        merge_suffixes=get_option("operators.binary.column_suffixes")
     ):
         """see :meth:`macpie.pandas.date_proximity`"""
         return operators.date_proximity.date_proximity(
@@ -126,6 +142,8 @@ class MacDataFrameAccessor:
             days=days,
             left_link_id=left_link_id,
             dropna=dropna,
+            drop_duplicates=drop_duplicates,
+            duplicates_indicator=duplicates_indicator,
             merge=merge,
             merge_suffixes=merge_suffixes
         )
@@ -166,7 +184,7 @@ class MacDataFrameAccessor:
         on=None,
         left_on=None,
         right_on=None,
-        merge_suffixes=('_x', '_y'),
+        merge_suffixes=get_option("operators.binary.column_suffixes"),
         add_suffixes=False,
         add_indexes=(None, None)
     ):

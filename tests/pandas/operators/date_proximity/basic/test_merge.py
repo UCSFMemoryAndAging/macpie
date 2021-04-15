@@ -1,15 +1,19 @@
 from pathlib import Path
 
-from macpie import io, util
+from macpie.pandas import file_to_dataframe
+from macpie.testing import assert_dfs_equal
 
-current_dir = Path("tests/pandas/operators/date_proximity/basic/").resolve()
+
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None
 
-primary = io.file_to_dataframe(current_dir / "primary.xlsx")
+primary = file_to_dataframe(current_dir / "primary.xlsx")
 
-secondary = io.file_to_dataframe(current_dir / "secondary.xlsx")
+secondary = file_to_dataframe(current_dir / "secondary.xlsx")
+
+cols_ignore = []
 
 
 def test_merge_partial():
@@ -23,12 +27,15 @@ def test_merge_partial():
         when='earlier_or_later',
         days=90,
         left_link_id='instrid',
-        merge='partial',
+        merge='partial'
     )
 
     # merge_partial_result.to_excel(current_dir / "merge_partial_result.xlsx", index=False)
-    merge_partial_expected_result = io.file_to_dataframe(current_dir / "merge_partial_expected_result.xlsx")
-    util.testing.assert_dfs_equal(merge_partial_result, merge_partial_expected_result, output_dir=output_dir)
+    merge_partial_expected_result = file_to_dataframe(current_dir / "merge_partial_expected_result.xlsx")
+    assert_dfs_equal(merge_partial_result,
+                     merge_partial_expected_result,
+                     cols_ignore=cols_ignore,
+                     output_dir=output_dir)
 
     # test that results are same when using equivalent id and date params
     test_id_on_params = primary.mac.date_proximity(
@@ -40,7 +47,7 @@ def test_merge_partial():
         when='earlier_or_later',
         days=90,
         left_link_id='instrid',
-        merge='partial',
+        merge='partial'
     )
 
     test_date_on_params = primary.mac.date_proximity(
@@ -77,5 +84,5 @@ def test_merge_full():
     )
 
     # merge_full_result.to_excel(current_dir / "merge_full_result.xlsx", index=False)
-    merge_full_expected_result = io.file_to_dataframe(current_dir / "merge_full_expected_result.xlsx")
-    util.testing.assert_dfs_equal(merge_full_result, merge_full_expected_result, output_dir=output_dir)
+    merge_full_expected_result = file_to_dataframe(current_dir / "merge_full_expected_result.xlsx")
+    assert_dfs_equal(merge_full_result, merge_full_expected_result, cols_ignore=cols_ignore, output_dir=output_dir)

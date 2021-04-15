@@ -1,11 +1,11 @@
-from macpie.cli.common import get_version
+from macpie import __version__
 
 # -- Project information -----------------------------------------------------
 
 project = 'MACPie'
 copyright = '2020, Regents of the University of California'
 author = 'Regents of the University of California'
-release = get_version()
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 

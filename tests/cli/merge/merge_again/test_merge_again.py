@@ -4,14 +4,19 @@ from shutil import copy
 from click.testing import CliRunner
 import pytest
 
-from macpie import util
+from macpie._config import get_option
 from macpie.cli.main import main
-
+from macpie.testing import assert_dfs_equal
 
 current_dir = Path("tests/cli/merge/merge_again").resolve()
 
 # output_dir = current_dir
 output_dir = None
+
+cols_ignore = [
+    ('instr2_all', 'InstrID_x'),
+]
+cols_ignore_pat = '^' + get_option("column.system.prefix")
 
 
 @pytest.mark.slow
@@ -40,4 +45,8 @@ def test_merge_again(helpers, tmp_path):
             copy(results_path, current_dir)
 
         results = helpers.read_merged_results(results_path)
-        util.testing.assert_dfs_equal(results, expected_result, output_dir=output_dir)
+        assert_dfs_equal(results,
+                         expected_result,
+                         cols_ignore=cols_ignore,
+                         cols_ignore_pat=cols_ignore_pat,
+                         output_dir=output_dir)

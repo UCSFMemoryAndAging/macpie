@@ -4,6 +4,27 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from macpie._config import get_option
+
+
+def test_equals():
+    d1 = {
+        'col1': ['a', 'b', 'c'],
+        'col2': [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
+        'col3': [7, 8, 9],
+        'col4': [7, 8, 9]
+    }
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {
+        'col1': ['a', 'b', 'c'],
+        'col2': ['3/2/2001', '2/1/2001', '8/1/2001'],
+        'col3': ['7', '8', '9']
+    }
+    df2 = pd.DataFrame(data=d2)
+
+    assert df1.mac.equals(df2, cols_ignore=['col4'])
+
 
 def test_add_diff_days():
     d = {
@@ -18,8 +39,8 @@ def test_add_diff_days():
 
     df = df.mac.add_diff_days('col2', 'col3')
 
-    assert '_diff_days' in df.columns
-    assert df['_diff_days'].equals(pd.Series([365.0, 28.0, 1.0]))
+    assert get_option("column.system.diff_days") in df.columns
+    assert df[get_option("column.system.diff_days")].equals(pd.Series([365.0, 28.0, 1.0]))
 
 
 def test_any_duplicates():
@@ -35,22 +56,22 @@ def test_any_duplicates():
         df.mac.any_duplicates('col4')
 
     d = {
-        '_duplicates': [False, False, False],
+        get_option("column.system.duplicates"): [False, False, False],
         'col2': [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
         'col3': [datetime(2002, 3, 2), datetime(2001, 3, 1), datetime(2001, 8, 2)]
     }
     df = pd.DataFrame(data=d)
 
-    assert not df['_duplicates'].any()
+    assert not df[get_option("column.system.duplicates")].any()
 
     d = {
-        '_duplicates': [True, False, False],
+        get_option("column.system.duplicates"): [True, False, False],
         'col2': [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
         'col3': [datetime(2002, 3, 2), datetime(2001, 3, 1), datetime(2001, 8, 2)]
     }
     df = pd.DataFrame(data=d)
 
-    assert df.mac.any_duplicates('_duplicates')
+    assert df.mac.any_duplicates(get_option("column.system.duplicates"))
 
     d = {
         'col1': ['a', 'b', 'c'],

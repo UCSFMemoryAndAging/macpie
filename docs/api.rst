@@ -5,10 +5,10 @@ This part of the documentation contains a detailed description of the MACPie API
 This reference describes how the classes and methods work and which parameters can be used.
 
 
-DataObject Class
+Dataset Class
 ----------------
 
-.. autoclass:: macpie.core.DataObject
+.. autoclass:: macpie.Dataset
    :members:
 
 
@@ -125,7 +125,7 @@ Utility Functions
 
 .. autofunction:: macpie.util.list.move
 
-.. autofunction:: macpie.util.pyxl.get_row_by_col_val
+.. autofunction:: macpie.util.pyxl.ws_get_row_by_col_val
 
 .. autofunction:: macpie.util.pyxl.move_sheets
 

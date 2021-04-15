@@ -5,11 +5,10 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from macpie import util
+from macpie._config import get_option
 from macpie.io.json import MACPieJSONDecoder, MACPieJSONEncoder
-
-
-COL_KEYWORDS = {'_abs_diff_days', '_diff_days', '_duplicates', '_merge'}
+from macpie.tools import sequence as seqtools
+from macpie.tools import string as strtools
 
 
 def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
@@ -21,10 +20,11 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
     :param col_start: column containing the start date
     :param col_end: column containing the end date
     """
+    diff_days_col = get_option("column.system.diff_days")
     if col_start == col_end:
         raise KeyError("date columns have the same name: {col_start}")
-    df['_diff_days'] = df[col_end] - df[col_start]
-    df['_diff_days'] = df['_diff_days'] / np.timedelta64(1, 'D')
+    df[diff_days_col] = df[col_end] - df[col_start]
+    df[diff_days_col] = df[diff_days_col] / np.timedelta64(1, 'D')
     return df
 
 
@@ -71,7 +71,7 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     return right.astype(left_dtypes)
 
 
-def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=None):
+def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
     """
     Return a length-2 tuple where the first element is the set of columns that
     exist in ``left``, and the second element is the set of columns that only
@@ -80,24 +80,22 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=None):
     :param left: left DataFrame
     :param right: right DataFrame
     """
+    left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
+    right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
+
     left_columns = set(left.columns)
-    left_columns = left_columns.difference(COL_KEYWORDS)
-
     right_columns = set(right.columns)
-    right_columns = right_columns.difference(COL_KEYWORDS)
 
-    if cols_ignore is not None and len(cols_ignore) > 0:
-        for col in cols_ignore:
-            left_columns.discard(col)
-            right_columns.discard(col)
+    left_columns = left_columns - set(cols_ignore)
+    right_columns = right_columns - set(cols_ignore)
 
-    left_only_cols = left_columns.difference(right_columns)
-    right_only_cols = right_columns.difference(left_columns)
+    left_only_cols = left_columns - right_columns
+    right_only_cols = right_columns - left_columns
 
     return (left_only_cols, right_only_cols)
 
 
-def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=None):
+def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
     """
     If ``left`` and ``right`` share the same columns, returns a DataFrame
     containing rows that differ.
@@ -106,34 +104,45 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=None):
     :param right: right DataFrame
     :param cols_ignore: a list of any columns to ignore
     """
-    # if one set of columns are MultiIndex, then both should be
-    if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
-        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(right.columns, pd.MultiIndex):
-            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+    left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
+    right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
 
-    if isinstance(left.columns, pd.MultiIndex):
-        level = len(left.columns.levels) - 1
-        _left = left.drop(columns=COL_KEYWORDS, level=level, errors='ignore')
-        _right = right.drop(columns=COL_KEYWORDS, level=level, errors='ignore')
-        _left.columns = _left.columns.to_flat_index()
-        _right.columns = _right.columns.to_flat_index()
-    else:
-        _left = left.drop(columns=COL_KEYWORDS, errors='ignore')
-        _right = right.drop(columns=COL_KEYWORDS, errors='ignore')
+    left_only_cols, right_only_cols = diff_cols(left, right)
 
-    if cols_ignore is not None and len(cols_ignore) > 0:
-        _left.drop(columns=cols_ignore, inplace=True, errors='ignore')
-        _right.drop(columns=cols_ignore, inplace=True, errors='ignore')
-
-    left_columns = _left.columns
-    right_columns = _right.columns
-
-    if set(left_columns) == set(right_columns):
-        merged_df = pd.merge(_left, _right, indicator=True, how='outer')
-        changed_rows_df = merged_df[merged_df['_merge'] != 'both']
+    if left_only_cols == right_only_cols == set():
+        indicator_col_name = get_option("column.system.prefix") + '_diff_rows_merge'
+        if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
+            # TODO: Doing a pd.merge() on MultiIndex dataframes with indicator
+            # set to True/string resulted in the following error:
+            # pandas.errors.PerformanceWarning: dropping on a non-lexsorted multi-index
+            # without a level parameter may impact performance
+            # Flatten the column MultiIndexes to get around this
+            left.columns = left.columns.to_flat_index()
+            right.columns = right.columns.to_flat_index()
+        merged_df = pd.merge(left, right, indicator=indicator_col_name, how='outer')
+        changed_rows_df = merged_df[merged_df[indicator_col_name] != 'both']
         return changed_rows_df
 
     raise KeyError('Dataframes do not share the same columns')
+
+
+def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
+    # Default pattern is to match nothing to ignore nothing
+    cols_pat = '$^' if cols_pat is None else cols_pat
+
+    if isinstance(df.columns, pd.MultiIndex):
+        last_level = df.columns.nlevels - 1
+        cols_match_pat = df.columns.get_level_values(last_level).str.contains(cols_pat, regex=True)
+    else:
+        cols_match_pat = df.columns.str.contains(cols_pat, regex=True)
+
+    cols_to_keep = np.invert(cols_match_pat)
+
+    df = df.loc[:, cols_to_keep]
+
+    df = df.drop(columns=cols_list, errors='ignore')
+
+    return df
 
 
 def drop_suffix(df: pd.DataFrame, suffix):
@@ -143,7 +152,35 @@ def drop_suffix(df: pd.DataFrame, suffix):
     :param df: DataFrame
     :param suffix: suffix to drop
     """
-    return df.rename(columns=lambda x: util.string.strip_suffix(x, suffix))
+    return df.rename(columns=lambda x: strtools.strip_suffix(x, suffix))
+
+
+def equals(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    cols_ignore=set(),
+    cols_ignore_pat=None
+):
+    """
+    For testing equality of :class:`pandas.DataFrame` objects
+
+    :param df1: left DataFrame to compare
+    :param df2: right DataFrame to compare
+    :param cols_ignore: DataFrame columns to ignore in comparison
+    :param cols_ignore_pat: DataFrame columns to ignore using regex pattern
+    """
+    if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
+        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(right.columns, pd.MultiIndex):
+            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+        if left.columns.nlevels != right.columns.nlevels:
+            raise IndexError('MultiIndexes have different levels.')
+
+    left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
+    right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
+
+    right = left.mac.assimilate(right)
+
+    return left.equals(right)
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
@@ -173,9 +210,9 @@ def get_col_name(df: pd.DataFrame, col_name):
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
-    if util.list.is_list_like(col_name):
+    if seqtools.is_list_like(col_name):
         for col in df.columns:
-            if util.list.list_like_str_equal(col, col_name, True):
+            if seqtools.list_like_str_equal(col, col_name, True):
                 return col
         raise KeyError(f"column not found: {col_name}")
 
@@ -201,6 +238,17 @@ def get_col_names(df: pd.DataFrame, col_names: List[str]):
     for index, col_name in enumerate(col_names):
         col_names[index] = get_col_name(df, col_name)
     return col_names
+
+
+def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):
+    """
+    Adds a column to the end of the DataFrame
+
+    :param df: DataFrame
+    :param col_name: name of column to insert
+    :param col_value: value of column to insert
+    """
+    return df.insert(len(df.columns), col_name, col_value, allow_duplicates=allow_duplicates)
 
 
 def is_date_col(arr_or_dtype):
@@ -238,7 +286,7 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     :param df: DataFrame
     :param cols: Only consider these columns for identifiying duplicates
     """
-    df['_duplicates'] = df.duplicated(subset=cols, keep=False)
+    df[get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
     return df
 
 
