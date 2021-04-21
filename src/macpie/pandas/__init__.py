@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from .io import file_to_dataframe
 from .operators.date_proximity import date_proximity
 from .operators.filter_by_id import filter_by_id

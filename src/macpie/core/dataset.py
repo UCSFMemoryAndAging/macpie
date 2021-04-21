@@ -53,10 +53,12 @@ class Dataset:
         #: Arbitrary tags for the Dataset that can be filtered on later.
         self.tags = tags
 
+        #: A function that generates a name suitable for display,
+        #: usually using the name and any tags
+        self.display_name_generator = strtools.add_suffixes_with_base
+
         #: The :class:`pandas.DataFrame` representing the actual data.
         self.df = self._df_orig = df
-
-        self._misc_init()
 
     def __len__(self):
         return self.height
@@ -108,16 +110,6 @@ class Dataset:
             # if any_duplicates(self._df, self._id_col, ignore_nan=True):
             #    pass
 
-    def _misc_init(self):
-        # used to sort tags if needed, especially for generating display_name
-        self._tag_order = [
-            get_option("dataset.tag.anchor"),
-            get_option("dataset.tag.secondary"),
-            get_option("dataset.tag.mergeable"),
-            get_option("dataset.tag.linked"),
-            get_option("dataset.tag.duplicates")
-        ]
-
     # -------------------------------------------------------------------------
     # Read-Only Properties
     # -------------------------------------------------------------------------
@@ -137,6 +129,10 @@ class Dataset:
     @property
     def id2_col(self):
         return self._id2_col
+
+    @property
+    def display_name(self):
+        return self._display_name_generator()
 
     @property
     def key_cols(self):
@@ -227,6 +223,17 @@ class Dataset:
         else:
             self._tags = list(value)
 
+    @property
+    def display_name_generator(self):
+        return self._display_name_generator
+
+    @display_name_generator.setter
+    def display_name_generator(self, value):
+        if callable(value):
+            self._display_name_generator = value
+        else:
+            self._display_name_generator = lambda x: ''
+
     # -------------------------------------------------------------------------
     # Dataset DataFrame Methods
     # -------------------------------------------------------------------------
@@ -239,55 +246,6 @@ class Dataset:
         if id2_col:
             self._id2_col = id2_col
         self.df = df
-
-    def copy_from_dset(self, dset, suffix=None):
-        """
-        `dset` is usually the parent Dataset that this one derived from,
-        so joining on the key columns
-
-        Typical case is `dset` is a primary, and this one is a secondary, and we need
-        to copy over the values from primary into this one.
-        """
-        # cannot use get_option for default value of keyword params,
-        # so setting it here
-        if suffix is None:
-            suffix = get_option("operators.binary.column_suffixes")[0]
-
-        left_on = []
-        right_on = []
-
-        for col in self._df.columns:
-            if dset.id_col and col == (dset.id_col + suffix):
-                left_on.append(dset.id_col)
-                right_on.append(col)
-            if dset.date_col and col == (dset.date_col + suffix):
-                left_on.append(dset.date_col)
-                right_on.append(col)
-            if dset.id2_col and col == (dset.id2_col + suffix):
-                left_on.append(dset.id2_col)
-                right_on.append(col)
-
-        if not left_on or not right_on:
-            raise KeyError("No columns to merge on")
-
-        left_df = dset.df[left_on].copy()
-        left_df.columns = left_df.columns.map(lambda x: str(x) + '_temp')
-        left_on = [col + "_temp" for col in left_on]
-
-        result = pd.merge(
-            left_df,
-            self.df,
-            how='left',
-            left_on=left_on,
-            right_on=right_on,
-            suffixes=('_temp', None)
-        )
-
-        result = result.drop(columns=right_on)
-
-        result = result.mac.replace_suffix('_temp', suffix)
-
-        self._df = result
 
     # -------------------------------------------------------------------------
     # Tag Methods
@@ -321,22 +279,11 @@ class Dataset:
     # Dataset Display Name Methods
     # -------------------------------------------------------------------------
 
-    @staticmethod
-    def create_display_name(name, tags=[], tag_order=[], max_length: int = -1):
-        if not tags:
-            return name[:max_length] if max_length > -1 else name
+    def get_display_name(self, max_length: int = -1, delimiter: str = '_') -> str:
+        return self._display_name_generator(self.name, self.tags, max_length=max_length, delimiter=delimiter)
 
-        display_name = name
-        if tag_order:
-            tags.sort(key=lambda i: tag_order.index(i) if i in tag_order else -1)
-
-        for tag in tags:
-            display_name = strtools.add_suffix(display_name, "_" + tag, max_length)
-
-        return display_name
-
-    def get_display_name(self, tags=[], max_length: int = -1):
-        return Dataset.create_display_name(self.name, self.tags, self._tag_order, max_length)
+    def get_excel_sheetname(self):
+        return self.get_display_name(max_length=31)
 
     # -------------------------------------------------------------------------
     # Dataset Columns Methods
@@ -351,12 +298,11 @@ class Dataset:
         self._id_col = col_name
         self._df.insert(0, col_name, np.arange(start_index, len(self._df) + 1))
 
-    def drop_col(self, col):
-        self._df = self._df.drop(columns=col)
+    def drop_cols(self, cols):
+        self._df = self._df.drop(columns=cols)
 
-    def keep_fields(self, selected_fields):
-        if self.name in selected_fields.to_dict():
-            self.keep_cols(selected_fields.to_dict()[self.name])
+    def drop_sys_cols(self):
+        self.drop_cols(self.sys_cols)
 
     def keep_cols(self, cols):
         cols_to_keep = self.key_cols
@@ -368,6 +314,10 @@ class Dataset:
         cols = seqtools.maybe_make_list(cols)
         cols_to_keep.extend([c for c in cols if c not in cols_to_keep])
         self._df = self._df[cols_to_keep]
+
+    def keep_fields(self, selected_fields):
+        if self.name in selected_fields.to_dict():
+            self.keep_cols(selected_fields.to_dict()[self.name])
 
     def rename_id_col(self, new_id_col):
         """
@@ -406,36 +356,6 @@ class Dataset:
     # I/O Methods
     # -------------------------------------------------------------------------
 
-    @classmethod
-    def from_file(cls, filepath, **kwargs) -> "Dataset":
-        """
-        Construct Dataset from a file.
-        """
-        from macpie.pandas.io import file_to_dataframe
-        df = file_to_dataframe(filepath)
-
-        return cls(df,
-                   id_col=kwargs.get('id_col'),
-                   date_col=kwargs.get('date_col'),
-                   id2_col=kwargs.get('id2_col'),
-                   name=kwargs.get('name', filepath.stem),
-                   tags=kwargs.get('tags'))
-
-    @classmethod
-    def from_excel_sheet(cls, filepath, dict_repr, id_dropna=False):
-        dset_sheet_name = Dataset.create_display_name(dict_repr['name'], dict_repr['tags'], max_length=31)
-        dset_df = pd.read_excel(filepath, sheet_name=dset_sheet_name, index_col=None, header=0)
-
-        if id_dropna:
-            dset_df = dset_df.dropna(subset=[dict_repr['id_col']])
-
-        return cls(dset_df,
-                   id_col=dict_repr['id_col'],
-                   date_col=dict_repr['date_col'],
-                   id2_col=dict_repr['id2_col'],
-                   name=dict_repr['name'],
-                   tags=dict_repr['tags'])
-
     def to_dict(self):
         """
         Convert the Dataset to a dictionary.
@@ -447,7 +367,9 @@ class Dataset:
             'id2_col': self._id2_col,
             'tags': self.tags,
             'rows': self.height,
-            'cols': self.width
+            'cols': self.width,
+            'display_name': self.get_display_name(),
+            'excel_sheetname': self.get_excel_sheetname()
         }
 
     def to_tablib(self):
@@ -496,6 +418,35 @@ class Dataset:
             engine=engine,
             storage_options=storage_options
         )
+
+    @classmethod
+    def from_file(cls, filepath, **kwargs) -> "Dataset":
+        """
+        Construct Dataset from a file.
+        """
+        from macpie.pandas.io import file_to_dataframe
+        df = file_to_dataframe(filepath)
+
+        return cls(df,
+                   id_col=kwargs.get('id_col'),
+                   date_col=kwargs.get('date_col'),
+                   id2_col=kwargs.get('id2_col'),
+                   name=kwargs.get('name', filepath.stem),
+                   tags=kwargs.get('tags'))
+
+    @classmethod
+    def from_excel_sheet(cls, filepath, dict_repr, id_dropna=False):
+        dset_df = pd.read_excel(filepath, sheet_name=dict_repr['excel_sheetname'], index_col=None, header=0)
+
+        if id_dropna:
+            dset_df = dset_df.dropna(subset=[dict_repr['id_col']])
+
+        return cls(dset_df,
+                   id_col=dict_repr['id_col'],
+                   date_col=dict_repr['date_col'],
+                   id2_col=dict_repr['id2_col'],
+                   name=dict_repr['name'],
+                   tags=dict_repr['tags'])
 
     # -------------------------------------------------------------------------
     # Data Transformation Methods

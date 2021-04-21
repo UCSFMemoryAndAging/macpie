@@ -17,7 +17,13 @@ def chunks(a, n):
 
 def diff(a, b):
     """
-    Return list of items in ``a`` that are not in ``b``.
+    Return list of items in ``a`` that are not in ``b``,
+    like ``a`` - ``b``. ::
+
+        $ l1 = [1, 2, 6, 8]
+        $ l2 = [2, 3, 5, 8]
+        $ l3 = diff(l1, l2)
+        $ assert l3 == [1, 6]
 
     :param a: list
     :param b: list

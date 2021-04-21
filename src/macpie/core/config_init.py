@@ -38,7 +38,7 @@ cf.register_option(
 )
 
 cf.register_option(
-    "dataset.tag.secondary", "secondary", "", validator=pandas_cf.is_str
+    "dataset.tag.duplicates", "duplicates", "", validator=pandas_cf.is_str
 )
 
 cf.register_option(
@@ -46,11 +46,15 @@ cf.register_option(
 )
 
 cf.register_option(
-    "dataset.tag.linked", "linked", "", validator=pandas_cf.is_str
+    "dataset.tag.merged", "merged", "", validator=pandas_cf.is_str
 )
 
 cf.register_option(
-    "dataset.tag.duplicates", "DUPS", "", validator=pandas_cf.is_str
+    "dataset.tag.not_merged", "not_merged", "", validator=pandas_cf.is_str
+)
+
+cf.register_option(
+    "dataset.tag.secondary", "secondary", "", validator=pandas_cf.is_str
 )
 
 

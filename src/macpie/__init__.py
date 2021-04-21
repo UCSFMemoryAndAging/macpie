@@ -12,33 +12,18 @@ from macpie._config import (
 # let init-time option registration happen
 import macpie.core.config_init
 
-from macpie.core.api import (
-    Dataset,
-    date_proximity,
-    group_by_keep_one
-)
+# top-level api
+from macpie.core.api import *
 
-from macpie.collections import (
-    anchoredlist,
-    basiclist,
-    mergeableanchoredlist
-)
+from macpie.collections import *
 
-from macpie import io
+from macpie.io import *
 
 from macpie.pandas.accessor_df import MacDataFrameAccessor
 
+from macpie.tools import *
+
+# sub-level api
 from macpie import pandas
 
-from macpie.tools import (
-    datetime as datetimetools,
-    excel as exceltools,
-    io as iotools,
-    openpyxl as openpyxltools,
-    pandas as pandastools,
-    path as pathtools,
-    sequence as seqtools,    
-    string as strtools,
-    tablib as tablibtools,
-    validator as validatortools
-)
+from macpie import util

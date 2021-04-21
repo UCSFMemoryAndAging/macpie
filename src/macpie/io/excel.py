@@ -77,7 +77,7 @@ class MACPieExcelFormatter(pd.io.formats.excel.ExcelFormatter):
             need_save = True
 
         if sheet_name is None:
-            sheet_name = self.dset.get_display_name(31)
+            sheet_name = self.dset.get_excel_sheetname()
 
         try:
             writer.write_cells(

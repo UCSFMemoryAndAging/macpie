@@ -2,7 +2,6 @@
 
 # classes
 from .dataset import Dataset, LavaDataset
-from .datasetfields import DatasetFields
 
 # reshaping functions
 from .reshape.date_proximity import date_proximity

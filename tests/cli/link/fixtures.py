@@ -95,4 +95,4 @@ def cli_link_full_no_merge(tmp_path_factory):
         # get the results file
         results_path = next(Path(".").glob('**/result*xlsx'))
         return Path(copy(results_path.resolve(),
-                         tmp_path_factory.mktemp("lcli_ink_full_no_merge")))
+                         tmp_path_factory.mktemp("cli_link_full_no_merge")))

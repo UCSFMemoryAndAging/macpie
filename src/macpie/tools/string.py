@@ -42,6 +42,21 @@ def add_suffixes(s: str, suffixes: List[str], max_length: int = -1):
         return s + ''.join(suffixes)
 
 
+def add_suffixes_with_base(base, suffixes: List[str] = [], delimiter: str = "_", max_length: int = -1):
+    if not suffixes:
+        return base[:max_length] if max_length > -1 else base
+
+    result = base
+
+    if max_length > -1:
+        max_length = max_length - (len(base) + len(suffixes))
+
+    for suffix in suffixes:
+        result = add_suffix(result, delimiter + suffix, max_length)
+
+    return result
+
+
 def strip_suffix(s: str, suffix: str):
     """
     Remove a suffix from a string.

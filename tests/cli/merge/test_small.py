@@ -4,11 +4,12 @@ from shutil import copy
 from click.testing import CliRunner
 import openpyxl as pyxl
 
-from macpie.testing import assert_dfs_equal
 from macpie._config import get_option
-from macpie.cli.main import main
 from macpie.io.excel import MACPieExcelWriter
-from macpie.core.datasetfields import DatasetFields
+from macpie.testing import assert_dfs_equal
+from macpie.util.datasetfields import DatasetFields
+
+from macpie.cli.main import main
 
 current_dir = Path("tests/cli/merge/").resolve()
 

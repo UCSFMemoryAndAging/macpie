@@ -6,9 +6,9 @@ import openpyxl as pyxl
 import pytest
 
 from macpie._config import get_option
-from macpie.core.datasetfields import DatasetFields
 from macpie.io.excel import MACPieExcelWriter
 from macpie.testing import assert_dfs_equal
+from macpie.util.datasetfields import DatasetFields
 
 from macpie.cli.main import main
 
@@ -23,23 +23,12 @@ def create_available_fields(filepath):
     # manually create some fields to merge and test
     # obviously these fields should be available from the link results file
     available_fields_rows = [
-        ('full', 'link_date'),
-        ('full', 'link_id'),
-        ('full', 'DCStatus'),
         ('full', 'Col1'),
         ('full', 'Col2'),
         ('full', 'Col3'),
-        ('instr2_all', 'PIDN'),
-        ('instr2_all', 'DCDate'),
-        ('instr2_all', 'DCStatus'),
-        ('instr2_all', 'InstrID'),
         ('instr2_all', 'Col1'),
         ('instr2_all', 'Col2'),
         ('instr2_all', 'Col3'),
-        ('instr3_all', 'PIDN'),
-        ('instr3_all', 'DCDate'),
-        ('instr3_all', 'DCStatus'),
-        ('instr3_all', 'InstrID'),
         ('instr3_all', 'Col1'),
         ('instr3_all', 'Col2'),
         ('instr3_all', 'Col3')

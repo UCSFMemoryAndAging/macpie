@@ -54,6 +54,9 @@ class TablibWrapper:
     def wipe_data(self):
         self._tlset._data = list()
 
+    def print(self):
+        print(self.export("cli", tablefmt="grid"))
+
     @classmethod
     def from_df(cls, df, title: str = None) -> "TablibWrapper":
         """

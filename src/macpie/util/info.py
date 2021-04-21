@@ -19,9 +19,6 @@ class Info(tablibtools.TablibWrapper):
         return dict(zip(self.df['Key'],
                         self.df['Value'].apply(json.loads)))
 
-    def print(self):
-        print(self.export("cli", tablefmt="grid"))
-
     @classmethod
     def from_dict(cls, dictionary, **kwargs) -> "Info":
         tags = kwargs.pop('tags', [])

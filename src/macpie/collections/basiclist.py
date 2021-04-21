@@ -65,11 +65,13 @@ class BasicList(BaseCollection):
         for dset in self._dsets:
             dset.replace_tag(old_tag, new_tag)
 
-    def keep_fields(self, selected_fields):
+    def keep_fields(self, selected_fields, keep_unselected: bool = False):
         new_list = []
         for dset in self._dsets:
             if dset.name in selected_fields.to_dict():
                 dset.keep_fields(selected_fields)
+                new_list.append(dset)
+            elif keep_unselected:
                 new_list.append(dset)
         self.dsets = new_list
 

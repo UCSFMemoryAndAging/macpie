@@ -1,7 +1,7 @@
 from functools import partial
 from pathlib import Path
 
-from macpie import pandas
+from macpie.pandas import group_by_keep_one
 from macpie.core.dataset import LavaDataset
 from macpie.collections.executablegraph import ExecutableGraph
 
@@ -33,7 +33,7 @@ def test_basic():
 
     G.add_node(
         dset1,
-        operation=partial(pandas.group_by_keep_one,
+        operation=partial(group_by_keep_one,
                           group_by_col=dset1.id2_col,
                           date_col=dset1.date_col,
                           keep='earliest',
