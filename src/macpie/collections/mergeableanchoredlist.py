@@ -188,6 +188,23 @@ class MergeableAnchoredList(AnchoredList):
         available_fields.append_col_fill(None, header=get_option("column.to_merge"))
         return available_fields
 
+    def get_duplicates(self):
+        dup_dsets = self._secondary.filter(MergeableAnchoredList._tag_duplicates)
+
+        if not dup_dsets:
+            return {}
+
+        result = {}
+
+        for dset in dup_dsets:
+            result[dset.name] = []
+
+        for dset in dup_dsets:
+            dup_rows_df = dset.df.duplicated(subset=[self._secondary_anchor_col], keep=False)
+            result[dset.name].extend(dset.df[dup_rows_df].values.tolist())
+
+        return result        
+
     def to_dict(self):
         """
         Convert the MergeableAnchoredList to a dictionary.

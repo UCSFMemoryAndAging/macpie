@@ -20,7 +20,7 @@ from macpie.util.decorators import TrackHistory
 class Dataset:
     """
     Two-dimensional tabular data with key fields commonly used in
-    clinical research data: form ID, date of collection, and subject id.
+    clinical research data: form ID, date of collection, and subject ID.
     The core MACPie data structure.
     """
 
@@ -116,6 +116,9 @@ class Dataset:
 
     @property
     def df_orig(self):
+        """Returns the original :class:`pandas.DataFrame` of this
+        :class:`Dataset`.
+        """
         return self._df_orig
 
     @property
@@ -132,10 +135,13 @@ class Dataset:
 
     @property
     def display_name(self):
-        return self._display_name_generator()
+        return self.get_display_name()
 
     @property
     def key_cols(self):
+        """Returns the original :class:`pandas.DataFrame` of this
+        :class:`Dataset`.
+        """
         key_cols = []
         if self._id_col is not None:
             key_cols.append(self._id_col)
@@ -147,6 +153,10 @@ class Dataset:
 
     @property
     def sys_cols(self):
+        """Returns the "system" columns of this :class:`Dataset`,
+        defined as any columns starting with `column.system.prefix` option.
+        """
+
         sys_col_prefix = get_option("column.system.prefix")
         return [col for col in self.df.columns if col.startswith(sys_col_prefix)]
 

@@ -22,3 +22,14 @@ def test_read_file(cli_link_small_with_merge):
     assert mal_info['class_name'] == 'MergeableAnchoredList'
     assert mal_info['primary']['name'] == 'small'
     assert mal_info['primary']['id_col'] == 'InstrID'
+
+
+def test_dups(cli_link_small_with_dups):
+    mal = MergeableAnchoredList.from_excel(cli_link_small_with_dups)
+
+    #print(mal)
+
+    dups = mal.get_duplicates()
+
+    assert len(dups['instr2_all']) == 12
+    assert len(dups['instr3_all']) == 17

@@ -12,7 +12,8 @@ from tests.cli.keepone.fixtures import cli_keepone_big
 from tests.cli.link.fixtures import (
     cli_link_full_no_merge,
     cli_link_small_no_merge,
-    cli_link_small_with_merge
+    cli_link_small_with_merge,
+    cli_link_small_with_dups
 )
 
 
