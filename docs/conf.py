@@ -3,7 +3,7 @@ from macpie import __version__
 # -- Project information -----------------------------------------------------
 
 project = 'MACPie'
-copyright = '2020, Regents of the University of California'
+copyright = '2021, Regents of the University of California'
 author = 'Regents of the University of California'
 release = __version__
 
@@ -15,10 +15,15 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_tabs.tabs",
 ]
+autodoc_default_options = {
+    'member-order': 'bysource'
+}
+autodoc_typehints = "description"
 intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable/", None),
     "openpyxl": ("https://openpyxl.readthedocs.io/en/stable/", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+    "tablib": ("https://tablib.readthedocs.io/en/stable/", None),
     "python": ("https://docs.python.org/3/", None),
 }
 

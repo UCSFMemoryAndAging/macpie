@@ -1,4 +1,3 @@
-from typing import Tuple
 import warnings
 
 import numpy as np
@@ -18,25 +17,45 @@ from .basiclist import BasicList
 
 class MergeableAnchoredList(AnchoredList):
     """
+    A :class:`macpie.AnchoredList` that is `mergeable`,
+    meaning all ``secondary`` Datasets have a common column that can be
+    used to merge with a column in the ``primary`` Dataset.
+    Includes advanced duplicate handling functionality.
+
+    :param primary: The primary `anchor` Dataset of the collection.
+                    Cannot be directly modified.
+    :param secondary: The secondary Datasets of the collection.
+                      Cannot be directly modified.
+    :param primary_anchor_col: The column in ``primary`` to merge on
+    :param secondary_anchor_col: The column in each ``secondary`` Dataset
+                                 to merge on
+    :param selected_fields: Fields to keep (discarding the rest)
 
     """
 
-    _tag_mergeable = get_option("dataset.tag.mergeable")  # can be merged (i.e. no dups)
-    _tag_merged = get_option("dataset.tag.merged")  # has been merged (also mergeable)
-    _tag_not_merged = get_option("dataset.tag.not_merged")  # hasn't been merged (though mergeable)
-    _tag_duplicates = get_option("dataset.tag.duplicates")  # cannot be merged (i.e. has dups)
+    #: Tag that denotes a Dataset can be merged (i.e. no duplicates)
+    tag_mergeable = get_option("dataset.tag.mergeable")
+
+    #: Tag that denotes a Dataset has been merged (also means mergeable)
+    tag_merged = get_option("dataset.tag.merged")
+
+    #: Tag that denotes a Dataset has not been merged (though mergeable)
+    tag_not_merged = get_option("dataset.tag.not_merged")
+
+    #: Tag that denotes a Dataset cannot be merged (i.e. has duplicates)
+    tag_duplicates = get_option("dataset.tag.duplicates")
 
     def __init__(
         self,
         primary: Dataset = None,
         secondary: BasicList = None,
-        primary_anchor_field: Tuple[str, str] = None,
+        primary_anchor_col: str = None,
         secondary_anchor_col: str = None,
         selected_fields: DatasetFields = None
     ):
         self._merged_df = None
 
-        self._primary_anchor_field = primary_anchor_field
+        self._primary_anchor_col = primary_anchor_col
         self._secondary_anchor_col = secondary_anchor_col
         self._selected_fields = selected_fields
 
@@ -49,41 +68,95 @@ class MergeableAnchoredList(AnchoredList):
             f'{self.__class__.__name__}('
             f'primary={self._primary!r}, '
             f'secondary={self._secondary!r}, '
-            f'primary_anchor_field={self._primary_anchor_field!r}, '
+            f'primary_anchor_col={self._primary_anchor_col!r}, '
             f'secondary_anchor_col={self._secondary_anchor_col!r}, '
             f'selected_fields={self._selected_fields!r})'
         )
 
     def _validate(self):
-        if self._primary_anchor_field is None:  # default primary anchor column
-            self._primary_anchor_field = (self._primary.name, self._primary.id_col)
+        if self._primary_anchor_col is None:  # default primary anchor column
+            self._primary_anchor_col = self._primary.id_col
         else:
-            self._primary_anchor_field = tuple(self._primary_anchor_field)
+            self._primary_anchor_col = self._primary_anchor_col
 
         if self._secondary_anchor_col is None:  # default secondary anchor column
             self._secondary_anchor_col = self._primary.id_col + get_option("operators.binary.column_suffixes")[0]
 
     @property
     def merged_df(self):
+        """The merged data.
+
+        :return: class:`pandas.DataFrame`
+        """
         return self._merged_df
 
-    @classmethod
-    def get_dataset_display_name_generator(cls):
-        def dataset_display_name_generator(name, tags, max_length: int = -1, delimiter: str = '_'):
-            if not tags:
-                return name[:max_length] if max_length > -1 else name
+    @property
+    def key_fields(self):
+        """A list of all :attr:`macpie.Dataset.key_fields` contained
+        in this :class:`MergeableAnchoredList`.
+        """
+        key_fields = super().key_fields
+        prim_anchor_field = (self._primary.name, self._primary_anchor_col)
+        if self._primary_anchor_col and prim_anchor_field not in key_fields:
+            key_fields.append(prim_anchor_field)
+        if self._secondary_anchor_col:
+            for sec in self._secondary:
+                sec_anchor_field = (sec.name, self._secondary_anchor_col)
+                if sec_anchor_field not in key_fields:
+                    key_fields.append(sec_anchor_field)
+        return key_fields
 
-            suffix = ""
-            if cls._tag_mergeable in tags:
-                suffix = "linked"
-            elif cls._tag_duplicates in tags:
-                suffix = "DUPS"
+    @property
+    def all_fields(self):
+        """A list of all :attr:`macpie.Dataset.all_fields` contained
+        in this :class:`MergeableAnchoredList`.
+        """
+        if not self._secondary_anchor_col:
+            return super().all_fields
 
-            return strtools.add_suffixes_with_base(name, [suffix])
+        fields = []
+        if self._primary:
+            fields.extend(self._primary.all_fields)
+        if self._secondary:
+            for sec in self._secondary:
+                sec_anchor_field = (sec.name, self._secondary_anchor_col)
+                fields.append(sec_anchor_field)
+                fields.extend(sec.all_fields)
+        return fields
 
-        return dataset_display_name_generator
+    def add_secondary(self, dset: Dataset):
+        """Append a Dataset to the `secondary` Datasets list.
+        """
+        if self._secondary_anchor_col not in dset.df.columns:
+            warnings.warn(
+                f"Warning: Secondary dataset '{dset!r}' does not have "
+                f"anchor column '{self._secondary_anchor_col}'. Skipping..."
+            )
+            return
+
+        dups = dset.df.duplicated(subset=[self._secondary_anchor_col], keep=False)
+        if dups.any():
+            dups_col = get_option("column.system.duplicates")
+            if dups_col in dset.sys_cols:
+                dset.rename_col(dups_col, dups_col + '_prior')
+            dset.df.mac.insert(dups_col, dups)
+            dset.add_tag(MergeableAnchoredList.tag_duplicates)
+        else:
+            dset.add_tag(MergeableAnchoredList.tag_mergeable)
+
+        super().add_secondary(dset)
+
+        dset.display_name_generator = MergeableAnchoredList.get_dataset_display_name_generator()
+
+        self._merged_df = None
 
     def keep_fields(self, selected_fields, keep_unselected: bool = False):
+        """Keep specified fields (and drop the rest).
+
+        :param selected_fields: Fields to keep
+        :param keep_unselected: If True, if a Dataset is not in ``selected_fields``,
+                                then keep entire Dataset. Defaults to False.
+        """
         fields_to_include = []
         selected_dsets = selected_fields.datasets
 
@@ -98,53 +171,28 @@ class MergeableAnchoredList(AnchoredList):
 
         super().keep_fields(selected_fields, keep_unselected=keep_unselected)
 
-    @property
-    def all_fields(self):
-        if not self._secondary_anchor_col:
-            return super().all_fields
-
-        fields = []
-        if self._primary:
-            fields.extend(self._primary.all_fields)
-        if self._secondary:
-            for sec in self._secondary:
-                sec_anchor_field = (sec.name, self._secondary_anchor_col)
-                fields.append(sec_anchor_field)
-                fields.extend(sec.all_fields)
-        return fields
-
-    @property
-    def key_fields(self):
-        key_fields = super().key_fields
-        if self._primary_anchor_field and self._primary_anchor_field not in key_fields:
-            key_fields.append(self._primary_anchor_field)
-        if self._secondary_anchor_col:
-            for sec in self._secondary:
-                sec_anchor_field = (sec.name, self._secondary_anchor_col)
-                if sec_anchor_field not in key_fields:
-                    key_fields.append(sec_anchor_field)
-        return key_fields
-
     def merge(self):
+        """Perform the merge.
+        """
         if self._selected_fields:
             self.keep_fields(self._selected_fields, keep_unselected=True)
 
         merged_df = self._primary.df.copy(deep=True)
         merged_df.columns = pd.MultiIndex.from_product([[self._primary.name], merged_df.columns])
 
-        mergeable_secondary = self._secondary.filter(MergeableAnchoredList._tag_mergeable)
+        mergeable_secondary = self._secondary.filter(MergeableAnchoredList.tag_mergeable)
 
         for sec in mergeable_secondary:
             if self._selected_fields and sec.name not in self._selected_fields.datasets:
-                sec.add_tag(MergeableAnchoredList._tag_not_merged)
+                sec.add_tag(MergeableAnchoredList.tag_not_merged)
             else:
                 merged_df = merged_df.mac.merge(
                     sec.df.copy(deep=True),
-                    left_on=[self._primary_anchor_field],
+                    left_on=[(self._primary.name, self._primary_anchor_col)],
                     right_on=[self._secondary_anchor_col],
                     add_indexes=(None, sec.name)
                 )
-                sec.add_tag(MergeableAnchoredList._tag_merged)
+                sec.add_tag(MergeableAnchoredList.tag_merged)
 
         # reset index to start from 1 for user readability
         start_index = 1
@@ -152,36 +200,16 @@ class MergeableAnchoredList(AnchoredList):
 
         self._merged_df = merged_df
 
-    def add_secondary(self, dset: Dataset):
-        if self._secondary_anchor_col not in dset.df.columns:
-            warnings.warn(
-                f"Warning: Secondary dataset '{dset!r}' does not have "
-                f"anchor column '{self._secondary_anchor_col}'. Skipping..."
-            )
-            return
-
-        dups = dset.df.duplicated(subset=[self._secondary_anchor_col], keep=False)
-        if dups.any():
-            dups_col = get_option("column.system.duplicates")
-            if dups_col in dset.sys_cols:
-                dset.rename_col(dups_col, dups_col + '_prior')
-            dset.df.mac.insert(dups_col, dups)
-            dset.add_tag(MergeableAnchoredList._tag_duplicates)
-        else:
-            dset.add_tag(MergeableAnchoredList._tag_mergeable)
-
-        super().add_secondary(dset)
-
-        dset.display_name_generator = MergeableAnchoredList.get_dataset_display_name_generator()
-
-        self._merged_df = None
-
     def get_available_fields(self):
+        """Get all "available" fields in this collection.
+
+        :return: :class:`macpie.util.DatasetFields`
+        """
         available_fields = DatasetFields.from_collection(
             self,
-            tags=[MergeableAnchoredList._tag_anchor,
-                  MergeableAnchoredList._tag_mergeable,
-                  MergeableAnchoredList._tag_duplicates]
+            tags=[MergeableAnchoredList.tag_anchor,
+                  MergeableAnchoredList.tag_mergeable,
+                  MergeableAnchoredList.tag_duplicates]
         )
         available_fields = available_fields.filter(DatasetFields.tag_non_key_field)
         available_fields.title = self._sheetname_available_fields
@@ -189,7 +217,7 @@ class MergeableAnchoredList(AnchoredList):
         return available_fields
 
     def get_duplicates(self):
-        dup_dsets = self._secondary.filter(MergeableAnchoredList._tag_duplicates)
+        dup_dsets = self._secondary.filter(MergeableAnchoredList.tag_duplicates)
 
         if not dup_dsets:
             return {}
@@ -203,7 +231,7 @@ class MergeableAnchoredList(AnchoredList):
             dup_rows_df = dset.df.duplicated(subset=[self._secondary_anchor_col], keep=False)
             result[dset.name].extend(dset.df[dup_rows_df].values.tolist())
 
-        return result        
+        return result
 
     def to_dict(self):
         """
@@ -212,30 +240,52 @@ class MergeableAnchoredList(AnchoredList):
         return {
             'primary': self._primary,
             'secondary': self._secondary,
-            'primary_anchor_field': self._primary_anchor_field,
+            'primary_anchor_col': self._primary_anchor_col,
             'secondary_anchor_col': self._secondary_anchor_col,
             'selected_fields': self._selected_fields
         }
 
     def to_excel(self, excel_writer, merge: bool = True, **kwargs):
+        """Write :class:`MergeableAnchoredList` to an Excel file.
+
+        :param merge: If True, output merged result. If False, keep everything
+                      unmerged. Defaults to True.
+        """
+
         if merge:
             if not self._merged_df:
                 self.merge()
             self._merged_df.to_excel(excel_writer, sheet_name=get_option("sheet.name.merged_results", **kwargs))
-            self._secondary.filter([MergeableAnchoredList._tag_not_merged]).to_excel(excel_writer, **kwargs)
+            self._secondary.filter([MergeableAnchoredList.tag_not_merged]).to_excel(excel_writer, **kwargs)
         else:
             self._primary.to_excel(excel_writer, **kwargs)
-            self._secondary.filter([MergeableAnchoredList._tag_mergeable]).to_excel(excel_writer, **kwargs)
+            self._secondary.filter([MergeableAnchoredList.tag_mergeable]).to_excel(excel_writer, **kwargs)
 
-        self._secondary.filter(MergeableAnchoredList._tag_duplicates).to_excel(excel_writer, **kwargs)
+        self._secondary.filter(MergeableAnchoredList.tag_duplicates).to_excel(excel_writer, **kwargs)
 
         self.get_available_fields().to_excel(excel_writer, **kwargs)
         self.get_collection_info().to_excel(excel_writer, **kwargs)
 
     @classmethod
+    def get_dataset_display_name_generator(cls):
+        def dataset_display_name_generator(name, tags, max_length: int = -1, delimiter: str = '_'):
+            if not tags:
+                return name[:max_length] if max_length > -1 else name
+
+            suffix = ""
+            if cls.tag_mergeable in tags:
+                suffix = "linked"
+            elif cls.tag_duplicates in tags:
+                suffix = "DUPS"
+
+            return strtools.add_suffixes_with_base(name, [suffix])
+
+        return dataset_display_name_generator
+
+    @classmethod
     def from_excel(cls, filepath) -> "MergeableAnchoredList":
         """
-        Construct MergeableAnchoredList from an Excel file.
+        Construct :class:`MergeableAnchoredList` from an Excel file.
         """
         sheet_name = get_option("sheet.name.collection_info")
         try:
@@ -260,7 +310,7 @@ class MergeableAnchoredList(AnchoredList):
 
         _primary = None
         _secondary = BasicList()
-        _primary_anchor_field = None
+        _primary_anchor_col = None
         _secondary_anchor_col = None
         _selected_fields = selected_fields if len(selected_fields) > 0 else None
 
@@ -301,7 +351,7 @@ class MergeableAnchoredList(AnchoredList):
                 secondary_name = sec['name']
                 secondary_tags = sec['tags']
 
-                if MergeableAnchoredList._tag_merged in secondary_tags:
+                if MergeableAnchoredList.tag_merged in secondary_tags:
                     secondary_df = _merged_df.xs(secondary_name, axis='columns', level=0)
                     secondary_dset = Dataset(secondary_df,
                                              id_col=sec['id_col'],
@@ -314,19 +364,19 @@ class MergeableAnchoredList(AnchoredList):
 
         for sec in info['secondary']:
             secondary_tags = sec['tags']
-            if MergeableAnchoredList._tag_merged not in secondary_tags:
+            if MergeableAnchoredList.tag_merged not in secondary_tags:
                 secondary_dset = Dataset.from_excel_sheet(filepath, sec)
                 secondary_dset.clear_tags()
                 secondary_dset.drop_sys_cols()
                 _secondary.append(secondary_dset)
 
-        _primary_anchor_field = info['primary_anchor_field']
+        _primary_anchor_col = info['primary_anchor_col']
         _secondary_anchor_col = info['secondary_anchor_col']
 
         instance = cls(
             primary=_primary,
             secondary=_secondary,
-            primary_anchor_field=_primary_anchor_field,
+            primary_anchor_col=_primary_anchor_col,
             secondary_anchor_col=_secondary_anchor_col,
             selected_fields=_selected_fields
         )

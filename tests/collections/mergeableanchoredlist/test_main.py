@@ -27,7 +27,7 @@ def test_read_file(cli_link_small_with_merge):
 def test_dups(cli_link_small_with_dups):
     mal = MergeableAnchoredList.from_excel(cli_link_small_with_dups)
 
-    #print(mal)
+    # print(mal)
 
     dups = mal.get_duplicates()
 

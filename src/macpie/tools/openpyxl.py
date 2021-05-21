@@ -9,10 +9,9 @@ YELLOW = "00FFFF00"
 
 
 def ws_autoadjust_colwidth(ws):
-    """
-    Autoadjust the column widths of a Worksheet
+    """Autoadjust the column widths of a Worksheet
 
-    :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
+    :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet` to adjust
     """
     for column_cells in ws.columns:
         length = max(len(str(cell.value or '')) for cell in column_cells)
@@ -21,8 +20,7 @@ def ws_autoadjust_colwidth(ws):
 
 
 def ws_get_col(ws, col_header: str = None):
-    """
-    Get column index of the ``col_header``, returning ``-1`` if not found
+    """Get column index of the ``col_header``, returning ``-1`` if not found
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
     :param col_header: column header to find
@@ -41,8 +39,7 @@ def ws_get_col(ws, col_header: str = None):
 
 
 def ws_get_row_by_col_val(ws, col_index, val):
-    """
-    Get row index of the first time ``val`` is found in specified column index.
+    """Get row index of the first time ``val`` is found in specified column index.
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
     :param col_index: column to check for ``val``
@@ -54,8 +51,7 @@ def ws_get_row_by_col_val(ws, col_index, val):
 
 
 def ws_highlight_row(ws, row: int, color: str = YELLOW):
-    """
-    Highlight row a certain color
+    """Highlight row a certain color
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
     :param row: row index to highlight
@@ -68,8 +64,7 @@ def ws_highlight_row(ws, row: int, color: str = YELLOW):
 
 
 def ws_highlight_rows_with_col(ws, col: str, color: str = YELLOW):
-    """
-    If a cell in specified column has a value of ``True``, then highlight entire row.
+    """If a cell in specified column has a value of ``True``, then highlight entire row.
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
     :param col: column (header string) to check for ``True`` value
@@ -85,6 +80,11 @@ def ws_highlight_rows_with_col(ws, col: str, color: str = YELLOW):
 
 
 def ws_is_row_empty(ws, row_index, delete_if_empty=False):
+    """Determine if a row is empty.
+
+    :param delete_if_empty: If True, and row is empty, row is deleted.
+                            defaults to False
+    """
     for row in ws.iter_rows(min_row=row_index, max_row=row_index):
         empty = not any((cell.value for cell in row))
         if empty:
@@ -95,8 +95,7 @@ def ws_is_row_empty(ws, row_index, delete_if_empty=False):
 
 
 def wb_move_sheets(wb, sheets_to_move, to_sheet):
-    """
-    Get row index of the first time ``val`` is found in specified column index.
+    """Get row index of the first time ``val`` is found in specified column index.
 
     :param book: :class:`openpyxl.workbook.workbook.Workbook`
     :param sheets_to_move: list of sheetnames to move
@@ -110,7 +109,12 @@ def wb_move_sheets(wb, sheets_to_move, to_sheet):
 
 
 def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
-    """Better to use pandas.read_excel as it takes care of a lot more nuances
+    """Converts an Excel worksheet to a :class:`pandas.DataFrame`.
+    Better to use :func:`pandas.read_excel` as it takes care of a lot
+    more nuances.
+
+    :param num_header: number of header rows
+    :param num_idx: number of index columns
     """
     if num_header == 1 and num_idx == 0:
         return _ws_to_df_default(ws)

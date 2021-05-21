@@ -74,6 +74,14 @@ def register_option(
 
 
 def get_option(key: str):
+    """
+    Retrieves the value of the specified option. ::
+
+        >>> macpie.get_option("operators.binary.column_suffixes")
+        ("_x", "_y")
+
+    """
+
     key = key.lower()
 
     if key not in _global_config:
@@ -83,6 +91,15 @@ def get_option(key: str):
 
 
 def set_option(key, value) -> None:
+    """
+    Sets the value of the specified option. ::
+
+        >>> macpie.set_option("operators.binary.column_suffixes", ("_link", "_y"))
+        >>> macpie.get_option("operators.binary.column_suffixes")
+        ("_link", "_y")
+
+    """
+
     key = key.lower()
 
     opt = _get_registered_option(key)
@@ -100,6 +117,13 @@ def set_option(key, value) -> None:
 
 
 def reset_option(key: str) -> None:
+    """
+    Reset one or more options to their default value. ::
+
+        >>> macpie.reset_option("operators.binary.column_suffixes")
+
+    """
+
     key = key.lower()
 
     if key not in _global_config:

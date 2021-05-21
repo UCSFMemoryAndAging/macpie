@@ -2,13 +2,15 @@ from typing import List
 
 
 def add_suffix(s: str, suffix: str, max_length: int = -1):
-    """
-    Add a suffix to a string, optionally specifying a maximum string length
+    """Add a suffix to a string, optionally specifying a maximum string length
     and giving priority to the suffix if maximum string length is reached. ::
 
-        $ assert add_suffix("testing", "suffix", 7) == "tsuffix"
-        $ assert add_suffix("testing", "suffix", 8) == "tesuffix"
-        $ assert add_suffix("testing", "suffix", 9) == "tessuffix"
+        >>> add_suffix("testing", "suffix", 7)
+        "tsuffix"
+        >>> add_suffix("testing", "suffix", 8)
+        "tesuffix"
+        >>> add_suffix("testing", "suffix", 9)
+        "tessuffix"
 
     :param s: string
     :param suffix: suffix to append to ``s``
@@ -23,9 +25,8 @@ def add_suffix(s: str, suffix: str, max_length: int = -1):
 
 
 def add_suffixes(s: str, suffixes: List[str], max_length: int = -1):
-    """
-    Add a list of suffixes to a string, optionally specifying a maximum string length
-    and giving priority to the suffix if maximum string length is reached. ::
+    """Add a list of suffixes to a string, optionally specifying a maximum string length
+    and giving priority to the suffix if maximum string length is reached.
 
     :param s: string
     :param suffixes: suffixes to append to ``s``
@@ -43,6 +44,14 @@ def add_suffixes(s: str, suffixes: List[str], max_length: int = -1):
 
 
 def add_suffixes_with_base(base, suffixes: List[str] = [], delimiter: str = "_", max_length: int = -1):
+    """Adds a list of suffixes to a specified `base` string.
+
+    :param base: Base to add suffixes to
+    :param suffixes: List of suffixes to add to `base`
+    :param delimiter: Delimiter to use when adding suffixes. Defaults to "_"
+    :param max_length: Maximum string length of final result, giving priority to
+                       the suffixes. Defaults to -1, meaning no maximum.
+    """
     if not suffixes:
         return base[:max_length] if max_length > -1 else base
 
@@ -58,8 +67,7 @@ def add_suffixes_with_base(base, suffixes: List[str] = [], delimiter: str = "_",
 
 
 def strip_suffix(s: str, suffix: str):
-    """
-    Remove a suffix from a string.
+    """Remove a suffix from a string.
 
     :param s: string
     :param suffix: suffix to remove from ``s``

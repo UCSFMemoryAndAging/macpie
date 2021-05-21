@@ -77,16 +77,14 @@ class ExecutableGraph(BasicGraph):
             self.g[u][v]['operation'] = operation
 
     def execute(self):
-        """
-        Execute by calling all ``operation`` functions on each node and edge.
+        """Execute by calling all ``operation`` functions on each node and edge.
         """
         self.execute_nodes()
         self.execute_edges()
         self.executed = True
 
     def execute_nodes(self):
-        """
-        Execute all the nodes, calling the ``operation`` on each node if it exists.
+        """Execute all the nodes, calling the ``operation`` on each node if it exists.
         """
         for n, d in self.g.nodes.items():
             if 'operation' in d:
@@ -96,8 +94,7 @@ class ExecutableGraph(BasicGraph):
                 self.log_node_operation(n, node_operation)
 
     def execute_edges(self):
-        """
-        Execute all the edges, calling the ``operation`` on each edge if it exists.
+        """Execute all the edges, calling the ``operation`` on each edge if it exists.
         """
         for u, v, edge_operation in self.g.edges.data('operation'):
             if edge_operation is not None:

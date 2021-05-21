@@ -26,4 +26,6 @@ from macpie.tools import *
 # sub-level api
 from macpie import pandas
 
+from macpie import testing
+
 from macpie import util

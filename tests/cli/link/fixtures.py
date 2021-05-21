@@ -98,7 +98,6 @@ def cli_link_full_no_merge(tmp_path_factory):
                          tmp_path_factory.mktemp("cli_link_full_no_merge")))
 
 
-
 @pytest.fixture(scope="session")
 def cli_link_small_with_dups(tmp_path_factory):
     # macpie link -g closest tests/cli/link/small_with_dups.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv

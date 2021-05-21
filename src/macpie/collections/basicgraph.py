@@ -9,7 +9,11 @@ from .base import BaseCollection
 
 class BasicGraph(BaseCollection):
     """
+    A collection of Datasets using a directed graph structure,
+    composed of Dataset nodes and directed edges (i.e. the edges
+    are an ordered pair of nodes).
 
+    :param g: an existing :class:`networkx.DiGraph`. Defaults to None.
     """
 
     def __init__(self, g: nx.DiGraph = None):
@@ -37,13 +41,10 @@ class BasicGraph(BaseCollection):
         dset: Dataset,
         name=None
     ):
-        """
-        Add a single Dataset node to the graph.
+        """Add a single Dataset node to the graph.
 
-        :param operation: A callable to be called on the Dataset. Typically
-                          a data transformation function that expects a single
-                          pandas.DataFrame object and arbitrary keyword arguments.
-                          See :meth:`execute_nodes`
+        :param dset: Dataset node to add.
+        :param name: Name of node.
         """
         self.g.add_node(dset)
         self.g.nodes[dset]['name'] = name if name is not None else dset.name
@@ -54,13 +55,7 @@ class BasicGraph(BaseCollection):
         v: Dataset,
         name=None
     ):
-        """
-        Add an edge between u and v.
-
-        :param operation: A callable to be called on the two Datasets. Typically
-                          a data transformation function that expects two pandas.DataFrame
-                          objects and arbitrary keyword arguments.
-                          See :meth:`execute_edges`
+        """Add an edge between u and v.
         """
         self.g.add_edge(u, v)
 
@@ -68,14 +63,12 @@ class BasicGraph(BaseCollection):
         self.g[u][v]['name'] = name
 
     def get_root_node(self):
-        """
-        If the graph is a rooted tree, get the root node.
+        """If the graph is a rooted tree, get the root node.
         """
         return list(nx.topological_sort(self.g))[0]
 
     def get_node(self, n, attr: str = None):
-        """
-        Get the node attribute if specified, otherwise get the node.
+        """Get the node attribute if specified, otherwise get the node.
         """
         node = self.g.nodes[n]
         if attr is not None:
@@ -129,15 +122,14 @@ class BasicGraph(BaseCollection):
             counter += 1
 
     def print_graph(self):
-        """
-        Print a text representation of the graph.
+        """Print a text representation of the graph.
         """
         self.print_nodes()
         self.print_edges()
 
     def draw_graph(self):
-        """
-        Print a graph representation of the graph using matplotlib.
+        """Print a graph representation of the graph using the
+        ``matplotlib`` library.
         """
         pos = nx.shell_layout(self.g)
         # pos = nx.spring_layout(self.g)

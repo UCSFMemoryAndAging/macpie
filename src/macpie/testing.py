@@ -18,8 +18,8 @@ def assert_dfs_equal(
     """
     For testing equality of :class:`pandas.DataFrame` objects
 
-    :param df1: left DataFrame to compare
-    :param df2: right DataFrame to compare
+    :param left: left DataFrame to compare
+    :param right: right DataFrame to compare
     :param cols_ignore: DataFrame columns to ignore in comparison
     :param output_dir: directory to write row difference results to
     """

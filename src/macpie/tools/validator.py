@@ -1,6 +1,5 @@
 def validate_bool_kwarg(value, arg_name):
-    """
-    Ensures that argument passed in arg_name is of type bool.
+    """Ensures that argument passed in arg_name is of type bool.
     """
     if not (isinstance(value, bool) or value is None):
         raise ValueError(

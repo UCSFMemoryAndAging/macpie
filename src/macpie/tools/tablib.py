@@ -1,10 +1,10 @@
 from openpyxl import load_workbook
+import pandas as pd
 import tablib as tl
 
 
 class TablibWrapper:
-    """
-    Wrap a Tablib Dataset with extra functionality.
+    """Wrap a :class:`tablib.Dataset` with extra functionality.
     """
 
     def __init__(self, *args, **kwargs):
@@ -34,33 +34,42 @@ class TablibWrapper:
             return self._tlset.__repr__()
 
     @property
-    def tuples(self):
-        return list(self._tlset)
-
-    @property
     def df(self):
+        """Get :class:`pandas.DataFrame` representation of data.
+        """
         return self._tlset.export('df')
 
     def append_col_fill(self, fill_value, header=None):
+        """Adds a column to the Dataset with a specified `fill_value`.
+
+        :param fill_value: Value to fill new column with.
+        :param header: Header for new column. Defaults to None.
+        """
         fill_values = [fill_value] * self._tlset.height
         self._tlset.append_col(fill_values, header)
 
     def filter(self, tag):
+        """Returns a new instance, excluding any rows that
+        do not contain the given tag.
+        """
         return self.from_tlset(self._tlset.filter(tag))
 
     def to_excel(self, excel_writer, **kwargs):
         excel_writer.write_tlset(self._tlset, **kwargs)
 
     def wipe_data(self):
+        """Removes all content (but not headers).
+        """
         self._tlset._data = list()
 
     def print(self):
+        """Print a representation table suited to a terminal in grid format.
+        """
         print(self.export("cli", tablefmt="grid"))
 
     @classmethod
     def from_df(cls, df, title: str = None) -> "TablibWrapper":
-        """
-        Construct Info from a pandas DataFrame.
+        """Construct instance from a :class:`pandas.DataFrame`.
         """
         instance = cls(title=title)
         instance._tlset.dict = df.to_dict(orient='records')
@@ -69,6 +78,8 @@ class TablibWrapper:
 
     @classmethod
     def from_tlset(cls, tlset, title: str = None) -> "TablibWrapper":
+        """Construct instance from a :class:`tablib.Dataset`.
+        """
         if title:
             tlset.title = title
 
@@ -79,8 +90,7 @@ class TablibWrapper:
 
     @classmethod
     def from_excel_sheet(cls, filepath, sheet_name) -> "TablibWrapper":
-        """
-        Construct Info from an Excel sheet.
+        """Construct instance from an Excel sheet.
         """
         loaded_tlset = excel_to_tablib(filepath, sheet_name)
         loaded_tlset.title = sheet_name
@@ -91,7 +101,35 @@ class TablibWrapper:
         return instance
 
 
-def append_with_tags(ser, dset):
+def append_with_tags(dset: tl.Dataset, ser: pd.Series):
+    """Adds ``ser`` as a row to ``dset`` with tags derived
+    from the labels in ``ser`` that are not headers in ``dset``,
+    and whose value is ``'x'`` or ``'X'``.
+
+        >>> dset = tl.Dataset()
+        >>> dset.headers = ('Dataset', 'Field')
+        >>> dset.append(('CDR', 'Col1'))
+        >>> dset.export("df")
+          Dataset Field
+        0     CDR  Col1
+        >>> ser_data = {'Dataset':'CDR', 'Field':'Col2', 'Merge?': 'x'}
+        >>> ser = pd.Series(data=ser_data, index=['Dataset','Field','Merge?'])
+        >>> ser
+        Dataset     CDR
+        Field      Col2
+        Merge?        x
+        >>> mp.tablibtools.append_with_tags(dset, ser)
+        >>> dset.export("df")
+          Dataset Field
+        0     CDR  Col1
+        1     CDR  Col2
+        >>> dset2 = dset.filter('Merge?')
+          Dataset Field
+        0     CDR  Col2
+
+    :param dset: The :class:`tablib.Dataset` that gets ``ser`` appended to
+    :param ser: A row of data to append to ``dset``
+    """
     ser = ser.copy()
     headers = dset.headers
     data_row = [ser.pop(item=header) for header in headers]
@@ -100,7 +138,8 @@ def append_with_tags(ser, dset):
 
 
 def excel_to_tablib(filepath, sheet_name: str = None, headers=True):
-    """Returns a Tablib Dataset from an Excel file."""
+    """Returns a Tablib Dataset from an Excel file.
+    """
 
     wb = load_workbook(filepath, read_only=True, data_only=True)
     sheet = wb.active if sheet_name is None else wb[sheet_name]

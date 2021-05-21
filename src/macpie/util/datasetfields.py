@@ -5,6 +5,13 @@ from macpie.tools import tablib as tablibtools
 
 
 class DatasetFields(tablibtools.TablibWrapper):
+    """A tabular representation of a set of :class:`macpie.Dataset` fields.
+    First column is the Dataset name.
+    Second column is the Dataset column name.
+
+    It is a subclass of :class:`macpie.tablibtools.TablibWrapper`, and therefore
+    can be initialized with data the same way.
+    """
 
     tag_key_field = 'key_field'
     tag_non_key_field = 'non_key_field'
@@ -30,21 +37,30 @@ class DatasetFields(tablibtools.TablibWrapper):
 
     @property
     def datasets(self):
+        """A list of unique :class:`macpie.Dataset` names.
+        """
         return list(self.df[self._col_dataset].unique())
 
-    def prepend(self, rows, tags=[]):
-        other_rows = [row for row in self]
+    def prepend(self, fields, tags=[]):
+        """Prepend a list of Dataset fields.
+        """
+        other_fields = [field for field in self]
         self.wipe_data()
-        self.extend(rows, tags=tags)
-        self.extend(other_rows)
+        self.extend(fields, tags=tags)
+        self.extend(other_fields)
 
     def sort(self, collection):
-        rows = [row for row in self]
-        rows.sort(key=lambda i: collection.all_fields.index(i))
+        """Sort the Dataset fields according to the order they have in
+        their respective collections.
+        """
+        fields = [field for field in self]
+        fields.sort(key=lambda i: collection.all_fields.index(i))
         self.wipe_data()
-        self.extend(rows)
+        self.extend(fields)
 
     def to_dict(self):
+        """Convert this :class:`DatasetFields` to a dictionary.
+        """
         dictionary = {}
         groups = self.df.groupby(by=self._col_dataset)
         for name, group in groups:
@@ -52,6 +68,8 @@ class DatasetFields(tablibtools.TablibWrapper):
         return dictionary
 
     def to_excel(self, excel_writer, **kwargs):
+        """Write :class:`DatasetFields` to an Excel sheet.
+        """
         df = self.df
         sheet_name = kwargs.pop('sheet_name', self.title)
         index = kwargs.pop('index', False)
@@ -59,8 +77,7 @@ class DatasetFields(tablibtools.TablibWrapper):
 
     @classmethod
     def from_collection(cls, collection, **kwargs) -> "DatasetFields":
-        """
-        Construct DatasetFields from a MACPie Collection.
+        """Construct :class:`DatasetFields` from a MACPie Collection.
         """
         tags = kwargs.pop('tags', [])
         instance = cls(**kwargs)
@@ -81,13 +98,12 @@ class DatasetFields(tablibtools.TablibWrapper):
 
     @classmethod
     def from_excel_sheet_create_tags(cls, filepath, sheet_name) -> "DatasetFields":
-        """
-        Construct DatasetFields from a pandas DataFrame.
+        """Construct :class:`DatasetFields` from a :class:`pandas.DataFrame`.
         """
         instance = cls(title=sheet_name)
         df = pd.read_excel(filepath, sheet_name=sheet_name, header=0, index_col=None)
         df.apply(
-            lambda x: tablibtools.append_with_tags(x, instance),
+            lambda x: tablibtools.append_with_tags(instance, x),
             axis='columns'
         )
         return instance

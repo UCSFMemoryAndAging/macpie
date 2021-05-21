@@ -4,6 +4,16 @@ import time
 
 
 class TrackHistory:
+    """
+    Decorator for class methods.
+
+    When a class method is decorated with ``@TrackHistory``, each time that
+    method is invoked, a record will be added to the class instance's ``_history``
+    attribute. The record will include before and after information using
+    the instance's ``to_dict()`` method, as well as useful information like
+    the method signature used in the invocation and duration of the method call.
+    """
+
     def __init__(self, func):
         # wrap the method
         update_wrapper(self, func)
