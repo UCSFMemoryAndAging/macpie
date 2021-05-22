@@ -7,8 +7,7 @@ def group_by_keep_one(
     keep: str = 'all',
     drop_duplicates: bool = False
 ) -> None:
-    """
-    Given a :class:`Dataset` object, group on the :attr:`Dataset.id2_col` column
+    """Given a :class:`Dataset` object, group on the :attr:`Dataset.id2_col` column
     and keep only the earliest or latest row in each group as determined by the date
     in the :attr:`Dataset.date_col` column.
 

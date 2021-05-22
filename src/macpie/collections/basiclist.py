@@ -8,8 +8,7 @@ from .base import BaseCollection
 
 
 class BasicList(BaseCollection):
-    """
-    A basic list of Datasets.
+    """A basic list of Datasets.
     """
 
     def __init__(self, dsets: List[Dataset] = []):
@@ -107,7 +106,11 @@ class BasicList(BaseCollection):
             dset.to_excel(excel_writer, **kwargs)
 
     def to_dict(self):
+        """Convert the :class:`BasicList` to a dictionary.
+        """
         return {"dsets": self._dsets}
 
-    def to_json(self):
+    def to_json_dict(self):
+        """Convert the :class:`BasicList` to a dictionary suitable for JSON.
+        """
         return self._dsets

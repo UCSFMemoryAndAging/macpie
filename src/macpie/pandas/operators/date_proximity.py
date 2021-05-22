@@ -27,8 +27,7 @@ def date_proximity(
     merge='partial',
     merge_suffixes=get_option("operators.binary.column_suffixes")
 ) -> pd.DataFrame:
-    """
-    Links data across two :class:`pandas.DataFrame` objects by date proximity.
+    """Links data across two :class:`pandas.DataFrame` objects by date proximity.
 
     Specifically, a "left" DataFrame contains a timepoint anchor, and a "right" DataFrame
     is linked to the left by retrieving all rows that match on a specified id col, and

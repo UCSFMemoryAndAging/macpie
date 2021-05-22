@@ -12,8 +12,7 @@ from macpie.tools import string as strtools
 
 
 def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
-    """
-    Adds a column to DataFrame called ``_diff_days`` which contains
+    """Adds a column to DataFrame called ``_diff_days`` which contains
     the number of days between ``col_start`` and ``col_end``
 
     :param df: DataFrame
@@ -29,8 +28,7 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
 
 
 def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
-    """
-    Return ``True`` if there are any duplicates in ``col``.
+    """Return ``True`` if there are any duplicates in ``col``.
 
     :param df: DataFrame
     :param col: column to check for duplicates
@@ -43,8 +41,7 @@ def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
 
 
 def assimilate(left: pd.DataFrame, right: pd.DataFrame):
-    """
-    Assimilate ``right`` to look like ``left`` by casting column data types in ``right``
+    """Assimilate ``right`` to look like ``left`` by casting column data types in ``right``
     to the data types in ``left`` where the column name is the same.
 
     :param left: left DataFrame
@@ -72,13 +69,17 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
 
 
 def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
-    """
-    Return a length-2 tuple where the first element is the set of columns that
+    """Return a length-2 tuple where the first element is the set of columns that
     exist in ``left``, and the second element is the set of columns that only
     exist in ``right``.
 
     :param left: left DataFrame
     :param right: right DataFrame
+    :param cols_ignore: columns to ignore
+    :param cols_ignore_pat: Character sequence or regular expression.
+                            Column names that match will be ignored.
+                            Defaults to None, which uses the pattern
+                            ``'$^'`` to match nothing to ignore nothing
     """
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
@@ -96,8 +97,7 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
 
 
 def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
-    """
-    If ``left`` and ``right`` share the same columns, returns a DataFrame
+    """If ``left`` and ``right`` share the same columns, returns a DataFrame
     containing rows that differ.
 
     :param left: left DataFrame
@@ -127,6 +127,14 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
 
 
 def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
+    """Drop specified columns
+
+    :param cols_list: List of columns to drop. Defaults to set()
+    :param cols_pat: Character sequence or regular expression.
+                     Column names that match will be dropped.
+                     Defaults to None, which uses the pattern
+                     ``'$^'`` to match nothing to ignore nothing
+    """
     # Default pattern is to match nothing to ignore nothing
     cols_pat = '$^' if cols_pat is None else cols_pat
 
@@ -146,8 +154,7 @@ def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
 
 
 def drop_suffix(df: pd.DataFrame, suffix):
-    """
-    Removes the ``suffix`` in any column name containing the ``suffix``.
+    """Removes the ``suffix`` in any column name containing the ``suffix``.
 
     :param df: DataFrame
     :param suffix: suffix to drop
@@ -161,13 +168,15 @@ def equals(
     cols_ignore=set(),
     cols_ignore_pat=None
 ):
-    """
-    For testing equality of :class:`pandas.DataFrame` objects
+    """For testing equality of :class:`pandas.DataFrame` objects
 
     :param df1: left DataFrame to compare
     :param df2: right DataFrame to compare
     :param cols_ignore: DataFrame columns to ignore in comparison
-    :param cols_ignore_pat: DataFrame columns to ignore using regex pattern
+    :param cols_ignore_pat: Character sequence or regular expression.
+                            Column names that match will be ignored in comparison.
+                            Defaults to None, which uses the pattern
+                            ``'$^'`` to match nothing to ignore nothing
     """
     if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
         if not isinstance(left.columns, pd.MultiIndex) or not isinstance(right.columns, pd.MultiIndex):
@@ -184,8 +193,7 @@ def equals(
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
-    """
-    Flatten (i.e. collapse) the multiindex on a particular ``axis`` using
+    """Flatten (i.e. collapse) the multiindex on a particular ``axis`` using
     a ``delimiter``.
 
     :param df: DataFrame
@@ -201,8 +209,7 @@ def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
 
 
 def get_col_name(df: pd.DataFrame, col_name):
-    """
-    Get the properly-cased column name from ``df``, ignoring case.
+    """Get the properly-cased column name from ``df``, ignoring case.
 
     :param df: DataFrame
     :param col_name: case-insensitive name of the column
@@ -229,8 +236,7 @@ def get_col_name(df: pd.DataFrame, col_name):
 
 
 def get_col_names(df: pd.DataFrame, col_names: List[str]):
-    """
-    Get the properly-cased columns names from ``df``, ignoring case.
+    """Get the properly-cased columns names from ``df``, ignoring case.
 
     :param df: DataFrame
     :param col_names: list of case-insensitive column names
@@ -241,8 +247,7 @@ def get_col_names(df: pd.DataFrame, col_names: List[str]):
 
 
 def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):
-    """
-    Adds a column to the end of the DataFrame
+    """Adds a column to the end of the DataFrame
 
     :param df: DataFrame
     :param col_name: name of column to insert
@@ -252,8 +257,7 @@ def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):
 
 
 def is_date_col(arr_or_dtype):
-    """
-    Check whether the provided array or dtype is of the datetime64 dtype.
+    """Check whether the provided array or dtype is of the datetime64 dtype.
 
     :param arr_or_dtype: The array or dtype to check
     """
@@ -261,8 +265,7 @@ def is_date_col(arr_or_dtype):
 
 
 def json_dumps_contents(df: pd.DataFrame):
-    """
-    Perform a json.dumps of each value in ``df``.
+    """Perform a json.dumps of each value in ``df``.
 
     :param df: DataFrame
     """
@@ -270,8 +273,7 @@ def json_dumps_contents(df: pd.DataFrame):
 
 
 def json_loads_contents(df: pd.DataFrame):
-    """
-    Perform a json.loads of each value in ``df``.
+    """Perform a json.loads of each value in ``df``.
 
     :param df: DataFrame
     """
@@ -279,8 +281,7 @@ def json_loads_contents(df: pd.DataFrame):
 
 
 def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
-    """
-    Create a column in ``df`` called ``_duplicates`` which is a boolean Series
+    """Create a column in ``df`` called ``_duplicates`` which is a boolean Series
     denoting duplicate rows as identified by ``cols``.
 
     :param df: DataFrame
@@ -291,8 +292,7 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
 
 
 def num_cols(df: pd.DataFrame):
-    """
-    Return number of columns in ``df``.
+    """Return number of columns in ``df``.
 
     :param df: DataFrame
     """
@@ -301,8 +301,7 @@ def num_cols(df: pd.DataFrame):
 
 
 def num_rows(df: pd.DataFrame):
-    """
-    Return number of rows in ``df``.
+    """Return number of rows in ``df``.
 
     :param df: DataFrame
     """
@@ -311,8 +310,7 @@ def num_rows(df: pd.DataFrame):
 
 
 def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
-    """
-    For any column names containing ``old_suffix``, replace the ``old_suffix``
+    """For any column names containing ``old_suffix``, replace the ``old_suffix``
     with ``new_suffix``.
 
     :param df: DataFrame
@@ -323,8 +321,7 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
 
 
 def to_datetime(df: pd.DataFrame, date_col: str):
-    """
-    Convert ``date_col`` column in ``df`` to datetime.
+    """Convert ``date_col`` column in ``df`` to datetime.
 
     :param df: DataFrame
     :param date_col: column to convert

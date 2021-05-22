@@ -8,8 +8,7 @@ def filter_by_id(
     id_col: str,
     ids: List[int]
 ) -> pd.DataFrame:
-    """
-    Filters a :class:`pandas.DataFrame` object to only include a specified list
+    """Filters a :class:`pandas.DataFrame` object to only include a specified list
     of numerical IDs in a specified numerical ID column.
 
     :param df: the DataFrame to filter

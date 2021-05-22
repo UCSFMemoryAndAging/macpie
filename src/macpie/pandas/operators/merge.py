@@ -16,8 +16,7 @@ def merge(
     add_suffixes=False,
     add_indexes=(None, None)
 ) -> pd.DataFrame:
-    """
-    Merge :class:`pandas.DataFrame` objects with a database-style join, similar to
+    """Merge :class:`pandas.DataFrame` objects with a database-style join, similar to
     :meth:`pandas.DataFrame.merge`.
 
     :param left: DataFrame

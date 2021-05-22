@@ -9,16 +9,35 @@
    Security - in case of vulnerabilities.
 
 
-Unreleased
-----------
+0.3 (2021-05-XX)
+----------------
 
 Added
 ~~~~~
-- :func:`util.list.chunks` function
+- Core :class:`Dataset` class
+- :ref:`Collections <api-collections-classes>` classes
+  
+  - :class:`BasicList`
+  - :class:`AnchoredList`
+  - :class:`MergeableAnchoredList`
+  - :class:`BasicGraph`
+  - :class:`ExecutableGraph`
 
-Fixed
-~~~~~
-- :class:`macpie.pandas.MacDataFrameAccessor` not imported in modules that use
+- :ref:`Tools <api-tools>`
+
+  - :ref:`Tablib <api-tools-tablib>`
+
+- :ref:`Utilities <api-utilities>`
+
+  - :class:`util.DatasetFields`
+  - :class:`util.Info`
+  - :class:`util.TrackHistory`
+
+- :ref:`Options <api-options>` system
+
+Changed
+~~~~~~~
+- Breaking changes almost everywhere
 
 Other
 ~~~~~

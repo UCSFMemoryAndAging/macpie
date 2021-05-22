@@ -8,10 +8,9 @@ from .base import BaseCollection
 
 
 class BasicGraph(BaseCollection):
-    """
-    A collection of Datasets using a directed graph structure,
+    """A collection of Datasets using a directed graph structure,
     composed of Dataset nodes and directed edges (i.e. the edges
-    are an ordered pair of nodes).
+    are an ordered pair of Dataset nodes).
 
     :param g: an existing :class:`networkx.DiGraph`. Defaults to None.
     """
@@ -42,9 +41,6 @@ class BasicGraph(BaseCollection):
         name=None
     ):
         """Add a single Dataset node to the graph.
-
-        :param dset: Dataset node to add.
-        :param name: Name of node.
         """
         self.g.add_node(dset)
         self.g.nodes[dset]['name'] = name if name is not None else dset.name

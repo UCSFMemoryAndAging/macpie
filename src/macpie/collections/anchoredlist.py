@@ -14,9 +14,7 @@ class AnchoredList(BaseCollection):
     or `anchor` Dataset, and the rest are considered `secondary` Datasets.
 
     :param primary: The primary `anchor` Dataset of the collection.
-                    Cannot be directly modified.
     :param secondary: The secondary Datasets of the collection.
-                      Cannot be directly modified.
 
     """
 
@@ -57,10 +55,16 @@ class AnchoredList(BaseCollection):
 
     @property
     def primary(self):
+        """The primary `anchor` Dataset of the collection.
+        Cannot be directly modified.
+        """
         return self._primary
 
     @property
     def secondary(self):
+        """The secondary Datasets of the collection.
+        Cannot be directly modified.
+        """
         return self._secondary
 
     @property
@@ -123,7 +127,7 @@ class AnchoredList(BaseCollection):
             self.add_secondary(sec)
 
     def add_secondary(self, dset: Dataset):
-        """Append a Dataset to the `secondary` Datasets list.
+        """Append `dset` to :attr:`AnchoredList.secondary`.
         """
         dset.add_tag(AnchoredList.tag_secondary)
         self._secondary.append(dset)

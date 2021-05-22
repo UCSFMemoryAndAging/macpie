@@ -7,10 +7,8 @@ from macpie.tools import io as iotools
 
 
 class ClickPath(click.Path):
+    """A Click path argument that returns a ``Path``, not a string.
     """
-    A Click path argument that returns a ``Path``, not a string.
-    """
-
     def convert(
         self,
         value: str,

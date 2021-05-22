@@ -437,8 +437,7 @@ class Dataset:
     # -------------------------------------------------------------------------
 
     def to_dict(self):
-        """
-        Convert the :class:`Dataset` to a dictionary.
+        """Convert the :class:`Dataset` to a dictionary.
         """
         return {
             'name': self.name,
@@ -453,8 +452,7 @@ class Dataset:
         }
 
     def to_tablib(self):
-        """
-        Convert the :class:`Dataset` to a :class:`tablib.Dataset`.
+        """Convert the :class:`Dataset` to a :class:`tablib.Dataset`.
         """
         tlset = tl.Dataset()
         tlset.title = self.display_name

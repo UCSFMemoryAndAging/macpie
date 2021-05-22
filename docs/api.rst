@@ -12,6 +12,8 @@ Dataset Class
     :members:
 
 
+.. _api-collections-classes:
+
 Collections Classes
 -------------------
 
@@ -152,6 +154,8 @@ Pandas Helper Functions
 .. autofunction:: macpie.pandas.to_datetime
 
 
+.. _api-tools:
+
 General Programming Tools
 -------------------------
 
@@ -253,6 +257,9 @@ Tools related to Python :class:`list`, :class:`tuple`, and :class:`set`.
 
 .. autofunction:: macpie.strtools.strip_suffix
 
+
+.. _api-tools-tablib:
+
 `Tablib <https://tablib.readthedocs.io/en/stable/>`_ Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -274,6 +281,8 @@ Validation Tools
 .. autofunction:: macpie.validatortools.validate_bool_kwarg
 
 
+.. _api-utilities:
+
 Utilities
 ---------
 
@@ -286,6 +295,8 @@ Utilities
 .. autoclass:: macpie.util.TrackHistory
    :members:
 
+
+.. _api-options:
 
 Working with Options
 --------------------

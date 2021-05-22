@@ -13,8 +13,8 @@ class MACPieJSONEncoder(json.JSONEncoder):
     TIME_FORMAT = "%H:%M:%S"
 
     def default(self, obj):
-        if hasattr(obj, 'to_json'):
-            return obj.to_json()
+        if hasattr(obj, 'to_json_dict'):
+            return obj.to_json_dict()
         if hasattr(obj, 'to_dict'):
             return obj.to_dict()
         if isinstance(obj, datetime.datetime):

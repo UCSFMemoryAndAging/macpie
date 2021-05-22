@@ -15,12 +15,15 @@ def assert_dfs_equal(
     cols_ignore_pat=None,
     output_dir=None
 ):
-    """
-    For testing equality of :class:`pandas.DataFrame` objects
+    """For testing equality of :class:`pandas.DataFrame` objects
 
     :param left: left DataFrame to compare
     :param right: right DataFrame to compare
     :param cols_ignore: DataFrame columns to ignore in comparison
+    :param cols_ignore_pat: Character sequence or regular expression.
+                            Column names that match will be ignored.
+                            Defaults to None, which uses the pattern
+                            ``'$^'`` to match nothing to ignore nothing
     :param output_dir: directory to write row difference results to
     """
 

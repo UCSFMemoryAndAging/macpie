@@ -4,8 +4,8 @@ import time
 
 
 class TrackHistory:
-    """
-    Decorator for class methods.
+    """Decorator for class methods for tracking history of
+    class instance modifications.
 
     When a class method is decorated with ``@TrackHistory``, each time that
     method is invoked, a record will be added to the class instance's ``_history``

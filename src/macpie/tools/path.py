@@ -9,6 +9,21 @@ from .datetime import append_current_datetime_str
 
 
 def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
+    """Creates an output directory with the current date/time appended to
+    the directory name.
+
+        >>> from pathlib import Path
+        >>> results_dir = pathtools.create_output_dir(Path('.'), "results")
+        >>> results_dir
+        PosixPath('results_20210521_162611')
+
+    :param output_dir: Directory in which to create the new directory.
+                       Defaults to None, which will use the current directory.
+    :param output_dir_name: Name of the new directory.
+                            Defaults to None, which will use "new_folder".
+
+    :raises PathError: If ``output_dir`` is not a directory
+    """
     if output_dir is None:
         output_dir = Path('.')
 
@@ -30,8 +45,7 @@ def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
 
 
 def get_files_from_dir(d: Path) -> List[Path]:
-    """
-    Get all files only from directory
+    """Get all files only from directory
 
     :param d: directory
 
@@ -41,8 +55,7 @@ def get_files_from_dir(d: Path) -> List[Path]:
 
 
 def validate_filepath(p: Path, allowed_file: Callable = None) -> Path:
-    """
-    Validate a path to a file.
+    """Validate a path to a file.
 
     :param p: file path
     :param allowed_file: a function that returns True if considered valid
@@ -62,9 +75,8 @@ def validate_filepath(p: Path, allowed_file: Callable = None) -> Path:
     return p
 
 
-def validate_filepaths(ps: [Path], allowed_file: Callable = None) -> Tuple[list, list]:
-    """
-    Validate a container of file paths.
+def validate_filepaths(ps: List[Path], allowed_file: Callable = None) -> Tuple[list, list]:
+    """Validate a container of file paths.
 
     :param ps: container of file paths
     :param allowed_file: a function that returns True if considered valid

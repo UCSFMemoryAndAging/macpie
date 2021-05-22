@@ -14,8 +14,7 @@ def date_proximity(
     duplicates_indicator: bool = False,
     merge_suffixes=get_option("operators.binary.column_suffixes")
 ) -> None:
-    """
-    Links data across two :class:`Dataset` objects by date proximity, first joining
+    """Links data across two :class:`Dataset` objects by date proximity, first joining
     them on their :attr:`Dataset.id2_col`.
 
     Specifically, a `left` Dataset contains a timepoint anchor, and a `right` Dataset

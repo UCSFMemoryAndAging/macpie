@@ -10,6 +10,7 @@ setup(
     version=version,
     install_requires=[
         "click>=7.1.2",
+        "matplotlib>=3.4.2",
         "networkx>=2.5",
         "openpyxl>=3.0.6",
         "pandas>=1.2.3",

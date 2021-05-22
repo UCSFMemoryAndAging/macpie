@@ -16,21 +16,17 @@ from .basiclist import BasicList
 
 
 class MergeableAnchoredList(AnchoredList):
-    """
-    A :class:`macpie.AnchoredList` that is `mergeable`,
+    """A :class:`macpie.AnchoredList` that is `mergeable`,
     meaning all ``secondary`` Datasets have a common column that can be
     used to merge with a column in the ``primary`` Dataset.
     Includes advanced duplicate handling functionality.
 
     :param primary: The primary `anchor` Dataset of the collection.
-                    Cannot be directly modified.
     :param secondary: The secondary Datasets of the collection.
-                      Cannot be directly modified.
     :param primary_anchor_col: The column in ``primary`` to merge on
     :param secondary_anchor_col: The column in each ``secondary`` Dataset
                                  to merge on
     :param selected_fields: Fields to keep (discarding the rest)
-
     """
 
     #: Tag that denotes a Dataset can be merged (i.e. no duplicates)
@@ -125,7 +121,7 @@ class MergeableAnchoredList(AnchoredList):
         return fields
 
     def add_secondary(self, dset: Dataset):
-        """Append a Dataset to the `secondary` Datasets list.
+        """Append `dset` to :attr:`MergeableAnchoredList.secondary`.
         """
         if self._secondary_anchor_col not in dset.df.columns:
             warnings.warn(
@@ -234,8 +230,7 @@ class MergeableAnchoredList(AnchoredList):
         return result
 
     def to_dict(self):
-        """
-        Convert the MergeableAnchoredList to a dictionary.
+        """Convert the MergeableAnchoredList to a dictionary.
         """
         return {
             'primary': self._primary,
@@ -284,8 +279,7 @@ class MergeableAnchoredList(AnchoredList):
 
     @classmethod
     def from_excel(cls, filepath) -> "MergeableAnchoredList":
-        """
-        Construct :class:`MergeableAnchoredList` from an Excel file.
+        """Construct :class:`MergeableAnchoredList` from an Excel file.
         """
         sheet_name = get_option("sheet.name.collection_info")
         try:

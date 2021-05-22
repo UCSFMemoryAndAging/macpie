@@ -9,8 +9,7 @@ from .basicgraph import BasicGraph
 
 
 class ExecutableGraph(BasicGraph):
-    """
-    A collection of Datasets using a directed graph structure.
+    """A collection of Datasets using a directed graph structure.
 
     The collection is composed of nodes and directed edges (i.e. the edges
     are an ordered pair of nodes). Nodes and edges can have operations attached
@@ -37,8 +36,7 @@ class ExecutableGraph(BasicGraph):
         name=None,
         operation: Callable = None
     ):
-        """
-        Add a single Dataset node to the graph.
+        """Add a single Dataset node to the graph.
 
         :param operation: A callable to be called on the Dataset. Typically
                           a data transformation function that expects a single
@@ -56,8 +54,7 @@ class ExecutableGraph(BasicGraph):
         name=None,
         operation: Callable = None
     ):
-        """
-        Add an edge between u and v.
+        """Add an edge between u and v.
 
         :param operation: A callable to be called on the two Datasets. Typically
                           a data transformation function that expects two pandas.DataFrame
