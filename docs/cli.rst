@@ -72,8 +72,8 @@ If they are not specified using these options, then defaults (as described below
 .. option:: -i <STRING>, --id-col=<STRING>
 
    ``Default=InstrID``. ID column header. The column header of the primary ID column.
-   In general, this column contains the primary key/index (unique identifiers) of the data
-   object. In a research data management system, this is typically the ID of a specific
+   In general, this column contains the primary key/index (unique identifiers) of the dataset.
+   In a research data management system, this is typically the ID of a specific
    data form or assessment.
 
 .. option:: -d <STRING>, --date-col=<STRING>
@@ -85,7 +85,7 @@ If they are not specified using these options, then defaults (as described below
 .. option:: -j <STRING>, --id2-col=<STRING>
 
    ``Default=PIDN``. ID2 column header. The column header of the primary ID2 column.
-   In general, this column contains the secondary key/index of the data object. In a research
+   In general, this column contains the secondary key/index of the dataset. In a research
    data management system, this is typically the ID of the patient, subject, or participant
    who completed the form or assessment.
 
@@ -132,7 +132,7 @@ Arguments
 Output
 ~~~~~~
 
-The results of each data object will be stored in a corresponding worksheet inside the results file.
+The results of each dataset will be stored in a corresponding worksheet inside the results file.
 
 
 .. _examples-keepone:
@@ -163,11 +163,11 @@ Examples
 Command - ``link``
 ------------------
 
-This command links data across multiple data objects using a specified timepoint anchor and time range.
+This command links data across multiple datasets using a specified timepoint anchor and time range.
 
-Specifically, a single ``PRIMARY`` data object contains the timepoint anchor (the :option:`--date-col` column).
-Then, one or more ``SECONDARY`` data objects is linked by retrieving all rows that match on the
-``PRIMARY`` data object's :option:`--id2-col` field and whose :option:`--date-col` fields are within a certain
+Specifically, a single ``PRIMARY`` dataset contains the timepoint anchor (the :option:`--date-col` column).
+Then, one or more ``SECONDARY`` datasets is linked by retrieving all rows that match on the
+``PRIMARY`` dataset's :option:`--id2-col` field and whose :option:`--date-col` fields are within a certain
 time range of each other.
 
 Usage
@@ -198,7 +198,7 @@ Options
     - ``closest``: get only the closest row that is within :option:`--secondary-days` days of the
       corresponding ``PRIMARY`` timepoint anchor
 
-.. option:: -d <INTEGER>, --secondary-days=<INTEGER>
+.. option:: -t <INTEGER>, --secondary-days=<INTEGER>
 
    ``Default=90``. Specify the time range measured in days.
 
@@ -229,7 +229,7 @@ Options
 .. option:: --merge-results/--no-merge-results
 
    ``Default=--merge-results``. Whether the linked results should be merged into one dataset. Otherwise, the linked
-   data objects will remain in their worksheets.
+   datasets will remain in their worksheets.
 
 .. option:: --help
 
@@ -241,12 +241,12 @@ Arguments
 
 .. option:: PRIMARY 
 
-   *Required*. Filename of the primary data object. One and only one must be specified.
+   *Required*. Filename of the primary dataset. One and only one must be specified.
     
 
 .. option:: SECONDARY
 
-   *Optional*. Filenames of the secondary data object(s), delimited by a space. An unlimited
+   *Optional*. Filenames of the secondary dataset(s), delimited by a space. An unlimited
    number of files can be specified.
     
 
@@ -254,10 +254,10 @@ Arguments
 Output
 ~~~~~~
 
-In the results file, the primary data object will have the suffix ``_anchor``, and every linked
-secondary data object will have the suffix ``_linked``.
+In the results file, the primary dataset will have the suffix ``_anchor``, and every linked
+secondary dataset will have the suffix ``_linked``.
 
-**IMPORTANT NOTE REGARDING DUPLICATES**: Each secondary data object result will have an extra column
+**IMPORTANT NOTE REGARDING DUPLICATES**: Each secondary dataset result will have an extra column
 ``_duplicates`` indicating whether that row is part of a duplicate set of rows (i.e. ``True`` if it is
 a duplicate, ``False`` otherwise); that row will also be highlighted yellow. It is up to you to
 remove any duplicates and keep the single record you consider the most valid or most useful to your dataset.
@@ -274,8 +274,8 @@ Some common conditions producing duplicates include:
       may have forgotten to remove the assessment that were automatically created as part of the
       cancelled visit.
 
-A good way to know whether you are ready to combine your data objects into a single dataset is if each secondary
-data object has the *same number of rows* as the primary anchor.
+A good way to know whether you are ready to combine your datasets into a single dataset is if each secondary
+dataset has the *same number of rows* as the primary anchor.
 
 
 .. _examples-link:
@@ -311,10 +311,10 @@ Command - ``merge``
 -------------------
 
 This command is a common follow-up to the :ref:`link <command-link>` command, as it allows you to select specific fields 
-across various data objects to merge together into one dataset (thereby removing unwanted fields, which can be many).
+across various datasets to merge together into one dataset (thereby removing unwanted fields, which can be many).
 
 The output file of the ``link`` command includes a worksheet named ``_available_fields``. This provides
-a view of all the fields across all the data objects that you input into the ``link`` command. By placing an ``"x"``
+a view of all the fields across all the datasets that you input into the ``link`` command. By placing an ``"x"``
 next to a particular field, the ``merge`` command will attempt to merge only those fields you marked into one single dataset.
 The linking fields (i.e. ``id_col``, ``date_col``, and ``id2_col`` of the primary argument in the ``link`` command, 
 e.g. ``PIDN``, ``DCDate``, ``InstrID``) will always be included.
@@ -347,8 +347,8 @@ Arguments
 Output
 ~~~~~~
 
-In the results file, all the merged fields will be in a single worksheet. Any data object that was not
-merged (by choice or because there were duplicates), will remain in its own worksheet. If a data object
+In the results file, all the merged fields will be in a single worksheet. Any dataset that was not
+merged (by choice or because there were duplicates), will remain in its own worksheet. If a dataset
 could not be merged because there were duplicates, you can remove the duplicates, save the file, and use
 this same command to attempt the merge again.
 

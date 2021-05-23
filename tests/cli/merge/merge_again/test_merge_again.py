@@ -30,7 +30,7 @@ def test_merge_again(helpers, tmp_path):
     # the full_merged_once.xlsx file was created from the result
     # of the tests.cli.merge.test_full.test_full_no_merge test,
     # and then removing the first duplicate in each set of duplicates for the
-    # instr2_all data object
+    # instr2_all dataset
     cli_args = ['merge', str((current_dir / "full_merged_once.xlsx").resolve())]
 
     with runner.isolated_filesystem():

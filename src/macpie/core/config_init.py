@@ -150,5 +150,9 @@ cf.register_option(
 )
 
 cf.register_option(
+    "sheet.suffix.duplicates", "_DUPS", "", validator=pandas_cf.is_str
+)
+
+cf.register_option(
     "operators.binary.column_suffixes", ("_x", "_y"), "", validator=cf.is_tuple_of_two
 )

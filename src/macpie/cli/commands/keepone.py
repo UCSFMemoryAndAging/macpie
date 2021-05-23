@@ -3,6 +3,7 @@ import click
 from macpie._config import get_option
 from macpie.collections.basiclist import BasicList
 from macpie.core.dataset import Dataset
+from macpie.io.excel import MACPieExcelWriter
 from macpie.tools import path as pathtools
 
 from macpie.cli.core import allowed_file, ClickPath
@@ -33,7 +34,11 @@ def keepone(ctx, keep, primary):
 
     collection = cmd.execute()
 
-    collection.to_excel(invoker.results_file)
+    with MACPieExcelWriter(invoker.results_file) as writer:
+        collection.to_excel(writer)
+        collection.get_collection_info().to_excel(writer)
+        invoker.get_command_info().to_excel(writer)
+        invoker.get_client_system_info().to_excel(writer)
 
 
 class _KeepOneCommand:
@@ -83,3 +88,5 @@ class _KeepOneCommand:
 
         if len(primary_valid) < 1:
             raise click.UsageError("ERROR: No valid files.")
+
+        self.primary = primary_valid

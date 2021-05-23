@@ -191,17 +191,17 @@ class _LinkCommand:
                     )
                     collection.add_secondary(sec_dset)
                 except DateProximityError as dpe:
-                    click.echo(f'\nERROR linking secondary dataset "{sec_dset.name}"\n')
+                    click.echo(f'\nERROR linking secondary dataset "{sec}"\n')
                     click.echo(dpe)
                 except Exception as e:
-                    click.echo(f'\nERROR loading secondary dataset "{sec_dset.name}"\n')
+                    click.echo(f'\nERROR loading secondary dataset "{sec}"\n')
                     click.echo(e)
                     raise(e)
 
         return collection
 
     def _validate(self):
-        primary = pathtools.validate_filepath(self.primary, allowed_file)
+        self.primary = pathtools.validate_filepath(self.primary, allowed_file)
 
         if self.secondary:
             (secondary_valid, secondary_invalid) = pathtools.validate_filepaths(self.secondary, allowed_file)
@@ -212,5 +212,7 @@ class _LinkCommand:
             if len(secondary_valid) < 1:
                 raise click.UsageError("ERROR: No valid files.")
             elif len(secondary_valid) == 1:
-                if primary == secondary_valid[0]:
-                    raise click.UsageError(f"ERROR: Primary file is {primary}. No secondary files to link to.")
+                if self.primary == secondary_valid[0]:
+                    raise click.UsageError(f"ERROR: Primary file is {self.primary}. No secondary files to link to.")
+
+            self.secondary = secondary_valid

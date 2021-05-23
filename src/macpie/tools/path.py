@@ -51,6 +51,8 @@ def get_files_from_dir(d: Path) -> List[Path]:
 
     :return: list of files
     """
+
+    # Note that Path.iterdir() yields path objects in arbitrary order
     return [f.resolve() for f in Path(d).iterdir() if f.is_file()]
 
 

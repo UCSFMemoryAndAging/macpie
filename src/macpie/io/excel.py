@@ -133,7 +133,10 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
                     # Since we are forced to keep the index column due to bug,
                     # might as well give it an informative name
                     ws['A2'].value = get_option("excel.row_index_header")
-            if ws.title.endswith(get_option("dataset.tag.duplicates")):
+            if (
+                    ws.title.endswith(get_option("dataset.tag.duplicates"))
+                    or ws.title.endswith(get_option("sheet.suffix.duplicates"))
+            ):
                 openpyxltools.ws_highlight_rows_with_col(ws, get_option("column.system.duplicates"))
 
         super().save()
