@@ -9,7 +9,7 @@
    Security - in case of vulnerabilities.
 
 
-0.3 (2021-05-XX)
+0.3 (2021-05-24)
 ----------------
 
 Added
