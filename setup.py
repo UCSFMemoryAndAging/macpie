@@ -9,13 +9,11 @@ setup(
     name="macpie",
     version=version,
     install_requires=[
-        "click>=7.1.2",
-        "matplotlib>=3.4.2",
-        "networkx>=2.5",
-        "openpyxl>=3.0.6",
-        "pandas>=1.2.3",
-        "tablib>=3.0.0",
-        "xlsxwriter>=1.3.7"
+        "click >= 8.0",
+        "mysql-connector-python >= 8.0.26",
+        "openpyxl >= 3.0",
+        "pandas >= 1.2",
+        "tablib >= 3.0",
     ],
     extras_require={"dotenv": ["python-dotenv"]},
 )
