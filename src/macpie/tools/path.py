@@ -25,13 +25,13 @@ def create_output_dir(output_dir: Path = None, output_dir_name: str = None):
     :raises PathError: If ``output_dir`` is not a directory
     """
     if output_dir is None:
-        output_dir = Path('.')
+        output_dir = Path(".")
 
     try:
         if not output_dir.is_dir():
-            raise PathError(f'Error writing output. Path is not a valid directory: {output_dir}')
+            raise PathError(f"Error writing output. Path is not a valid directory: {output_dir}")
     except Exception:
-        raise PathError(f'Error writing output. Path is not a valid path: {output_dir}')
+        raise PathError(f"Error writing output. Path is not a valid path: {output_dir}")
 
     if output_dir_name is None:
         output_dir_name = append_current_datetime_str("new_folder")
@@ -68,12 +68,12 @@ def validate_filepath(p: Path, allowed_file: Callable = None) -> Path:
              is a directory, or not allowed in ``allowed_file``
     """
     if not p.exists():
-        raise PathError('ERROR: File does not exist.')
+        raise PathError("ERROR: File does not exist.")
     if p.is_dir():
-        raise PathError('ERROR: File is not a file but a directory.')
+        raise PathError("ERROR: File is not a file but a directory.")
     if allowed_file is not None:
         if not allowed_file(p):
-            raise PathError('ERROR: File is specified as not allowed.')
+            raise PathError("ERROR: File is specified as not allowed.")
     return p
 
 
@@ -86,10 +86,6 @@ def validate_filepaths(ps: List[Path], allowed_file: Callable = None) -> Tuple[l
     :return: Length-2 tuple where the first element is list of valid files,
              and second element is list of invliad files.
     """
-    if allowed_file is None:
-        def allowed_file(p):
-            return True
-
     to_validate = []
     valid = []
     invalid = []
@@ -104,10 +100,10 @@ def validate_filepaths(ps: List[Path], allowed_file: Callable = None) -> Tuple[l
         if p in valid or p in invalid:
             continue
         # ignore hidden files
-        if p.stem.startswith('.'):
+        if p.stem.startswith("."):
             continue
         # ignore temp excel files
-        if p.stem.startswith('~') and p.suffix.startswith('.xls'):
+        if p.stem.startswith("~") and p.suffix.startswith(".xls"):
             continue
         try:
             vp = validate_filepath(p, allowed_file)

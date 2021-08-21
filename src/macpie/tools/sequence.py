@@ -1,5 +1,10 @@
-def chunks(a, n):
-    """Generator yielding successive n-sized chunks from list ``a``. ::
+from collections import defaultdict
+import itertools
+
+
+def chunks(seq, chunk_size=None):
+    """Make an iterator returning successive chunks of size ``chunk_size``
+    from ``seq``. ::
 
         >>> list = [1, 2, 3, 4, 5, 6, 7]
         >>> chnks = chunks(list, 3)
@@ -9,12 +14,20 @@ def chunks(a, n):
         [4, 5, 6]
         >>> next(chnks)
         [7]
-
-    :param a: list
-    :param n: size of chunks
     """
-    for i in range(0, len(a), n):
-        yield a[i:i + n]
+
+    if chunk_size is None:
+        chunk_size = len(seq) // 2
+
+    for i in range(0, len(seq), chunk_size):
+        yield seq[i : i + chunk_size]
+
+
+def common_members(a, b):
+    a_set = set(a) if a else set()
+    b_set = set(b) if b else set()
+
+    return list(a_set.intersection(b_set))
 
 
 def diff(a, b):
@@ -34,6 +47,49 @@ def diff(a, b):
     return [item for item in a if item not in b]
 
 
+def get_indices_of_duplicates(seq):
+    """Make an iterator that returns duplicate items from the ``seq`` along
+    with the the indices of that item. ::
+
+        >>> seq = ['a', 'b', 'c', 'b', 'd']
+        >>> dups = get_indices_of_duplicates(seq)
+        >>> next(dups)
+        ('b', [1, 3])
+    """
+
+    tally = defaultdict(list)
+
+    for i, item in enumerate(seq):
+        tally[item].append(i)
+
+    dups = (
+        (item, idxs)
+        for item, idxs in tally.items()
+        if len(idxs) > 1
+    )
+
+    return dups
+
+
+
+def is_disjoint(a, b):
+    """Check if two lists are disjoint (i.e. have no element in common). ::
+
+        >>> l1 = [1, 2, 6, 8]
+        >>> l2 = [2, 3, 5, 8]
+        >>> is_disjoint(l1, l2)
+        False
+
+    :param a: list
+    :param b: list
+    """
+    a_set = set(a)
+    b_set = set(b)
+    if len(a_set.intersection(b_set)) > 0:
+        return False
+    return True
+
+
 def is_list_like(obj):
     """Whether ``obj`` is a tuple or list
 
@@ -50,12 +106,11 @@ def list_like_str_equal(a, b, case_insensitive=False):
     :param b: list
     :param case_insensitive: whether equality comparison should be case insensitive
     """
-    if is_list_like(a) and is_list_like(b):
-        if len(a) == len(b):
-            if case_insensitive:
-                return str(a).lower() == str(b).lower()
-            else:
-                return str(a) == str(b)
+    if is_list_like(a) and is_list_like(b) and len(a) == len(b):
+        if case_insensitive:
+            return str(a).lower() == str(b).lower()
+        else:
+            return str(a) == str(b)
 
 
 def maybe_make_list(obj):
@@ -65,9 +120,12 @@ def maybe_make_list(obj):
 
     :return: list
     """
-    if obj is not None and not is_list_like(obj):
+    if is_list_like(obj):
+        return list(obj)
+    elif obj:
         return [obj]
-    return obj
+    else:
+        return []
 
 
 def move(a, item, item_to_move_to):
@@ -90,3 +148,17 @@ def move(a, item, item_to_move_to):
         a.insert(item_to_move_to_idx - 1, a.pop(item_idx))
     elif item_idx > item_to_move_to_idx:
         a.insert(item_to_move_to_idx, a.pop(item_idx))
+
+
+
+# pandas.isnull(x)
+def remove_trailers(iterable, predicate=None):
+    """
+    Remove trailing elements from list as long as predicate is true.
+    Return an iterator over the new list.
+    """
+    if predicate is None:
+    	predicate = lambda x: x is None
+    
+    return reversed(tuple(itertools.dropwhile(predicate, reversed(iterable))))
+

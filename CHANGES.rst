@@ -9,6 +9,26 @@
    Security - in case of vulnerabilities.
 
 
+0.4 (2021-XX-XX)
+----------------
+
+Added
+~~~~~
+- :ref:`masker <command-masker>` command for masking data
+- :ref:`Utilities <api-utilities>` classes for masking data
+
+  - :class:`util.Masker`
+  - :class:`util.Mapper`
+
+Changed
+~~~~~~~
+- ??
+
+Other
+~~~~~
+- ??
+
+
 0.3 (2021-05-24)
 ----------------
 

@@ -23,7 +23,7 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
     if col_start == col_end:
         raise KeyError("date columns have the same name: {col_start}")
     df[diff_days_col] = df[col_end] - df[col_start]
-    df[diff_days_col] = df[diff_days_col] / np.timedelta64(1, 'D')
+    df[diff_days_col] = df[diff_days_col] / np.timedelta64(1, "D")
     return df
 
 
@@ -51,8 +51,10 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
 
     # if one set of columns are MultiIndex, then both should be
     if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
-        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(right.columns, pd.MultiIndex):
-            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(
+            right.columns, pd.MultiIndex
+        ):
+            raise IndexError("One set of columns is a MultiIndex and the other is not.")
 
     left_columns = set(left.columns)
     right_columns = set(right.columns)
@@ -110,7 +112,7 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     left_only_cols, right_only_cols = diff_cols(left, right)
 
     if left_only_cols == right_only_cols == set():
-        indicator_col_name = get_option("column.system.prefix") + '_diff_rows_merge'
+        indicator_col_name = get_option("column.system.prefix") + "_diff_rows_merge"
         if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
             # TODO: Doing a pd.merge() on MultiIndex dataframes with indicator
             # set to True/string resulted in the following error:
@@ -119,11 +121,11 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
             # Flatten the column MultiIndexes to get around this
             left.columns = left.columns.to_flat_index()
             right.columns = right.columns.to_flat_index()
-        merged_df = pd.merge(left, right, indicator=indicator_col_name, how='outer')
-        changed_rows_df = merged_df[merged_df[indicator_col_name] != 'both']
+        merged_df = pd.merge(left, right, indicator=indicator_col_name, how="outer")
+        changed_rows_df = merged_df[merged_df[indicator_col_name] != "both"]
         return changed_rows_df
 
-    raise KeyError('Dataframes do not share the same columns')
+    raise KeyError("Dataframes do not share the same columns")
 
 
 def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
@@ -136,7 +138,7 @@ def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
                      ``'$^'`` to match nothing to ignore nothing
     """
     # Default pattern is to match nothing to ignore nothing
-    cols_pat = '$^' if cols_pat is None else cols_pat
+    cols_pat = "$^" if cols_pat is None else cols_pat
 
     if isinstance(df.columns, pd.MultiIndex):
         last_level = df.columns.nlevels - 1
@@ -148,7 +150,7 @@ def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
 
     df = df.loc[:, cols_to_keep]
 
-    df = df.drop(columns=cols_list, errors='ignore')
+    df = df.drop(columns=cols_list, errors="ignore")
 
     return df
 
@@ -162,12 +164,7 @@ def drop_suffix(df: pd.DataFrame, suffix):
     return df.rename(columns=lambda x: strtools.strip_suffix(x, suffix))
 
 
-def equals(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    cols_ignore=set(),
-    cols_ignore_pat=None
-):
+def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
     """For testing equality of :class:`pandas.DataFrame` objects
 
     :param df1: left DataFrame to compare
@@ -179,10 +176,12 @@ def equals(
                             ``'$^'`` to match nothing to ignore nothing
     """
     if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
-        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(right.columns, pd.MultiIndex):
-            raise IndexError('One set of columns is a MultiIndex and the other is not.')
+        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(
+            right.columns, pd.MultiIndex
+        ):
+            raise IndexError("One set of columns is a MultiIndex and the other is not.")
         if left.columns.nlevels != right.columns.nlevels:
-            raise IndexError('MultiIndexes have different levels.')
+            raise IndexError("MultiIndexes have different levels.")
 
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
@@ -192,7 +191,7 @@ def equals(
     return left.equals(right)
 
 
-def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = '_'):
+def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
     """Flatten (i.e. collapse) the multiindex on a particular ``axis`` using
     a ``delimiter``.
 
@@ -235,15 +234,25 @@ def get_col_name(df: pd.DataFrame, col_name):
     raise KeyError(f"column not found: {col_name}")
 
 
-def get_col_names(df: pd.DataFrame, col_names: List[str]):
+def get_col_names(df: pd.DataFrame, col_names: List[str], strict=True):
     """Get the properly-cased columns names from ``df``, ignoring case.
 
     :param df: DataFrame
     :param col_names: list of case-insensitive column names
+    :param strict: if True, raise error if a column can't be found, otherwise
+                   return None for that column
     """
-    for index, col_name in enumerate(col_names):
-        col_names[index] = get_col_name(df, col_name)
-    return col_names
+    df_col_names = []
+    for col in col_names:
+        try:
+            df_col = get_col_name(df, col)
+        except KeyError as e:
+            if strict:
+                raise e
+            else:
+                df_col = None
+        df_col_names.append(df_col)
+    return df_col_names
 
 
 def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):
@@ -317,7 +326,9 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
     :param old_suffix: suffix to replace
     :param new_suffix: suffix to replace ``old_suffix``
     """
-    return df.rename(columns=lambda x: x[:-len(old_suffix)] + new_suffix if x.endswith(old_suffix) else x)
+    return df.rename(
+        columns=lambda x: x[: -len(old_suffix)] + new_suffix if x.endswith(old_suffix) else x
+    )
 
 
 def to_datetime(df: pd.DataFrame, date_col: str):
@@ -334,17 +345,28 @@ def to_datetime(df: pd.DataFrame, date_col: str):
     except KeyError:
         raise KeyError(f"Date column '{date_col}' in dataframe is not a valid column")
     except ValueError:
-        raise ValueError(f"Date column '{date_col}' in dataframe contains string(s) that "
-                         "are not likely datetime(s)")
+        raise ValueError(
+            f"Date column '{date_col}' in dataframe contains string(s) that "
+            "are not likely datetime(s)"
+        )
     except TypeError as e:
-        raise TypeError((f"Date column '{date_col}' in dataframe contains values "
-                        f"that are not convertible to datetime")) from e
+        raise TypeError(
+            (
+                f"Date column '{date_col}' in dataframe contains values "
+                f"that are not convertible to datetime"
+            )
+        ) from e
     except ParserError:
-        raise ValueError((f"Date column '{date_col}' in dataframe could not be parsed "
-                         f"as a datetime string"))
+        raise ValueError(
+            (f"Date column '{date_col}' in dataframe could not be parsed " f"as a datetime string")
+        )
     except pd.errors.OutOfBoundsDatetime:
         # Since pandas represents timestamps in nanosecond resolution,
         # the time span that can be represented using a 64-bit integer
         # is limited to approximately 584 years.
-        raise ValueError((f"Date column '{date_col}' in dataframe contains a date "
-                         f"that is out of bounds (i.e. outside of today +- 584 years)"))
+        raise ValueError(
+            (
+                f"Date column '{date_col}' in dataframe contains a date "
+                f"that is out of bounds (i.e. outside of today +- 584 years)"
+            )
+        )

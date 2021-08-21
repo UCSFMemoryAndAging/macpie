@@ -1,7 +1,7 @@
 # flake8: noqa
 
 # classes
-from .dataset import Dataset, LavaDataset
+from .dataset import Dataset, LavaDataset, DatasetKeyCols
 
 # reshaping functions
 from .reshape.date_proximity import date_proximity

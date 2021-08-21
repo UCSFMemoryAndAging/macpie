@@ -18,6 +18,7 @@ class MacDataFrameAccessor:
     available via the public API, leaving out the first DataFrame argument.
     This is essentially syntactic sugar for calling those functions.
     """
+
     def __init__(self, df):
         self._validate(df)
         self._df = df
@@ -59,7 +60,7 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.equals`"""
         return general.equals(self._df, right, cols_ignore, cols_ignore_pat)
 
-    def flatten_multiindex(self, axis: int = 0, delimiter: str = '_'):
+    def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):
         """see :meth:`macpie.pandas.flatten_multiindex`"""
         return general.flatten_multiindex(self._df, axis)
 
@@ -67,9 +68,9 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.get_col_name`"""
         return general.get_col_name(self._df, col_name)
 
-    def get_col_names(self, col_names: List[str]):
+    def get_col_names(self, col_names: List[str], strict=True):
         """see :meth:`macpie.pandas.get_col_names`"""
-        return general.get_col_names(self._df, col_names)
+        return general.get_col_names(self._df, col_names, strict)
 
     def insert(self, col_name, col_value, allow_duplicates=False):
         """see :meth:`macpie.pandas.insert`"""
@@ -117,15 +118,15 @@ class MacDataFrameAccessor:
         date_on=None,
         date_left_on=None,
         date_right_on=None,
-        get: str = 'all',
-        when: str = 'earlier_or_later',
+        get: str = "all",
+        when: str = "earlier_or_later",
         days: int = 90,
         left_link_id=None,
         dropna: bool = False,
         drop_duplicates: bool = False,
         duplicates_indicator: bool = False,
-        merge='partial',
-        merge_suffixes=get_option("operators.binary.column_suffixes")
+        merge="partial",
+        merge_suffixes=get_option("operators.binary.column_suffixes"),
     ):
         """see :meth:`macpie.pandas.date_proximity`"""
         return operators.date_proximity.date_proximity(
@@ -145,28 +146,20 @@ class MacDataFrameAccessor:
             drop_duplicates=drop_duplicates,
             duplicates_indicator=duplicates_indicator,
             merge=merge,
-            merge_suffixes=merge_suffixes
+            merge_suffixes=merge_suffixes,
         )
 
-    def filter_by_id(
-        self,
-        id_col: str,
-        ids: List[int]
-    ):
+    def filter_by_id(self, id_col: str, ids: List[int]):
         """see :meth:`macpie.pandas.filter_by_id`"""
-        return operators.filter_by_id.filter_by_id(
-            self._df,
-            id_col,
-            ids
-        )
+        return operators.filter_by_id.filter_by_id(self._df, id_col, ids)
 
     def group_by_keep_one(
         self,
         group_by_col: str,
         date_col: str,
-        keep: str = 'all',
+        keep: str = "all",
         id_col: str = None,
-        drop_duplicates: bool = False
+        drop_duplicates: bool = False,
     ):
         """see :meth:`macpie.pandas.group_by_keep_one`"""
         return operators.group_by_keep_one.group_by_keep_one(
@@ -175,7 +168,7 @@ class MacDataFrameAccessor:
             date_col=date_col,
             keep=keep,
             id_col=id_col,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
         )
 
     def merge(
@@ -186,7 +179,7 @@ class MacDataFrameAccessor:
         right_on=None,
         merge_suffixes=get_option("operators.binary.column_suffixes"),
         add_suffixes=False,
-        add_indexes=(None, None)
+        add_indexes=(None, None),
     ):
         """see :meth:`macpie.pandas.merge`"""
         return operators.merge.merge(
@@ -197,5 +190,5 @@ class MacDataFrameAccessor:
             right_on=right_on,
             merge_suffixes=merge_suffixes,
             add_suffixes=add_suffixes,
-            add_indexes=add_indexes
+            add_indexes=add_indexes,
         )

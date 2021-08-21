@@ -1,13 +1,9 @@
 # flake8: noqa
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
-from macpie._config import (
-    get_option,
-    set_option,
-    reset_option
-)
+from macpie._config import get_option, set_option, reset_option
 
 # let init-time option registration happen
 import macpie.core.config_init

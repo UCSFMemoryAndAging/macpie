@@ -4,6 +4,7 @@ Base and utility classes for macpie objects.
 
 import datetime
 from dateutil import parser
+import decimal
 import json
 from pathlib import Path
 
@@ -24,6 +25,13 @@ class MACPieJSONEncoder(json.JSONEncoder):
                     self.DATE_FORMAT, self.TIME_FORMAT
                 ))
             }
+        if isinstance(obj, datetime.date):
+            return {
+                "_type": "date",
+                "value": obj.strftime("%s" % (self.DATE_FORMAT))
+            }
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)            
         if isinstance(obj, Path):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
@@ -37,6 +45,6 @@ class MACPieJSONDecoder(json.JSONDecoder):
         if '_type' not in obj:
             return obj
         type = obj['_type']
-        if type == 'datetime':
+        if type == 'datetime' or type == 'date':
             return parser.parse(obj['value'])
         return obj

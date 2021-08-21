@@ -26,22 +26,22 @@ class TrackHistory:
         func_name = self.func.__name__
         func_sig = OrderedDict()
         for i, arg in enumerate(args):
-            func_sig['arg' + str(i + 1)] = repr(arg)
+            func_sig["arg" + str(i + 1)] = repr(arg)
 
-        for k, v, in kwargs.items():
+        for k, v in kwargs.items():
             func_sig[k] = repr(v)
 
-        if '_history' not in instance.__dict__:
-            instance.__dict__['_history'] = []
+        if "_history" not in instance.__dict__:
+            instance.__dict__["_history"] = []
 
-        history = instance.__dict__['_history']
+        history = instance.__dict__["_history"]
 
         record = {
-            'func_name': func_name,
-            'func_sig': dict(func_sig),
-            'before': instance.to_dict(),
-            'after' : None,
-            'run_time' : None
+            "func_name": func_name,
+            "func_sig": dict(func_sig),
+            "before": instance.to_dict(),
+            "after": None,
+            "run_time": None,
         }
 
         history.append(record)
@@ -51,8 +51,8 @@ class TrackHistory:
         end_time = time.perf_counter()
         run_time = end_time - start_time
 
-        history[-1]['after'] = instance.to_dict()
-        history[-1]['run_time'] = f"{run_time:.3f} secs"
+        history[-1]["after"] = instance.to_dict()
+        history[-1]["run_time"] = f"{run_time:.3f} secs"
 
         return value
 
@@ -60,7 +60,7 @@ class TrackHistory:
         # By implementing this descriptor method, when __call__ is invoked,
         # this method will be invoked.
         # Wrappers/decorators typically wrap unbound functions, but since
-        # this decorator is supposed to decorate ***instance*** methods,
-        # we need to pass the bound object as the first argument
-        # before __call__ happens.
+        # this decorator is supposed to decorate ***instance*** methods
+        # (i.e. bound methods), we need to pass the instance
+        # (i.e. bound object) as the first argument before __call__ happens.
         return partial(self.__call__, instance)

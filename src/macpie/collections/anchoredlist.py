@@ -27,38 +27,40 @@ class AnchoredList(BaseCollection):
     def __init__(self, primary: Dataset = None, secondary: BasicList = None):
         self._sheetname_available_fields = get_option("sheet.name.available_fields")
 
-        if primary is None:
-            self._primary = None
-        else:
-            self.set_primary(primary)
-
-        if secondary is None:
-            self._secondary = BasicList()
-        else:
-            self.set_secondary(secondary)
-
-    def __setattr__(self, key, value):
-        if key == '_primary' and key in self.__dict__ and self.__dict__[key] is not None:
-            raise AttributeError(f"The value for the '{key}'' attribute has already "
-                                 "been set, and can not be re-set")
-        self.__dict__[key] = value
+        self.primary = primary
+        self.secondary = secondary
 
     def __iter__(self):
         return chain([self._primary] if self._primary else [], self._secondary)
 
     def __repr__(self) -> str:
         return (
-            f'{self.__class__.__name__}('
-            f'primary={self._primary!r}, '
-            f'secondary={self._secondary!r}...)'
+            f"{self.__class__.__name__}("
+            f"primary={self._primary!r}, "
+            f"secondary={self._secondary!r}...)"
         )
 
     @property
     def primary(self):
-        """The primary `anchor` Dataset of the collection.
-        Cannot be directly modified.
-        """
+        """The primary `anchor` Dataset of the collection."""
         return self._primary
+
+    @primary.setter
+    def primary(self, dset: Dataset):
+        """Sets the `primary` Dataset of this collection."""
+        if hasattr(self, "_primary") and self._primary is not None:
+            raise AttributeError(
+                "The 'primary' attribute has already been set, and can not be re-set."
+            )
+
+        if dset and dset.df[dset.id_col].duplicated().any():
+            raise ValueError("Primary Dataset in an AnchoredList cannot have duplicate IDs")
+
+        self._primary = dset
+
+        if self._primary:
+            self._primary.sort_by_id2()
+            self._primary.add_tag(AnchoredList.tag_anchor)
 
     @property
     def secondary(self):
@@ -66,6 +68,14 @@ class AnchoredList(BaseCollection):
         Cannot be directly modified.
         """
         return self._secondary
+
+    @secondary.setter
+    def secondary(self, dsets: BasicList):
+        """Sets the `secondary` Datasets of this collection."""
+        self._secondary = BasicList()
+        if dsets is not None:
+            for sec in dsets:
+                self.add_secondary(sec)
 
     @property
     def key_fields(self):
@@ -106,29 +116,8 @@ class AnchoredList(BaseCollection):
                 fields.extend(sec.all_fields)
         return fields
 
-    def set_primary(self, dset: Dataset):
-        """Sets the `primary` Dataset of this collection.
-        """
-        if dset is None:
-            raise ValueError("Cannot set Primary to None")
-        if dset.df[dset.id_col].duplicated().any():
-            raise ValueError("Primary Dataset in an AnchoredList cannot have duplicate IDs")
-        self._primary = dset
-        self._primary.sort_by_id2()
-        self._primary.add_tag(AnchoredList.tag_anchor)
-
-    def set_secondary(self, dsets: BasicList):
-        """Sets the `secondary` Datasets of this collection.
-        """
-        if dsets is None:
-            raise ValueError("Cannot set Secondary to None")
-        self._secondary = BasicList()
-        for sec in dsets:
-            self.add_secondary(sec)
-
     def add_secondary(self, dset: Dataset):
-        """Append `dset` to :attr:`AnchoredList.secondary`.
-        """
+        """Append `dset` to :attr:`AnchoredList.secondary`."""
         dset.add_tag(AnchoredList.tag_secondary)
         self._secondary.append(dset)
 
@@ -150,6 +139,10 @@ class AnchoredList(BaseCollection):
         :return: :class:`macpie.util.DatasetFields`
         """
         return DatasetFields.from_collection(self, title=self._sheetname_available_fields)
+
+    def to_dict(self):
+        """Convert the AnchoredList to a dictionary."""
+        return {"primary": self._primary, "secondary": self._secondary}
 
     def to_excel(self, excel_writer, **kwargs):
         """Write :class:`AnchoredList` to an Excel file by calling
