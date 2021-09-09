@@ -3,6 +3,7 @@
 from . import datetime as datetimetools
 from . import excel as exceltools
 from . import io as iotools
+from . import iterator as itertools
 from . import openpyxl as openpyxltools
 from . import pandas as pandastools
 from . import path as pathtools

@@ -62,14 +62,9 @@ def get_indices_of_duplicates(seq):
     for i, item in enumerate(seq):
         tally[item].append(i)
 
-    dups = (
-        (item, idxs)
-        for item, idxs in tally.items()
-        if len(idxs) > 1
-    )
+    dups = ((item, idxs) for item, idxs in tally.items() if len(idxs) > 1)
 
     return dups
-
 
 
 def is_disjoint(a, b):
@@ -111,6 +106,7 @@ def list_like_str_equal(a, b, case_insensitive=False):
             return str(a).lower() == str(b).lower()
         else:
             return str(a) == str(b)
+    return False
 
 
 def maybe_make_list(obj):
@@ -150,15 +146,12 @@ def move(a, item, item_to_move_to):
         a.insert(item_to_move_to_idx, a.pop(item_idx))
 
 
-
-# pandas.isnull(x)
 def remove_trailers(iterable, predicate=None):
     """
     Remove trailing elements from list as long as predicate is true.
     Return an iterator over the new list.
     """
     if predicate is None:
-    	predicate = lambda x: x is None
-    
-    return reversed(tuple(itertools.dropwhile(predicate, reversed(iterable))))
+        predicate = lambda x: x is None
 
+    return reversed(tuple(itertools.dropwhile(predicate, reversed(iterable))))
