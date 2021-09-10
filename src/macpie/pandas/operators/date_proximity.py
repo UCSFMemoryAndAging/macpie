@@ -17,15 +17,15 @@ def date_proximity(
     date_on=None,
     date_left_on=None,
     date_right_on=None,
-    get: str = 'all',
-    when: str = 'earlier_or_later',
+    get: str = "all",
+    when: str = "earlier_or_later",
     days: int = 90,
     left_link_id=None,
     dropna: bool = False,
     drop_duplicates: bool = False,
     duplicates_indicator: bool = False,
-    merge='partial',
-    merge_suffixes=get_option("operators.binary.column_suffixes")
+    merge="partial",
+    merge_suffixes=get_option("operators.binary.column_suffixes"),
 ) -> pd.DataFrame:
     """Links data across two :class:`pandas.DataFrame` objects by date proximity.
 
@@ -102,13 +102,12 @@ def date_proximity(
         drop_duplicates=drop_duplicates,
         duplicates_indicator=duplicates_indicator,
         merge=merge,
-        merge_suffixes=merge_suffixes
+        merge_suffixes=merge_suffixes,
     )
     return op.get_result()
 
 
 class _DateProximityOperation:
-
     def __init__(
         self,
         left: pd.DataFrame,
@@ -119,15 +118,15 @@ class _DateProximityOperation:
         date_on=None,
         date_left_on=None,
         date_right_on=None,
-        get: str = 'all',
-        when: str = 'earlier_or_later',
+        get: str = "all",
+        when: str = "earlier_or_later",
         days: int = 90,
         left_link_id=None,
         dropna: bool = False,
         drop_duplicates: bool = False,
         duplicates_indicator: bool = False,
-        merge='partial',
-        merge_suffixes=get_option("operators.binary.column_suffixes")
+        merge="partial",
+        merge_suffixes=get_option("operators.binary.column_suffixes"),
     ):
         self.left = self.orig_left = left
         self.right = self.orig_right = right
@@ -147,7 +146,9 @@ class _DateProximityOperation:
         self.left_link_id = left_link_id
 
         self.dropna = validatortools.validate_bool_kwarg(dropna, "dropna")
-        self.drop_duplicates = validatortools.validate_bool_kwarg(drop_duplicates, "drop_duplicates")
+        self.drop_duplicates = validatortools.validate_bool_kwarg(
+            drop_duplicates, "drop_duplicates"
+        )
 
         self.duplicates_indicator = duplicates_indicator
 
@@ -156,13 +157,10 @@ class _DateProximityOperation:
             self.duplicates_indicator_name = self.duplicates_indicator
         elif isinstance(self.duplicates_indicator, bool):
             self.duplicates_indicator_name = (
-                get_option("column.system.duplicates") if self.duplicates_indicator
-                else None
+                get_option("column.system.duplicates") if self.duplicates_indicator else None
             )
         else:
-            raise ValueError(
-                "indicator option can only accept boolean or string arguments"
-            )
+            raise ValueError("indicator option can only accept boolean or string arguments")
 
         self.merge = merge
         self.merge_suffixes = merge_suffixes
@@ -177,7 +175,7 @@ class _DateProximityOperation:
 
     def get_result(self):
         result = self._get_all()
-        if self.get == 'closest':
+        if self.get == "closest":
             result = self._get_closest(result)
         result = self._handle_dropna(result)
         result = self._handle_duplicates(result)
@@ -189,25 +187,22 @@ class _DateProximityOperation:
         everything = pd.merge(
             self.link_table,
             self.right,
-            how='left',
+            how="left",
             left_on=self.id_left_on,
             right_on=self.id_right_on,
-            indicator=self._merge_indicator_col
+            indicator=self._merge_indicator_col,
         )
 
         # create a column 'diff_days' with date difference in days
-        everything = everything.mac.add_diff_days(
-            self.date_left_on,
-            self.date_right_on
-        )
+        everything = everything.mac.add_diff_days(self.date_left_on, self.date_right_on)
 
         # keep rows where the date differences within range
         # create copy to avoid chained indexing and getting a SettingWithCopyWarning
         all_candidates = everything.loc[abs(everything[self._diff_days_col]) <= self.days].copy()
 
-        if self.when == 'earlier':
+        if self.when == "earlier":
             all_candidates = all_candidates.loc[all_candidates[self._diff_days_col] <= 0]
-        elif self.when == 'later':
+        elif self.when == "later":
             all_candidates = all_candidates.loc[all_candidates[self._diff_days_col] >= 0]
 
         return all_candidates
@@ -220,26 +215,24 @@ class _DateProximityOperation:
             by=self.link_table_cols + [self._abs_diff_days_col],
             # by=['index', self._abs_diff_days_col],
             inplace=False,
-            na_position='last'
+            na_position="last",
         )
 
         groupby_cols = self.id_left_on + [self.date_left_on]
         closest_candidates = all_candidates[
-            (all_candidates[self._abs_diff_days_col]
-             == all_candidates.groupby(groupby_cols)[self._abs_diff_days_col].transform('min'))
+            (
+                all_candidates[self._abs_diff_days_col]
+                == all_candidates.groupby(groupby_cols)[self._abs_diff_days_col].transform("min")
+            )
         ]
 
         return closest_candidates
 
     def _handle_dropna(self, result):
         if self.dropna is False:
-            left_frame = self.left[self.link_table_cols] if self.merge == 'partial' else self.left
+            left_frame = self.left[self.link_table_cols] if self.merge == "partial" else self.left
             result = pd.merge(
-                left_frame,
-                result,
-                how='left',
-                on=self.link_table_cols,
-                indicator=False
+                left_frame, result, how="left", on=self.link_table_cols, indicator=False
             )
 
         return result
@@ -250,7 +243,9 @@ class _DateProximityOperation:
         # handle duplicates
         if dups.any():
             if self.drop_duplicates:
-                result = result.drop_duplicates(subset=self.link_table_cols, keep='last', ignore_index=True)
+                result = result.drop_duplicates(
+                    subset=self.link_table_cols, keep="last", ignore_index=True
+                )
             elif self.duplicates_indicator:
                 result.mac.insert(self.duplicates_indicator_name, dups)
         return result
@@ -259,7 +254,7 @@ class _DateProximityOperation:
         left_suffix = self.merge_suffixes[0]
         right_suffix = self.merge_suffixes[1]
 
-        if self.merge == 'partial':
+        if self.merge == "partial":
             result = result.mac.drop_suffix(self._right_suffix)
             result = result.mac.replace_suffix(self._left_suffix, left_suffix)
         else:
@@ -269,15 +264,15 @@ class _DateProximityOperation:
         return result
 
     def _validate_specification(self):
-        if self.id_on is not None:
-            if self.id_left_on is not None or self.id_right_on is not None:
+        if self.id_on:
+            if self.id_left_on or self.id_right_on:
                 raise DateProximityError(
                     'Must pass argument "id_on" OR "id_left_on" '
                     'and "id_right_on", but not a combination of both.'
                 )
             self.id_left_on = self.left.mac.get_col_names(self.id_on)
             self.id_right_on = self.right.mac.get_col_names(self.id_on)
-        elif self.id_left_on is not None and self.id_right_on is not None:
+        elif self.id_left_on and self.id_right_on:
             if len(self.id_left_on) != len(self.id_right_on):
                 raise ValueError("len(id_right_on) must equal len(id_left_on)")
             self.id_left_on = self.left.mac.get_col_names(self.id_left_on)
@@ -288,8 +283,8 @@ class _DateProximityOperation:
                 'and "id_right_on", but not a combination of both.'
             )
 
-        if self.date_on is None:
-            if self.date_left_on is None or self.date_right_on is None:
+        if not self.date_on:
+            if not self.date_left_on or not self.date_right_on:
                 raise DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
@@ -297,7 +292,7 @@ class _DateProximityOperation:
             self.date_left_on = self.left.mac.get_col_name(self.date_left_on)
             self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
         else:
-            if self.date_left_on is not None or self.date_right_on is not None:
+            if self.date_left_on or self.date_right_on:
                 raise DateProximityError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
@@ -308,10 +303,10 @@ class _DateProximityOperation:
         self.date_left_on = self.left.mac.to_datetime(self.date_left_on)
         self.date_right_on = self.right.mac.to_datetime(self.date_right_on)
 
-        if self.get not in ['all', 'closest']:
+        if self.get not in ["all", "closest"]:
             raise ValueError(f"invalid get option: {self.get}")
 
-        if self.when not in ['earlier', 'later', 'earlier_or_later']:
+        if self.when not in ["earlier", "later", "earlier_or_later"]:
             raise ValueError(f"invalid when option: {self.when}")
 
         if isinstance(self.days, int):
@@ -321,7 +316,7 @@ class _DateProximityOperation:
             raise TypeError("days option needs to be an integer")
 
         # check for duplicates
-        if self.left_link_id is None:
+        if not self.left_link_id:
             has_dupes = self.left[self.id_left_on + [self.date_left_on]].duplicated().any()
             if has_dupes:
                 raise ValueError(
@@ -335,7 +330,7 @@ class _DateProximityOperation:
                     f"ID column '{self.left_link_id}' must be unique but is not. Aborting."
                 )
 
-        if self.merge not in ['partial', 'full']:
+        if self.merge not in ["partial", "full"]:
             raise ValueError(f"invalid merge option: {self.merge}")
 
         if not seqtools.is_list_like(self.merge_suffixes):
@@ -358,13 +353,13 @@ class _DateProximityOperation:
         self.date_left_on = self.date_left_on + self._left_suffix
         self.date_right_on = self.date_right_on + self._right_suffix
 
-        if self.left_link_id is not None:
+        if self.left_link_id:
             self.left_link_id = self.left_link_id + self._left_suffix
 
     def _create_link_helpers(self):
         link_table_cols = self.id_left_on.copy()
         link_table_cols.append(self.date_left_on)
-        if self.left_link_id is not None:
+        if self.left_link_id:
             link_table_cols.append(self.left_link_id)
 
         self.link_table_cols = link_table_cols

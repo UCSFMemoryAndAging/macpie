@@ -14,7 +14,7 @@ def merge(
     right_on=None,
     merge_suffixes=get_option("operators.binary.column_suffixes"),
     add_suffixes=False,
-    add_indexes=(None, None)
+    add_indexes=(None, None),
 ) -> pd.DataFrame:
     """Merge :class:`pandas.DataFrame` objects with a database-style join, similar to
     :meth:`pandas.DataFrame.merge`.
@@ -46,7 +46,7 @@ def merge(
         right_on=right_on,
         merge_suffixes=merge_suffixes,
         add_suffixes=add_suffixes,
-        add_indexes=add_indexes
+        add_indexes=add_indexes,
     )
     return op.get_result()
 
@@ -68,7 +68,7 @@ class _MergeOperation:
         right_on=None,
         merge_suffixes=get_option("operators.binary.column_suffixes"),
         add_suffixes=False,
-        add_indexes=(None, None)
+        add_indexes=(None, None),
     ):
 
         self.left = self.orig_left = left
@@ -91,34 +91,40 @@ class _MergeOperation:
             self._add_suffixes()
 
         if self._left_superindex:
-            self.left.columns = pd.MultiIndex.from_product([[self._left_superindex], self.left.columns])
+            self.left.columns = pd.MultiIndex.from_product(
+                [[self._left_superindex], self.left.columns]
+            )
 
         if self._right_superindex:
-            self.right.columns = pd.MultiIndex.from_product([[self._right_superindex], self.right.columns])
+            self.right.columns = pd.MultiIndex.from_product(
+                [[self._right_superindex], self.right.columns]
+            )
 
         result = pd.merge(
             self.left,
             self.right,
-            how='left',
+            how="left",
             left_on=[(self._left_superindex, col) for col in self.left_on]
-                if self._left_superindex else self.left_on,
+            if self._left_superindex
+            else self.left_on,
             right_on=[(self._right_superindex, col) for col in self.right_on]
-                if self._right_superindex else self.right_on,
-            suffixes=self.merge_suffixes
+            if self._right_superindex
+            else self.right_on,
+            suffixes=self.merge_suffixes,
         )
 
         return result
 
     def _validate_specification(self):
-        if self.on is not None:
-            if self.left_on is not None or self.right_on is not None:
+        if self.on:
+            if self.left_on or self.right_on:
                 raise MergeError(
                     'Must pass argument "on" OR "left_on" '
                     'and "right_on", but not a combination of both.'
                 )
             self.left_on = self.left.mac.get_col_names(self.on)
             self.right_on = self.right.mac.get_col_names(self.on)
-        elif self.left_on is not None and self.right_on is not None:
+        elif self.left_on and self.right_on:
             if len(self.left_on) != len(self.right_on):
                 raise ValueError("len(right_on) must equal len(left_on)")
             self.left_on = self.left.mac.get_col_names(self.left_on)
@@ -154,10 +160,10 @@ class _MergeOperation:
         self._right_superindex = self.add_indexes[1]
 
     def _add_suffixes(self):
-        if self._left_suffix is not None:
+        if self._left_suffix:
             self.left = self.left.add_suffix(self._left_suffix)
             self.left_on = [col + self._left_suffix for col in self.left_on]
 
-        if self._right_suffix is not None:
+        if self._right_suffix:
             self.right = self.right.add_suffix(self._right_suffix)
             self.right_on = [col + self._right_suffix for col in self.right_on]
