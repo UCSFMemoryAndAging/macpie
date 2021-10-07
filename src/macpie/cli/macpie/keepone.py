@@ -59,14 +59,14 @@ class _KeepOneCommand:
         for filepath in self.primary:
             dset = Dataset.from_file(
                 filepath,
-                id_col=self.id_col,
-                date_col=self.date_col,
-                id2_col=self.id2_col,
+                id_col_name=self.id_col,
+                date_col_name=self.date_col,
+                id2_col_name=self.id2_col,
                 name=filepath.stem,
             )
 
             dset.group_by_keep_one(keep=self.keep, drop_duplicates=False)
-            if get_option("column.system.duplicates") in dset.df.columns:
+            if get_option("column.system.duplicates") in dset.columns:
                 dset.add_tag(get_option("dataset.tag.duplicates"))
             collection.append(dset)
 

@@ -3,6 +3,7 @@ from .general import (
     add_diff_days,
     any_duplicates,
     assimilate,
+    col_count,
     diff_cols,
     diff_rows,
     drop_cols,
@@ -13,15 +14,16 @@ from .general import (
     get_col_names,
     insert,
     is_date_col,
-    json_dumps_contents,
-    json_loads_contents,
     mark_duplicates_by_cols,
-    num_cols,
-    num_rows,
     replace_suffix,
+    row_count,
     to_datetime,
 )
+
 from .io import csv_to_dataframe, excel_to_dataframe, file_to_dataframe
+
+from .multi_index import prepend_multi_index_level
+
 from .operators.date_proximity import date_proximity
 from .operators.filter_by_id import filter_by_id
 from .operators.group_by_keep_one import group_by_keep_one

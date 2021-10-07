@@ -8,7 +8,7 @@ import pytest
 from macpie._config import get_option
 from macpie.io.excel import MACPieExcelWriter
 from macpie.testing import assert_dfs_equal
-from macpie.util.datasetfields import DatasetFields
+from macpie.core.datasetfields import DatasetFields
 
 from macpie.cli.macpie.main import main
 
@@ -35,12 +35,12 @@ def create_available_fields(filepath):
     ]
 
     available_fields = DatasetFields(
-        *available_fields_rows, title=get_option("sheet.name.available_fields")
+        *available_fields_rows, title=get_option("excel.sheet_name.available_fields")
     )
     available_fields.append_col_fill("x", header=get_option("column.to_merge"))
 
     wb = pyxl.load_workbook(filepath)
-    del wb[get_option("sheet.name.available_fields")]
+    del wb[get_option("excel.sheet_name.available_fields")]
     wb.save(filepath)
 
     with MACPieExcelWriter(filepath, mode="a") as writer:
@@ -75,8 +75,8 @@ def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
             "MERGED_RESULTS",
             "instr2_all_DUPS",
             "instr3_all_DUPS",
-            get_option("sheet.name.available_fields"),
-            get_option("sheet.name.collection_info"),
+            get_option("excel.sheet_name.available_fields"),
+            get_option("excel.sheet_name.collection_info"),
         ]
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)

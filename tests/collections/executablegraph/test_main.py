@@ -19,7 +19,7 @@ output_dir = None
 
 
 cols_ignore = []
-cols_ignore_pat = '^' + get_option("column.system.prefix")
+cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
 @pytest.mark.slow
@@ -32,22 +32,26 @@ def test_keepone(cli_keepone_big):
 
     G.add_node(
         primary,
-        operation=partial(group_by_keep_one,
-                          group_by_col=primary.id2_col,
-                          date_col=primary.date_col,
-                          keep='earliest',
-                          drop_duplicates=False)
+        operation=partial(
+            group_by_keep_one,
+            group_by_col=primary.id2_col_name,
+            date_col_name=primary.date_col_name,
+            keep="earliest",
+            drop_duplicates=False,
+        ),
     )
 
     G.execute()
 
-    nodes_with_operations = G.get_all_node_data('operation')
+    nodes_with_operations = G.get_all_node_data("operation")
 
-    result = nodes_with_operations[0]['operation_result']
+    result = nodes_with_operations[0]["operation_result"]
 
     expected_result = file_to_dataframe(cli_keepone_big)
 
-    assert_dfs_equal(result, expected_result, cols_ignore_pat=cols_ignore_pat, output_dir=output_dir)
+    assert_dfs_equal(
+        result, expected_result, cols_ignore_pat=cols_ignore_pat, output_dir=output_dir
+    )
 
 
 @pytest.mark.slow
@@ -66,12 +70,14 @@ def test_link():
 
     G.add_node(
         prim,
-        operation=partial(group_by_keep_one,
-                          group_by_col=prim.id2_col,
-                          date_col=prim.date_col,
-                          keep='all',
-                          id_col=prim.id_col,
-                          drop_duplicates=False)
+        operation=partial(
+            group_by_keep_one,
+            group_by_col=prim.id2_col_name,
+            date_col_name=prim.date_col_name,
+            keep="all",
+            id_col_name=prim.id_col_name,
+            drop_duplicates=False,
+        ),
     )
     G.add_node(sec_1)
     G.add_node(sec_2)
@@ -79,57 +85,55 @@ def test_link():
     G.add_edge(
         prim,
         sec_1,
-        operation=partial(date_proximity,
-                          id_left_on=prim.id2_col,
-                          id_right_on=sec_1.id2_col,
-                          date_left_on=prim.date_col,
-                          date_right_on=sec_1.date_col,
-                          get='closest',
-                          when='earlier_or_later',
-                          days=90,
-                          left_link_id=prim.id_col)
+        operation=partial(
+            date_proximity,
+            id_left_on=prim.id2_col_name,
+            id_right_on=sec_1.id2_col_name,
+            date_left_on=prim.date_col_name,
+            date_right_on=sec_1.date_col_name,
+            get="closest",
+            when="earlier_or_later",
+            days=90,
+            left_link_id=prim.id_col_name,
+        ),
     )
     G.add_edge(
         prim,
         sec_2,
-        operation=partial(date_proximity,
-                          id_left_on=prim.id2_col,
-                          id_right_on=sec_1.id2_col,
-                          date_left_on=prim.date_col,
-                          date_right_on=sec_1.date_col,
-                          get='closest',
-                          when='earlier_or_later',
-                          days=90,
-                          left_link_id=prim.id_col)
+        operation=partial(
+            date_proximity,
+            id_left_on=prim.id2_col_name,
+            id_right_on=sec_1.id2_col_name,
+            date_left_on=prim.date_col_name,
+            date_right_on=sec_1.date_col_name,
+            get="closest",
+            when="earlier_or_later",
+            days=90,
+            left_link_id=prim.id_col_name,
+        ),
     )
 
     G.execute()
 
-    edges_with_operation_results = G.get_all_edge_data('operation_result')
+    edges_with_operation_results = G.get_all_edge_data("operation_result")
 
     sec_1_copy.date_proximity(
-        anchor_dset=prim_copy,
-        get='closest',
-        when='earlier_or_later',
-        days=90
+        right_dset=prim_copy, get="closest", when="earlier_or_later", days=90
     )
 
     assert_dfs_equal(
-        sec_1_copy.df,
-        edges_with_operation_results[0]['operation_result'],
+        sec_1_copy,
+        edges_with_operation_results[0]["operation_result"],
         cols_ignore_pat=cols_ignore_pat,
-        output_dir=output_dir
+        output_dir=output_dir,
     )
 
     sec_2_copy.date_proximity(
-        anchor_dset=prim_copy,
-        get='closest',
-        when='earlier_or_later',
-        days=90
+        right_dset=prim_copy, get="closest", when="earlier_or_later", days=90
     )
     assert_dfs_equal(
-        sec_2_copy.df,
-        edges_with_operation_results[1]['operation_result'],
+        sec_2_copy,
+        edges_with_operation_results[1]["operation_result"],
         cols_ignore_pat=cols_ignore_pat,
-        output_dir=output_dir
+        output_dir=output_dir,
     )

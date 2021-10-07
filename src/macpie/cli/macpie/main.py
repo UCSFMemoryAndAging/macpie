@@ -7,7 +7,7 @@ import click
 from macpie import __version__
 from macpie._config import get_option
 from macpie.tools import path as pathtools
-from macpie.util.info import Info
+from macpie.util.simpledataset import DictLikeDataset
 
 from .keepone import keepone
 from .link import link
@@ -42,7 +42,7 @@ class Invoker:
         return self.args[k]
 
     def get_command_info(self):
-        info = Info(title=get_option("sheet.name.command_info"))
+        info = DictLikeDataset(title=get_option("excel.sheet_name.command_info"))
         info.append(("command_name", self.command_name))
         info.append_separator("Arguments")
         info.append_dict(self.args)
@@ -51,7 +51,7 @@ class Invoker:
         return info
 
     def get_client_system_info(self):
-        info = Info(title=get_option("sheet.name.client_system_info"))
+        info = DictLikeDataset(title=get_option("excel.sheet_name.client_system_info"))
         info.append(("python_version", platform.python_version()))
         info.append(("platform", platform.platform()))
         info.append(("computer_network_name", platform.node()))
@@ -68,11 +68,13 @@ class Invoker:
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
-@click.option("-i", "--id-col", default=get_option("dataset.id_col"), help="ID Column Header")
+@click.option("-i", "--id-col", default=get_option("dataset.id_col_name"), help="ID Column Header")
 @click.option(
-    "-d", "--date-col", default=get_option("dataset.date_col"), help="Date Column Header"
+    "-d", "--date-col", default=get_option("dataset.date_col_name"), help="Date Column Header"
 )
-@click.option("-j", "--id2-col", default=get_option("dataset.id2_col"), help="ID2 Column Header")
+@click.option(
+    "-j", "--id2-col", default=get_option("dataset.id2_col_name"), help="ID2 Column Header"
+)
 @click.version_option(__version__)
 @click.pass_context
 def main(ctx, verbose, id_col, date_col, id2_col):

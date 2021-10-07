@@ -11,7 +11,7 @@ from macpie.tools import sequence as seqtools
 from macpie.tools import string as strtools
 
 
-def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
+def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str, diff_days_col: str = None):
     """Adds a column to DataFrame called ``_diff_days`` which contains
     the number of days between ``col_start`` and ``col_end``
 
@@ -19,11 +19,17 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str):
     :param col_start: column containing the start date
     :param col_end: column containing the end date
     """
-    diff_days_col = get_option("column.system.diff_days")
+    if diff_days_col is None:
+        diff_days_col = get_option("column.system.diff_days")
+
     if col_start == col_end:
-        raise KeyError("date columns have the same name: {col_start}")
+        raise KeyError("date columns have the same name: {col_start}=={col_end}")
+
     df[diff_days_col] = df[col_end] - df[col_start]
     df[diff_days_col] = df[diff_days_col] / np.timedelta64(1, "D")
+
+    # df.assign(**{diff_days_col: (df[col_end] - df[col_start]) / np.timedelta64(1, "D")})
+
     return df
 
 
@@ -68,6 +74,15 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
         left_dtypes.pop(col_name)
 
     return right.astype(left_dtypes)
+
+
+def col_count(df: pd.DataFrame):
+    """Return number of columns in ``df``.
+
+    :param df: DataFrame
+    """
+    # faster than df.shape[1]
+    return len(df.columns)
 
 
 def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
@@ -273,22 +288,6 @@ def is_date_col(arr_or_dtype):
     return pd.api.types.is_datetime64_any_dtype(arr_or_dtype)
 
 
-def json_dumps_contents(df: pd.DataFrame):
-    """Perform a json.dumps of each value in ``df``.
-
-    :param df: DataFrame
-    """
-    return df.applymap(lambda a: json.dumps(a, cls=MACPieJSONEncoder))
-
-
-def json_loads_contents(df: pd.DataFrame):
-    """Perform a json.loads of each value in ``df``.
-
-    :param df: DataFrame
-    """
-    return df.applymap(lambda a: json.loads(a, cls=MACPieJSONDecoder) if isinstance(a, str) else a)
-
-
 def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     """Create a column in ``df`` called ``_duplicates`` which is a boolean Series
     denoting duplicate rows as identified by ``cols``.
@@ -298,24 +297,6 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     """
     df[get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
     return df
-
-
-def num_cols(df: pd.DataFrame):
-    """Return number of columns in ``df``.
-
-    :param df: DataFrame
-    """
-    # faster than df.shape[1]
-    return len(df.columns)
-
-
-def num_rows(df: pd.DataFrame):
-    """Return number of rows in ``df``.
-
-    :param df: DataFrame
-    """
-    # faster than df.shape[0] or len(df)
-    return len(df.index)
 
 
 def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
@@ -331,34 +312,46 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
     )
 
 
-def to_datetime(df: pd.DataFrame, date_col: str):
-    """Convert ``date_col`` column in ``df`` to datetime.
+def row_count(df: pd.DataFrame):
+    """Return number of rows in ``df``.
 
     :param df: DataFrame
-    :param date_col: column to convert
+    """
+    # faster than df.shape[0] or len(df)
+    return len(df.index)
+
+
+def to_datetime(df: pd.DataFrame, date_col_name):
+    """Convert ``date_col_name`` column in ``df`` to datetime.
+
+    :param df: DataFrame
+    :param date_col_name: column to convert
     """
     try:
-        _date_col = get_col_name(df, date_col)
+        _date_col = get_col_name(df, date_col_name)
         if not is_date_col(df[_date_col]):
             df[_date_col] = pd.to_datetime(df[_date_col])
         return _date_col
     except KeyError:
-        raise KeyError(f"Date column '{date_col}' in dataframe is not a valid column")
+        raise KeyError(f"Date column '{date_col_name}' in dataframe is not a valid column")
     except ValueError:
-        raise ValueError(
-            f"Date column '{date_col}' in dataframe contains string(s) that "
+        raise TypeError(
+            f"Date column '{date_col_name}' in dataframe contains string(s) that "
             "are not likely datetime(s)"
         )
     except TypeError as e:
         raise TypeError(
             (
-                f"Date column '{date_col}' in dataframe contains values "
+                f"Date column '{date_col_name}' in dataframe contains values "
                 f"that are not convertible to datetime"
             )
         ) from e
     except ParserError:
         raise ValueError(
-            (f"Date column '{date_col}' in dataframe could not be parsed " f"as a datetime string")
+            (
+                f"Date column '{date_col_name}' in dataframe could not be parsed "
+                f"as a datetime string"
+            )
         )
     except pd.errors.OutOfBoundsDatetime:
         # Since pandas represents timestamps in nanosecond resolution,
@@ -366,7 +359,7 @@ def to_datetime(df: pd.DataFrame, date_col: str):
         # is limited to approximately 584 years.
         raise ValueError(
             (
-                f"Date column '{date_col}' in dataframe contains a date "
+                f"Date column '{date_col_name}' in dataframe contains a date "
                 f"that is out of bounds (i.e. outside of today +- 584 years)"
             )
         )

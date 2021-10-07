@@ -24,9 +24,9 @@ class BasicGraph(BaseCollection):
 
     def __repr__(self) -> str:
         return (
-            f'{self.__class__.__name__}('
-            f'num_nodes={self.g.number_of_nodes()!r}, '
-            f'num_edges={self.g.number_of_edges()!r})'
+            f"{self.__class__.__name__}("
+            f"num_nodes={self.g.number_of_nodes()!r}, "
+            f"num_edges={self.g.number_of_edges()!r})"
         )
 
     def __iter__(self):
@@ -35,37 +35,27 @@ class BasicGraph(BaseCollection):
     def to_dict(self):
         return nx.convert.to_dict_of_dicts(self.g)
 
-    def add_node(
-        self,
-        dset: Dataset,
-        name=None
-    ):
-        """Add a single Dataset node to the graph.
-        """
-        self.g.add_node(dset)
-        self.g.nodes[dset]['name'] = name if name is not None else dset.name
+    def to_excel_dict(self):
+        raise NotImplementedError
 
-    def add_edge(
-        self,
-        u: Dataset,
-        v: Dataset,
-        name=None
-    ):
-        """Add an edge between u and v.
-        """
+    def add_node(self, dset: Dataset, name=None):
+        """Add a single Dataset node to the graph."""
+        self.g.add_node(dset)
+        self.g.nodes[dset]["name"] = name if name is not None else dset.name
+
+    def add_edge(self, u: Dataset, v: Dataset, name=None):
+        """Add an edge between u and v."""
         self.g.add_edge(u, v)
 
         name = strtools.add_suffix(u.name + "->", v.name) if name is None else name
-        self.g[u][v]['name'] = name
+        self.g[u][v]["name"] = name
 
     def get_root_node(self):
-        """If the graph is a rooted tree, get the root node.
-        """
+        """If the graph is a rooted tree, get the root node."""
         return list(nx.topological_sort(self.g))[0]
 
     def get_node(self, n, attr: str = None):
-        """Get the node attribute if specified, otherwise get the node.
-        """
+        """Get the node attribute if specified, otherwise get the node."""
         node = self.g.nodes[n]
         if attr is not None:
             if attr in node:
@@ -104,7 +94,7 @@ class BasicGraph(BaseCollection):
     def print_nodes(self):
         counter = 1
         for n, d in self.g.nodes.items():
-            print('\nNODE ' + str(counter))
+            print("\nNODE " + str(counter))
             print(n)
             print(d)
             counter += 1
@@ -112,14 +102,13 @@ class BasicGraph(BaseCollection):
     def print_edges(self):
         counter = 1
         for e, d in self.g.edges.items():
-            print('\nEDGE ' + str(counter))
+            print("\nEDGE " + str(counter))
             print(e)
             print(d)
             counter += 1
 
     def print_graph(self):
-        """Print a text representation of the graph.
-        """
+        """Print a text representation of the graph."""
         self.print_nodes()
         self.print_edges()
 
@@ -131,23 +120,23 @@ class BasicGraph(BaseCollection):
         # pos = nx.spring_layout(self.g)
 
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.axis('equal')
+        ax.axis("equal")
 
         nx.draw_networkx_nodes(self.g, pos, node_size=500)
         nx.draw_networkx_edges(self.g, pos, arrowsize=30)
         nx.draw_networkx_edge_labels(
             self.g,
             pos,
-            edge_labels=nx.get_edge_attributes(self.g, 'name'),
-            verticalalignment='center',
-            horizontalalignment='center'
+            edge_labels=nx.get_edge_attributes(self.g, "name"),
+            verticalalignment="center",
+            horizontalalignment="center",
         )
         nx.draw_networkx_labels(
             self.g,
             pos,
-            labels={n: d['name'] for n, d in self.g.nodes.items() if n in pos},
+            labels={n: d["name"] for n, d in self.g.nodes.items() if n in pos},
             font_size=10,
-            horizontalalignment="left"
+            horizontalalignment="left",
         )
 
         # plt.tight_layout()

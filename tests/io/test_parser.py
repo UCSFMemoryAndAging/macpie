@@ -62,12 +62,12 @@ def test_csv_to_dataframe_medium():
     df1 = file_to_dataframe(p1)
 
     # test column count and headers
-    assert df1.mac.num_cols() == 60
+    assert df1.mac.col_count() == 60
     assert df1.columns[0] == "PIDN"
     assert df1.columns[3] == "DCDate"
 
     # test row count
-    assert df1.mac.num_rows() == 13808
+    assert df1.mac.row_count() == 13808
 
 
 @pytest.mark.slow
@@ -76,9 +76,9 @@ def test_import_xl_medium():
     df1 = file_to_dataframe(p1)
 
     # test column count and headers
-    assert df1.mac.num_cols() == 58
+    assert df1.mac.col_count() == 58
     assert df1.columns[0] == "PIDN"
     assert df1.columns[1] == "DCDate"
 
     # test row count
-    assert df1.mac.num_rows() == 13808
+    assert df1.mac.row_count() == 13808

@@ -140,12 +140,12 @@ class Masker:
                 print("Mapper not found for id col", id_col)
 
         # 4. mask date columns
-        for date_col in date_cols_to_mask:
-            mapper = self.get_mapper(date_col)
+        for date_col_name in date_cols_to_mask:
+            mapper = self.get_mapper(date_col_name)
             if mapper:
-                mapper.mask_df_date_col(result_df, date_col)
+                mapper.mask_df_date_col(result_df, date_col_name)
             else:
-                print("Mapper not found for date col", date_col)
+                print("Mapper not found for date col", date_col_name)
 
         col_transformations = {**col_rename_dict, **dict.fromkeys(cols_to_drop)}
 
@@ -162,7 +162,9 @@ class IdMapCols:
     def __init__(self, id_map, id_cols, date_cols=None):
         self.id_map = id_map
         self.id_cols = [id_col.lower() for id_col in id_cols]
-        self.date_cols = [date_col.lower() for date_col in date_cols] if date_cols else []
+        self.date_cols = (
+            [date_col_name.lower() for date_col_name in date_cols] if date_cols else []
+        )
 
     def __len__(self):
         return len(self.id_map)
@@ -186,14 +188,14 @@ class IdMapCols:
             lambda x: self.id_map.get(x).masked_id if not pd.isnull(x) else None
         )
 
-    def mask_df_date_col(self, df, date_col):
-        if not df.mac.is_date_col(date_col):
-            raise TypeError(f"Invalid date column '{date_col}'")
+    def mask_df_date_col(self, df, date_col_name):
+        if not df.mac.is_date_col(date_col_name):
+            raise TypeError(f"Invalid date column '{date_col_name}'")
 
         id_cols_in_df = self.get_id_cols_in_df(df)
 
         if len(id_cols_in_df) < 1:
-            print(f"Need id col in df to mask date_col '{date_col}'. Skipping.")
+            print(f"Need id col in df to mask date_col_name '{date_col_name}'. Skipping.")
             return
 
         id_col = id_cols_in_df[0]  # any will do
@@ -206,7 +208,7 @@ class IdMapCols:
             else None
         )
 
-        df[date_col] = df[date_col] - df[day_shift_helper_col]
+        df[date_col_name] = df[date_col_name] - df[day_shift_helper_col]
 
         df.drop(columns=[day_shift_helper_col], inplace=True)
 

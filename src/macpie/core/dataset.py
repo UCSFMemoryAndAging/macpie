@@ -1,266 +1,188 @@
-from collections import namedtuple
-from typing import ClassVar, List, Optional
+import json
+from typing import ClassVar, List
+from macpie.util.simpledataset import DictLikeDataset
 
 import numpy as np
 import pandas as pd
-import tablib as tl
+from pandas.core.dtypes.generic import ABCDataFrame
 
 from macpie._config import get_option
-from macpie.exceptions import DatasetIDColError, DatasetDateColError, DatasetID2ColError
-from macpie.io.excel import MACPieExcelFormatter
-from macpie.pandas.general import get_col_name, to_datetime
+from macpie.io.excel import safe_xlsx_sheet_title, MACPieExcelFile
+from macpie.pandas.general import get_col_name, is_date_col, to_datetime
 from macpie.tools import sequence as seqtools
 from macpie.tools import string as strtools
-from macpie.util.datasetfields import DatasetFields
 from macpie.util.decorators import TrackHistory
 
+from .datasetfields import DatasetField
 
-DatasetKeyCols = namedtuple("DatasetKeyCols", "id_col, date_col, id2_col")
+DEFAULT_ID_COL_NAME = "PIDN"
+DEFAULT_DATE_COL_NAME = "DCDate"
+DEFAULT_ID2_COL_NAME = "InstrID"
+
+DEFAULT_NAME = "NO_NAME"
 
 
-class Dataset:
-    """The :class:`Dataset` object is the heart of MACPie.
-    It represents two-dimensional tabular data with key fields commonly used in
-    clinical research data: form ID, date of collection, and subject ID.
+class Dataset(pd.DataFrame):
 
-    :param df: The :class:`pandas.DataFrame` representing the actual
-               data of this :class:`Dataset`.
-    :param id_col: The column in ``df`` representing the primary key/index
-                   of the :class:`Dataset`. Typically used for unique IDs of a clinical
-                   research subject's data record (e.g. form, assessment, assay)
-    :param date_col: The column in ``df`` representing the primary date column
-                     of the :class:`Dataset`. Typically used for the date the data was collected.
-    :param id2_col: The column in ``df`` representing the secondary key/index
-                    of the :class:`Dataset`. Typically used for the ID of the subject themselves.
-    :param name: The name of this :class:`Dataset`.
-    :param tags: Arbitrary tags for the :class:`Dataset` that can be filtered on later.
-                 Also used to create :attr:`Dataset.display_name`.
-    """
+    _metadata = [
+        "_id_col_name",
+        "_date_col_name",
+        "_id2_col_name",
+        "_name",
+        "_tags",
+        "_display_name_generator",
+        "_history",
+    ]
+
+    # _id_col_name = DEFAULT_ID_COL_NAME
+    # _date_column_name = DEFAULT_DATE_COL_NAME
+    # _id2_column_name = DEFAULT_ID2_COL_NAME
 
     def __init__(
         self,
-        df: pd.DataFrame,
-        *,
-        id_col: str = None,
-        date_col: str = None,
-        id2_col: str = None,
-        name: str = None,
-        tags: List[str] = [],
+        data=None,
+        *args,
+        id_col_name=None,
+        date_col_name=None,
+        id2_col_name=None,
+        name=None,
+        tags=None,
+        display_name_generator=None,
+        id_col_dropna=False,
+        **kwargs,
     ):
-        self._id_col = id_col
+        super().__init__(data, *args, **kwargs)
 
-        self._date_col = date_col
-
-        self._id2_col = id2_col
-
+        self.id_col_name = id_col_name
+        self.date_col_name = date_col_name
+        self.id2_col_name = id2_col_name
         self.name = name
-
         self.tags = tags
+        self.display_name_generator = display_name_generator
 
-        self.display_name_generator = strtools.add_suffixes_with_base
+        if id_col_dropna:
+            self.dropna(subset=["id_col_name"], inplace=True)
 
-        self.df = self._df_orig = df
+    def __setattr__(self, attr, val):
+        # Have to special case tags b/c pandas tries to use as column.
+        # Specifically, avoids the the following warning:
+        # UserWarning: Pandas doesn't allow columns to be created via a new attribute name -
+        # see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
+        if attr in ("id_col_name", "date_col_name", "id2_col_name", "tags"):
+            object.__setattr__(self, attr, val)
+        else:
+            super().__setattr__(attr, val)
 
-    # -------------------------------------------------------------------------
-    # Internals
-    # -------------------------------------------------------------------------
-
-    def __len__(self):
-        return self.height
-
-    def __repr__(self) -> str:
+    def __repr__(self):
         return (
             f"{self.__class__.__name__}("
+            f"id_col_name={self.id_col_name!r}, "
+            f"date_col_name={self.date_col_name!r}, "
+            f"id2_col_name={self.id2_col_name!r}, "
             f"name={self.name!r}, "
-            f"id_col={self._id_col!r}, "
-            f"date_col={self._date_col!r}, "
-            f"id2_col={self._id2_col!r}, "
-            f"tags={self.tags!r})"
+            f"tags={self.tags!r}, "
+            f"df=\n{super().__repr__()}\n)"
         )
 
-    def _validate_df(self):
-        if self._date_col is not None:
-            try:
-                self._date_col = to_datetime(self._df, self._date_col)
-            except (KeyError, ValueError):
-                raise DatasetDateColError(
-                    f"Date column '{self._date_col}' in dataset '{self.name}' "
-                    "could not be converted to native date objects"
-                )
-
-        if self._id2_col is not None:
-            try:
-                self._id2_col = get_col_name(self._df, self._id2_col)
-            except KeyError:
-                raise DatasetID2ColError(
-                    f"ID2 column '{self._id2_col}' in dataset '{self.name}' not found"
-                )
-
-        if self._id_col is not None:
-            try:
-                self._id_col = get_col_name(self._df, self._id_col)
-            except KeyError:
-                raise DatasetIDColError(
-                    f"ID column '{self._id_col}' in dataset '{self.name}' not found"
-                )
-
-            # if self._df[self._id_col].isnull().any():
-            #    pass
-
-            # from macpie.pandas.general import any_duplicates
-            # if any_duplicates(self._df, self._id_col, ignore_nan=True):
-            #    pass
-
-    # -------------------------------------------------------------------------
-    # Read-Only Properties
-    # -------------------------------------------------------------------------
-
     @property
-    def id_col(self):
-        return self._id_col
-
-    @property
-    def date_col(self):
-        return self._date_col
-
-    @property
-    def id2_col(self):
-        return self._id2_col
-
-    @property
-    def display_name(self):
-        """The name for this :class:`Dataset` suitable for display as generated by
-        the :attr:`display_name_generator` function.
-        """
-        return self._display_name_generator(self.name, self.tags, max_length=-1, delimiter="_")
-
-    @property
-    def key_cols(self):
-        """Returns list of non-null `key` column names of this :class:`Dataset`,
-        defined as :attr:`id_col`, :attr:`date_col`, and :attr:`id2_col`
-        """
-        key_cols = []
-        if self._id_col is not None:
-            key_cols.append(self._id_col)
-        if self._date_col is not None:
-            key_cols.append(self._date_col)
-        if self._id2_col is not None:
-            key_cols.append(self._id2_col)
-        return key_cols
-
-    @property
-    def sys_cols(self):
-        """Returns list of `system` column names of this :class:`Dataset`,
-        defined as any columns starting with ``column.system.prefix`` option.
-        """
-
-        sys_col_prefix = get_option("column.system.prefix")
-        return [col for col in self.df.columns if col.startswith(sys_col_prefix)]
-
-    @property
-    def non_key_cols(self):
-        """Returns list of `non-key` column names of this :class:`Dataset`,
-        defined as any columns that are not :attr:`key_cols` or :attr:`sys_cols`.
-        """
-        key_and_sys_cols = self.key_cols + self.sys_cols
-        return [col for col in self.df.columns if col not in key_and_sys_cols]
-
-    @property
-    def key_fields(self):
-        """Returns list of all `key` fields of this :class:`Dataset`
-        (analog of :attr:`key_cols`).
-        A field is a (:attr:`name`, ``col_name``) tuple, where
-        ``col_name`` is a column header in :attr:`df`.
-        """
-        return [(self.name, col) for col in self.key_cols]
-
-    @property
-    def sys_fields(self):
-        """Returns list of all `system` fields of this :class:`Dataset`
-        (analog of :attr:`sys_cols`).
-        A field is a (:attr:`name`, ``col_name``) tuple, where
-        ``col_name`` is a column header in :attr:`df`.
-        """
-        return [(self.name, col) for col in self.sys_cols]
-
-    @property
-    def non_key_fields(self):
-        """Returns list of all `non-key` fields of this :class:`Dataset`
-        (analog of :attr:`non_key_cols`).
-        A field is a (:attr:`name`, ``col_name``) tuple, where
-        ``col_name`` is a column header in :attr:`df`.
-        """
-        return [(self.name, col) for col in self.non_key_cols]
-
-    @property
-    def all_fields(self):
-        """Returns list of all fields of this :class:`Dataset`.
-        A field is a (:attr:`name`, ``col_name``) tuple, where
-        ``col_name`` is a column header in :attr:`df`.
-        """
-        return [(self.name, col) for col in self.df.columns]
-
-    @property
-    def height(self):
+    def row_count(self):
         """The number of rows currently in the :class:`Dataset`."""
-        return len(self._df.index)
+        return len(self.index)
 
     @property
-    def width(self):
+    def col_count(self):
         """The number of columns currently in the :class:`Dataset`."""
-        return len(self._df.columns)
+        return len(self.columns)
+
+    def equals(self, other: object):
+        if isinstance(other, Dataset):
+            if self.name != other.name or self.tags != other.tags:
+                return False
+        return super().equals(other)
 
     @property
-    def history(self):
-        """History information as generated by the
-        :class:`macpie.util.TrackHistory` decorator.
-        """
-        if "_history" in self.__dict__:
-            return self.__dict__["_history"]
-        return []
+    def id_col_name(self):
+        if self._id_col_name and self._id_col_name not in self.columns:
+            raise AttributeError(f"No id column found: '{self._id_col_name}'.")
+        return self._id_col_name
+
+    @id_col_name.setter
+    def id_col_name(self, val):
+        if val is not None:
+            try:
+                self._id_col_name = get_col_name(self, val)
+            except KeyError:
+                raise ValueError(f"Unknown column '{val}'")
+            except Exception:
+                raise
+        else:
+            self._id_col_name = None
 
     @property
-    def df_orig(self):
-        """Returns the original :class:`pandas.DataFrame` of this
-        :class:`Dataset`. Useful if/when data is constantly modified.
-        """
-        return self._df_orig
+    def date_col_name(self):
+        if self._date_col_name and self._date_col_name not in self.columns:
+            raise AttributeError(f"No date column found: '{self._date_col_name}'.")
+        return self._date_col_name
 
-    # -------------------------------------------------------------------------
-    # Read/Write Properties
-    # -------------------------------------------------------------------------
+    @date_col_name.setter
+    def date_col_name(self, val):
+        if val is not None:
+            try:
+                self._date_col_name = get_col_name(self, val)
+                to_datetime(self, self._date_col_name)
+            except KeyError:
+                raise ValueError(f"Unknown column '{val}'")
+            except Exception:
+                raise
+        else:
+            self._date_col_name = None
 
     @property
-    def df(self):
-        return self._df
+    def id2_col_name(self):
+        if self._id2_col_name and self._id2_col_name not in self.columns:
+            raise AttributeError(f"No id2 column found: '{self._id2_col_name}'.")
+        return self._id2_col_name
 
-    @df.setter
-    def df(self, value):
-        if value is None:
-            raise ValueError("'df' cannot be None")
-        if isinstance(value.columns, pd.MultiIndex):
-            raise ValueError("'df' columns cannot be of type 'MultiIndex'")
-        self._df = value
-        self._validate_df()
+    @id2_col_name.setter
+    def id2_col_name(self, val):
+        if val is not None:
+            try:
+                self._id2_col_name = get_col_name(self, val)
+            except KeyError:
+                raise ValueError(f"Unknown column '{val}'")
+            except Exception:
+                raise
+        else:
+            self._id2_col_name = None
 
     @property
     def name(self):
         return self._name
 
     @name.setter
-    def name(self, value):
-        self._name = value
+    def name(self, val):
+        if val is None:
+            self._name = DEFAULT_NAME
+        else:
+            self._name = val
 
     @property
     def tags(self):
         return self._tags
 
     @tags.setter
-    def tags(self, value):
-        if value is None:
+    def tags(self, val):
+        if val is None:
             self._tags = []
         else:
-            self._tags = list(value)
+            self._tags = list(val)
+
+    @property
+    def display_name(self):
+        """The name for this :class:`Dataset` suitable for display as generated by
+        the :attr:`display_name_generator` function.
+        """
+        return self._display_name_generator(self)
 
     @property
     def display_name_generator(self):
@@ -281,24 +203,28 @@ class Dataset:
         return self._display_name_generator
 
     @display_name_generator.setter
-    def display_name_generator(self, value):
-        if callable(value):
-            self._display_name_generator = value
+    def display_name_generator(self, val):
+        if callable(val):
+            self._display_name_generator = val
         else:
-            self._display_name_generator = lambda x: ""
+            self._display_name_generator = self.default_display_name_generator
 
-    # -------------------------------------------------------------------------
-    # Dataset DataFrame Methods
-    # -------------------------------------------------------------------------
+    @property
+    def history(self):
+        """History information as generated by the
+        :class:`macpie.util.TrackHistory` decorator.
+        """
+        if "_history" in self.__dict__:
+            return self.__dict__["_history"]
+        return []
 
-    def set_df(self, df, id_col=None, date_col=None, id2_col=None):
-        if id_col:
-            self._id_col = id_col
-        if date_col:
-            self._date_col = date_col
-        if id2_col:
-            self._id2_col = id2_col
-        self.df = df
+    @property
+    def _constructor(self):
+        return Dataset
+
+    @staticmethod
+    def default_display_name_generator(dset):
+        return strtools.add_suffixes_with_base(dset.name, dset.tags, max_length=-1, delimiter="_")
 
     # -------------------------------------------------------------------------
     # Tag Methods
@@ -336,193 +262,173 @@ class Dataset:
 
     def get_excel_sheetname(self):
         """Generates a valid Excel sheet name by truncating
-        :attr:`display_name` to 31 characters, the maximum allowed by Excel.
+        :attr:`display_name` to 30 characters. The maximum allowed by Excel is 31,
+        but leaving one character for use by library (i.e. prepending an '_').
         """
-        return self.display_name[:31]
+        return safe_xlsx_sheet_title(self.display_name[:31], "-")
 
     # -------------------------------------------------------------------------
-    # Dataset Columns Methods
+    # Column and Field Properties
     # -------------------------------------------------------------------------
+
+    @property
+    def key_cols(self):
+        """Returns list of non-null `key` column names of this :class:`Dataset`,
+        defined as :attr:`id_col_name`, :attr:`date_col_name`, and :attr:`id2_col_name`
+        """
+        key_cols = []
+        if self._id_col_name is not None:
+            key_cols.append(self._id_col_name)
+        if self._date_col_name is not None:
+            key_cols.append(self._date_col_name)
+        if self._id2_col_name is not None:
+            key_cols.append(self._id2_col_name)
+        return key_cols
+
+    @property
+    def sys_cols(self):
+        """Returns list of `system` column names of this :class:`Dataset`,
+        defined as any columns starting with ``column.system.prefix`` option.
+        """
+        sys_col_prefix = get_option("column.system.prefix")
+        return [col for col in self.columns if col.startswith(sys_col_prefix)]
+
+    @property
+    def non_key_cols(self):
+        """Returns list of `non-key` column names of this :class:`Dataset`,
+        defined as any columns that are not :attr:`key_cols` or :attr:`sys_cols`.
+        """
+        key_and_sys_cols = self.key_cols + self.sys_cols
+        return [col for col in self.columns if col not in key_and_sys_cols]
+
+    @property
+    def key_fields(self):
+        """Returns list of all `key` fields of this :class:`Dataset`
+        (analog of :attr:`key_cols`).
+        A field is a (:attr:`name`, ``col_name``) tuple, where
+        ``col_name`` is a column header in :attr:`df`.
+        """
+        return [DatasetField(self.name, col) for col in self.key_cols]
+
+    @property
+    def sys_fields(self):
+        """Returns list of all `system` fields of this :class:`Dataset`
+        (analog of :attr:`sys_cols`).
+        A field is a (:attr:`name`, ``col_name``) tuple, where
+        ``col_name`` is a column header in :attr:`df`.
+        """
+        return [DatasetField(self.name, col) for col in self.sys_cols]
+
+    @property
+    def non_key_fields(self):
+        """Returns list of all `non-key` fields of this :class:`Dataset`
+        (analog of :attr:`non_key_cols`).
+        A field is a (:attr:`name`, ``col_name``) tuple, where
+        ``col_name`` is a column header in :attr:`df`.
+        """
+        return [DatasetField(self.name, col) for col in self.non_key_cols]
+
+    @property
+    def all_fields(self):
+        """Returns list of all fields of this :class:`Dataset`.
+        A field is a (:attr:`name`, ``col_name``) tuple, where
+        ``col_name`` is a column header in :attr:`df`.
+        """
+        return [DatasetField(self.name, col) for col in self.columns]
 
     def create_id_col(self, col_name="mp_id_col", start_index=1):
-        """Create :attr:`id_col` with sequential numerical index.
+        """Create :attr:`id_col_name` with sequential numerical index.
 
-        :param col_name: name of :attr:`id_col` to create
+        :param col_name: name of :attr:`id_col_name` to create
         :param start_index: index starting number
 
         """
-        if self._id_col is not None:
-            raise ValueError(f'"id_col" with value "{self._id_col}"" already exists')
+        if self._id_col_name is not None:
+            raise ValueError(f'"id_col_name" with value "{self._id_col_name}"" already exists')
 
         # self.sort_by_id2()
-        # create an id_col called 'mp_id_col' with index starting from 1
-        self._id_col = col_name
-        self._df.insert(0, col_name, np.arange(start_index, len(self._df) + 1))
-
-    def rename_id_col(self, new_id_col):
-        """
-        Rename :attr:`id_col` to ``new_id_col``
-        """
-        old_id_col = self._id_col
-        self._id_col = new_id_col
-        if old_id_col is not None and old_id_col in self._df.columns:
-            self._df = self._df.rename(columns={old_id_col: new_id_col})
-
-    def rename_col(self, old_col, new_col):
-        """
-        Rename ``old_col`` to ``new_col``. Note: ``old_col``
-        cannot be a `key` column.
-        """
-        if old_col in self.non_key_cols or old_col in self.sys_cols:
-            self._df = self._df.rename(columns={old_col: new_col})
-        else:
-            raise KeyError(f"Column '{old_col}' not in dataset or is a key column.")
-
-    def drop_cols(self, cols):
-        """Drop specified columns from :class:`Dataset`.
-
-        :param cols: single label, or list-like
-
-        """
-        self._df = self._df.drop(columns=cols)
-
-    def drop_sys_cols(self):
-        """Drop all :attr:`sys_cols` from :class:`Dataset`."""
-        self.drop_cols(self.sys_cols)
-
-    def keep_cols(self, cols):
-        """Keep specified columns (thus dropping the rest).
-        Note: `Key` columns will always be kept.
-        """
-        cols_to_keep = self.key_cols
-
-        # preserve order of the key columns by sorting them according
-        # to existing order
-        cols_to_keep.sort(key=lambda i: self._df.columns.tolist().index(i))
-
-        cols = seqtools.maybe_make_list(cols)
-        cols_to_keep.extend([c for c in cols if c not in cols_to_keep])
-        self._df = self._df[cols_to_keep]
-
-    def keep_fields(self, selected_fields: DatasetFields):
-        """Keep specified fields (and drop the rest)."""
-        if self.name in selected_fields.to_dict():
-            self.keep_cols(selected_fields.to_dict()[self.name])
+        # create an id_col_name called 'mp_id_col' with index starting from 1
+        self._id_col_name = col_name
+        self.insert(0, col_name, np.arange(start_index, len(self) + 1))
 
     # -------------------------------------------------------------------------
     # Sorting
     # -------------------------------------------------------------------------
 
     def sort_by_id2(self):
-        """Sort :attr:`df` by :attr:`id2_col`."""
-
-        sort_cols = []
-        if self._id2_col:
-            sort_cols.append(self._id2_col)
-        if self._date_col:
-            sort_cols.append(self._date_col)
-        if self._id_col:
-            sort_cols.append(self._id_col)
+        """Sort :attr:`df` by :attr:`id2_col_name`."""
+        sort_cols = list(reversed(self.key_cols))
         if sort_cols:
-            self._df = self._df.sort_values(by=sort_cols, na_position="last")
+            return self.sort_values(by=sort_cols, na_position="last")
+        return self
 
     # -------------------------------------------------------------------------
     # I/O Methods
     # -------------------------------------------------------------------------
 
-    def to_dict(self):
+    def to_excel_dict(self):
         """Convert the :class:`Dataset` to a dictionary."""
         return {
+            "class_name": self.__class__.__name__,
+            "id_col_name": self._id_col_name,
+            "date_col_name": self._date_col_name,
+            "id2_col_name": self._id2_col_name,
             "name": self.name,
-            "id_col": self._id_col,
-            "date_col": self._date_col,
-            "id2_col": self._id2_col,
-            "tags": self.tags,
-            "rows": self.height,
-            "cols": self.width,
             "display_name": self.display_name,
             "excel_sheetname": self.get_excel_sheetname(),
+            "tags": self.tags,
+            "row_count": self.row_count,
+            "col_count": self.col_count,
         }
 
-    def to_tablib(self):
-        """Convert the :class:`Dataset` to a :class:`tablib.Dataset`."""
-        tlset = tl.Dataset()
-        tlset.title = self.display_name
-        tlset.dict = [self.to_dict()]
-        return tlset
+    @classmethod
+    def from_excel_dict(cls, excel_dict, df):
+        return Dataset(
+            data=df,
+            id_col_name=excel_dict.get("id_col_name"),
+            date_col_name=excel_dict.get("date_col_name"),
+            id2_col_name=excel_dict.get("id2_col_name"),
+            name=excel_dict.get("name"),
+            tags=excel_dict.get("tags"),
+        )
 
-    def to_excel(
-        self,
-        excel_writer,
-        sheet_name: str = None,
-        na_rep: str = "",
-        float_format: Optional[str] = None,
-        columns=None,
-        header=True,
-        index=False,
-        index_label=None,
-        startrow=0,
-        startcol=0,
-        engine=None,
-        merge_cells=True,
-        encoding=None,
-        inf_rep="inf",
-        verbose=True,
-        freeze_panes=None,
-        storage_options: pd._typing.StorageOptions = None,
-    ) -> None:
+    def get_excel_repr(self):
+        return DictLikeDataset(
+            *[(self.get_excel_sheetname(), self.to_excel_dict())],
+            title=MACPieExcelFile._datasets_sheet_name,
+        )
+
+    def to_excel(self, excel_writer, write_repr=True, **kwargs) -> None:
         """Write :class:`Dataset` to an Excel sheet.
 
-        As this is essentially writing the underlying :class:`pandas.DataFrame`
-        (i.e. :attr:`df`) to Excel, this method mirrors :meth:`pandas.DataFrame.to_excel` with
-        minor modifications. Whenever the `pandas` library is updated, this method
-        should be checked to make sure it is still compatible.
-
         :param excel_writer: File path or existing ExcelWriter.
-        :param sheet_name: Name of sheet which will contain Dataset, defaults to None
-        :param na_rep: Missing data representation., defaults to ""
-        :param float_format: Format string for floating point numbers. For example
-                             ``float_format="%.2f"`` will format 0.1234 to 0.12., defaults to None
-        :param columns: Columns to write, defaults to None
-        :param header: Write out the column names. If a list of string is given it is
-                       assumed to be aliases for the column names. Defaults to True
-        :param index: Write row names (index). Defaults to False
-        :param index_label: Column label for index column(s) if desired. If not specified, and
-                            `header` and `index` are True, then the index names are used. A
-                            sequence should be given if the DataFrame uses MultiIndex. Defaults to None
-        :param startrow: Upper left cell row to dump data frame. Defaults to 0
-        :param startcol: Upper left cell column to dump data frame. Defaults to 0
-        :param engine: Write engine to use, 'openpyxl' or 'xlsxwriter'. Defaults to None
-        :param merge_cells: Write MultiIndex and Hierarchical Rows as merged cells. Defaults to True
-        :param encoding: Encoding of the resulting excel file. Only necessary for xlwt,
-                         other writers support unicode natively. Defaults to None
-        :param inf_rep: Representation for infinity (there is no native representation for
-                        infinity in Excel). Defaults to "inf"
-        :param verbose: Display more information in the error logs. Defaults to True
-        :param freeze_panes: Specifies the one-based bottommost row and rightmost column that
-                             is to be frozen. Defaults to None
-        :param storage_options: Defaults to None
+        :param kwargs:
         """
-        formatter = MACPieExcelFormatter(
-            self,
-            na_rep=na_rep,
-            cols=columns,
-            header=header,
-            float_format=float_format,
-            index=index,
-            index_label=index_label,
-            merge_cells=merge_cells,
-            inf_rep=inf_rep,
-        )
-        formatter.write(
-            excel_writer,
-            sheet_name=sheet_name,
-            startrow=startrow,
-            startcol=startcol,
-            freeze_panes=freeze_panes,
-            engine=engine,
-            storage_options=storage_options,
-        )
+        from macpie import MACPieExcelWriter
+
+        if isinstance(excel_writer, MACPieExcelWriter):
+            need_save = False
+        else:
+            excel_writer = MACPieExcelWriter(
+                excel_writer, engine="openpyxl", storage_options=kwargs.get("storage_options")
+            )
+            need_save = True
+
+        try:
+            if isinstance(self.index, pd.MultiIndex) or isinstance(self.columns, pd.MultiIndex):
+                index = kwargs.pop("index", True)
+            else:
+                index = kwargs.pop("index", False)
+
+            sheet_name = kwargs.pop("sheet_name", self.get_excel_sheetname())
+            super().to_excel(excel_writer, sheet_name=sheet_name, index=index, **kwargs)
+
+            if write_repr:
+                self.get_excel_repr().to_excel(excel_writer)
+        finally:
+            # make sure to close opened file handles
+            if need_save:
+                excel_writer.close()
 
     @classmethod
     def from_file(cls, filepath, **kwargs) -> "Dataset":
@@ -534,37 +440,12 @@ class Dataset:
         df = file_to_dataframe(filepath)
 
         return cls(
-            df,
-            id_col=kwargs.get("id_col"),
-            date_col=kwargs.get("date_col"),
-            id2_col=kwargs.get("id2_col"),
+            data=df,
+            id_col_name=kwargs.get("id_col_name"),
+            date_col_name=kwargs.get("date_col_name"),
+            id2_col_name=kwargs.get("id2_col_name"),
             name=kwargs.get("name", filepath.stem),
             tags=kwargs.get("tags"),
-        )
-
-    @classmethod
-    def from_excel_sheet(cls, filepath, dict_repr, id_dropna=False):
-        """
-        Construct :class:`Dataset` from a sheet within an Excel file.
-
-        :param filepath: File path of Excel file.
-        :param dict_repr: Dict representation of the :class:`Dataset`, i.e.,
-            the return value of :meth:`to_dict()`.
-        """
-        dset_df = pd.read_excel(
-            filepath, sheet_name=dict_repr["excel_sheetname"], index_col=None, header=0
-        )
-
-        if id_dropna:
-            dset_df = dset_df.dropna(subset=[dict_repr["id_col"]])
-
-        return cls(
-            dset_df,
-            id_col=dict_repr["id_col"],
-            date_col=dict_repr["date_col"],
-            id2_col=dict_repr["id2_col"],
-            name=dict_repr["name"],
-            tags=dict_repr["tags"],
         )
 
     # -------------------------------------------------------------------------
@@ -574,7 +455,7 @@ class Dataset:
     @TrackHistory
     def date_proximity(
         self,
-        anchor_dset: "Dataset",
+        right_dset: "Dataset",
         get: str = "all",
         when: str = "earlier_or_later",
         days: int = 90,
@@ -582,19 +463,20 @@ class Dataset:
         drop_duplicates: bool = False,
         duplicates_indicator: bool = False,
         merge_suffixes=get_option("operators.binary.column_suffixes"),
+        prepend_level_name: bool = True,
     ) -> None:
         """
-        Links data across this :class:`Dataset` and ``anchor_dset``,
+        Links data across this :class:`Dataset` and ``right_dset``,
         updating :attr:`df` with the results.
 
-        Calls :func:`macpie.date_proximity`, passing in ``anchor_dset`` as
+        Calls :func:`macpie.date_proximity`, passing in ``right_dset`` as
         the "left" Dataset, and this Dataset as the "right" Dataset.
         """
-        from macpie.core.reshape.date_proximity import date_proximity
+        from macpie.core.operators.date_proximity import date_proximity
 
         return date_proximity(
-            left=anchor_dset,
-            right=self,
+            left=self,
+            right=right_dset,
             get=get,
             when=when,
             days=days,
@@ -602,18 +484,13 @@ class Dataset:
             drop_duplicates=drop_duplicates,
             duplicates_indicator=duplicates_indicator,
             merge_suffixes=merge_suffixes,
+            prepend_level_name=prepend_level_name,
         )
 
     @TrackHistory
     def group_by_keep_one(self, keep="all", drop_duplicates=False):
-        """
-        Links data across this :class:`Dataset` and ``anchor_dset``,
-        updating :attr:`df` with the results.
-
-        Calls :func:`macpie.date_proximity`, passing in ``anchor_dset`` as
-        the "left" Dataset, and this Dataset as the "right" Dataset.
-        """
-        from macpie.core.reshape.group_by_keep_one import group_by_keep_one
+        """ """
+        from macpie.core.operators.group_by_keep_one import group_by_keep_one
 
         return group_by_keep_one(self, keep, drop_duplicates)
 
@@ -627,18 +504,21 @@ class LavaDataset(Dataset):
     FIELD_DATE_COL_VALUE_DEFAULT: ClassVar[str] = "DCDate"
     FIELD_DATE_COL_VALUES_POSSIBLE: ClassVar[List[str]] = ["DATE", "DCDATE", "LINK_DATE"]
 
-    def __init__(self, df: pd.DataFrame, **kwargs):
+    def __init__(self, *args, **kwargs):
+        id_col_name = kwargs.pop("id_col_name", LavaDataset.FIELD_ID_COL_VALUE_DEFAULT)
+        date_col_name = kwargs.pop("date_col_name", LavaDataset.FIELD_DATE_COL_VALUE_DEFAULT)
+        id2_col_name = kwargs.pop("id2_col_name", LavaDataset.FIELD_ID2_COL_VALUE_DEFAULT)
+
         super().__init__(
-            df,
-            id_col=kwargs.get("id_col", LavaDataset.FIELD_ID_COL_VALUE_DEFAULT),
-            date_col=kwargs.get("date_col", LavaDataset.FIELD_DATE_COL_VALUE_DEFAULT),
-            id2_col=kwargs.get("id2_col", LavaDataset.FIELD_ID2_COL_VALUE_DEFAULT),
-            name=kwargs.get("name"),
-            tags=kwargs.get("tags"),
+            *args,
+            id_col_name=id_col_name,
+            date_col_name=date_col_name,
+            id2_col_name=id2_col_name,
+            **kwargs,
         )
 
     @classmethod
-    def from_file(cls, filepath, **kwargs) -> "Dataset":
+    def from_file(cls, filepath, **kwargs) -> "LavaDataset":
         """
         Construct LavaDataset from a file.
         """
@@ -646,4 +526,4 @@ class LavaDataset(Dataset):
 
         df = file_to_dataframe(filepath)
         name = kwargs.pop("name", filepath.stem)
-        return cls(df, name=name, **kwargs)
+        return cls(data=df, name=name, **kwargs)

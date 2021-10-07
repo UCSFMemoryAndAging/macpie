@@ -3,9 +3,7 @@ from typing import Optional, Sequence, Union
 import pandas as pd
 
 
-def is_potential_multi_index(
-    columns, index_col: Optional[Union[bool, Sequence[int]]] = None
-):
+def is_potential_multi_index(columns, index_col: Optional[Union[bool, Sequence[int]]] = None):
     """Check whether or not the `columns` parameter
     could be converted into a MultiIndex.
 
@@ -24,7 +22,7 @@ def is_potential_multi_index(
     )
 
 
-def maybe_make_multi_index_columns(self, columns, col_names=None):
+def maybe_make_multi_index_columns(columns, col_names=None):
     """possibly create a column mi here
 
     :param columns: Object which may or may not be made into a MultiIndex
@@ -34,3 +32,8 @@ def maybe_make_multi_index_columns(self, columns, col_names=None):
     if is_potential_multi_index(columns):
         columns = pd.MultiIndex.from_tuples(columns, names=col_names)
     return columns
+
+
+def prepend_multi_index_level(df: pd.DataFrame, level_name: str, axis: int = 0):
+    """Prepend a MultiIndex level."""
+    return pd.concat([df], keys=[level_name], axis=axis)

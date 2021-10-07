@@ -19,7 +19,7 @@ def add_suffix(s: str, suffix: str, max_length: int = -1):
     if max_length > -1:
         if len(suffix) >= max_length:
             raise ValueError("suffix can't be equal to or longer than max_length specified")
-        return s[0:max_length - len(suffix)] + suffix
+        return s[0 : max_length - len(suffix)] + suffix
     else:
         return s + suffix
 
@@ -40,10 +40,12 @@ def add_suffixes(s: str, suffixes: List[str], max_length: int = -1):
             s = add_suffix(s, suffix, max_length)
         return s
     else:
-        return s + ''.join(suffixes)
+        return s + "".join(suffixes)
 
 
-def add_suffixes_with_base(base, suffixes: List[str] = [], delimiter: str = "_", max_length: int = -1):
+def add_suffixes_with_base(
+    base, suffixes: List[str] = [], delimiter: str = "_", max_length: int = -1
+):
     """Adds a list of suffixes to a specified `base` string.
 
     :param base: Base to add suffixes to
@@ -73,5 +75,5 @@ def strip_suffix(s: str, suffix: str):
     :param suffix: suffix to remove from ``s``
     """
     if s is not None and s.endswith(suffix):
-        return s[:-len(suffix)]
+        return s[: -len(suffix)]
     return s

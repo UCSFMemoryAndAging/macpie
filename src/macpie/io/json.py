@@ -14,26 +14,27 @@ class MACPieJSONEncoder(json.JSONEncoder):
     TIME_FORMAT = "%H:%M:%S"
 
     def default(self, obj):
-        if hasattr(obj, 'to_json_dict'):
+        if hasattr(obj, "to_json_dict"):
             return obj.to_json_dict()
-        if hasattr(obj, 'to_dict'):
+
+        if hasattr(obj, "to_dict"):
             return obj.to_dict()
+
         if isinstance(obj, datetime.datetime):
             return {
                 "_type": "datetime",
-                "value": obj.strftime("%s %s" % (
-                    self.DATE_FORMAT, self.TIME_FORMAT
-                ))
+                "value": obj.strftime("%s %s" % (self.DATE_FORMAT, self.TIME_FORMAT)),
             }
+
         if isinstance(obj, datetime.date):
-            return {
-                "_type": "date",
-                "value": obj.strftime("%s" % (self.DATE_FORMAT))
-            }
+            return {"_type": "date", "value": obj.strftime("%s" % (self.DATE_FORMAT))}
+
         if isinstance(obj, decimal.Decimal):
-            return str(obj)            
+            return str(obj)
+
         if isinstance(obj, Path):
             return str(obj)
+
         return json.JSONEncoder.default(self, obj)
 
 
@@ -42,9 +43,11 @@ class MACPieJSONDecoder(json.JSONDecoder):
         json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
-        if '_type' not in obj:
+        if "_type" not in obj:
             return obj
-        type = obj['_type']
-        if type == 'datetime' or type == 'date':
-            return parser.parse(obj['value'])
+
+        type = obj["_type"]
+        if type == "datetime" or type == "date":
+            return parser.parse(obj["value"])
+
         return obj

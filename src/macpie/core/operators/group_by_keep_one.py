@@ -2,14 +2,10 @@ from macpie import pandas
 from macpie.core.dataset import Dataset
 
 
-def group_by_keep_one(
-    dset: Dataset,
-    keep: str = 'all',
-    drop_duplicates: bool = False
-) -> None:
-    """Given a :class:`Dataset` object, group on the :attr:`Dataset.id2_col` column
+def group_by_keep_one(dset: Dataset, keep: str = "all", drop_duplicates: bool = False) -> None:
+    """Given a :class:`Dataset` object, group on the :attr:`Dataset.id2_col_name` column
     and keep only the earliest or latest row in each group as determined by the date
-    in the :attr:`Dataset.date_col` column.
+    in the :attr:`Dataset.date_col_name` column.
 
     This is the :class:`Dataset` analog of :func:`macpie.pandas.group_by_keep_one`.
 
@@ -28,16 +24,17 @@ def group_by_keep_one(
 
     :param drop_duplicates: if ``True``, then if more than one row is determined to be
                             earliest or or latest in each group, drop all duplicates
-                            except the first occurrence. ``dset``'s ``id_col`` will
+                            except the first occurrence. ``dset``'s ``id_col_name`` will
                             be used for identifying duplicates
     """
     result_df = pandas.operators.group_by_keep_one.group_by_keep_one(
-        df=dset.df,
-        group_by_col=dset.id2_col,
-        date_col=dset.date_col,
+        df=dset,
+        group_by_col=dset.id2_col_name,
+        date_col_name=dset.date_col_name,
         keep=keep,
-        id_col=dset.id_col,
-        drop_duplicates=drop_duplicates
+        id_col_name=dset.id_col_name,
+        drop_duplicates=drop_duplicates,
     )
 
-    dset.df = result_df
+    return Dataset(data=result_df)
+    # dset.df = result_df

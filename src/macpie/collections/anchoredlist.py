@@ -1,8 +1,8 @@
 from itertools import chain
 
 from macpie._config import get_option
-from macpie.core.dataset import Dataset
-from macpie.util.datasetfields import DatasetFields
+from macpie import Dataset, DatasetFields
+
 
 from .base import BaseCollection
 from .basiclist import BasicList
@@ -25,13 +25,28 @@ class AnchoredList(BaseCollection):
     tag_secondary = get_option("dataset.tag.secondary")
 
     def __init__(self, primary: Dataset = None, secondary: BasicList = None):
-        self._sheetname_available_fields = get_option("sheet.name.available_fields")
+        self._sheetname_available_fields = get_option("excel.sheet_name.available_fields")
 
         self.primary = primary
         self.secondary = secondary
 
+    def __contains__(self, dset):
+        if dset is self.primary:
+            return True
+        if self.secondary:
+            return self.secondary.__contains__(dset)
+        return False
+
     def __iter__(self):
-        return chain([self._primary] if self._primary else [], self._secondary)
+        return chain([self._primary] if self._primary is not None else [], self._secondary)
+
+    def __len__(self):
+        counter = 0
+        if self.primary:
+            counter += 1
+        if self.secondary:
+            counter += len(self.secondary)
+        return counter
 
     def __repr__(self) -> str:
         return (
@@ -53,13 +68,13 @@ class AnchoredList(BaseCollection):
                 "The 'primary' attribute has already been set, and can not be re-set."
             )
 
-        if dset and dset.df[dset.id_col].duplicated().any():
+        if dset is not None and dset[dset.id_col_name].duplicated().any():
             raise ValueError("Primary Dataset in an AnchoredList cannot have duplicate IDs")
 
         self._primary = dset
 
-        if self._primary:
-            self._primary.sort_by_id2()
+        if self._primary is not None:
+            self._primary = self._primary.sort_by_id2()
             self._primary.add_tag(AnchoredList.tag_anchor)
 
     @property
@@ -83,7 +98,7 @@ class AnchoredList(BaseCollection):
         in this :class:`AnchoredList`.
         """
         key_fields = []
-        if self._primary:
+        if self._primary is not None:
             key_fields.extend(self._primary.key_fields)
         if self._secondary:
             for sec in self._secondary:
@@ -96,7 +111,7 @@ class AnchoredList(BaseCollection):
         in this :class:`AnchoredList`.
         """
         sys_fields = []
-        if self._primary:
+        if self._primary is not None:
             sys_fields.extend(self._primary.sys_fields)
         if self._secondary:
             for sec in self._secondary:
@@ -109,7 +124,7 @@ class AnchoredList(BaseCollection):
         in this :class:`AnchoredList`.
         """
         fields = []
-        if self._primary:
+        if self._primary is not None:
             fields.extend(self._primary.all_fields)
         if self._secondary:
             for sec in self._secondary:
@@ -128,7 +143,7 @@ class AnchoredList(BaseCollection):
         :param keep_unselected: If True, if a Dataset is not in ``selected_fields``,
                                 then keep entire Dataset. Defaults to False.
         """
-        if self._primary:
+        if self._primary is not None:
             self._primary.keep_fields(selected_fields)
         if self._secondary:
             self._secondary.keep_fields(selected_fields, keep_unselected=keep_unselected)
@@ -138,18 +153,24 @@ class AnchoredList(BaseCollection):
 
         :return: :class:`macpie.util.DatasetFields`
         """
+        return self.all_fields
         return DatasetFields.from_collection(self, title=self._sheetname_available_fields)
 
-    def to_dict(self):
+    def to_excel_dict(self):
         """Convert the AnchoredList to a dictionary."""
-        return {"primary": self._primary, "secondary": self._secondary}
+        return {
+            "class_name": self.__class__.__name__,
+            "primary": self._primary.to_excel_dict(),
+            "secondary": self._secondary.to_excel_dict(),
+        }
 
-    def to_excel(self, excel_writer, **kwargs):
+    def to_excel(self, excel_writer, write_repr=True, **kwargs):
         """Write :class:`AnchoredList` to an Excel file by calling
         :meth:`macpie.Dataset.to_excel` on :attr:`AnchoredList.primary`
         and :attr:`AnchoredList.secondary`.
         """
         self._primary.to_excel(excel_writer, **kwargs)
-        self._secondary.to_excel(excel_writer, **kwargs)
+        self._secondary.to_excel(excel_writer, write_repr=False, **kwargs)
 
-        self.get_collection_info().to_excel(excel_writer, **kwargs)
+        if write_repr:
+            self.get_excel_repr().to_excel(excel_writer, dump_json=True, **kwargs)

@@ -1,34 +1,42 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from collections.abc import Collection
+import json
 
 from macpie._config import get_option
-from macpie.util.info import Info
+from macpie.io.excel import MACPieExcelFile
+from macpie.util.simpledataset import DictLikeDataset
 
 
-class BaseCollection(ABC):
-    """Abstract base class for all collections.
-    """
+class BaseCollection(Collection):
+    """Abstract base class for all collections."""
 
-    @abstractmethod
+    def __contains__(self, x):
+        return False
+
     def __iter__(self):
         while False:
             yield None
 
+    def __len__(self):
+        return 0
+
     @abstractmethod
-    def to_dict(self):
+    def to_excel_dict(self):
         return {}
 
-    def get_collection_info(self):
-        """Contruct and return an :class:`macpie.util.Info` object
+    def get_excel_repr(self):
+        """Contruct and return an :class:`macpie.core.DictLikeDataset` object
         describing this collection.
         """
-        collection_dict = {'class_name': self.__class__.__name__, **self.to_dict()}
-        return Info.from_dict(collection_dict, title=get_option("sheet.name.collection_info"))
+        dictionary = {"class_name": self.__class__.__name__}
+        dictionary.update(self.to_excel_dict())
+        return DictLikeDataset.from_dict(dictionary, title=MACPieExcelFile._collection_sheet_name)
 
     def get_dataset_history_info(self):
-        """Contruct and return an :class:`macpie.util.Info` object containing
+        """Contruct and return an :class:`macpie.core.DictLikeDataset` object containing
         all :attr:`macpie.Dataset.history` information.
         """
-        info = Info(title=get_option("sheet.name.dsets_history"))
+        info = DictLikeDataset(title=get_option("excel.sheet_name.dsets_history"))
         for dset in self:
             if dset.history:
                 for record in dset.history:

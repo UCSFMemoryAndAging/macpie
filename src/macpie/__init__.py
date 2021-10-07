@@ -2,13 +2,14 @@
 
 __version__ = "0.4.0"
 
-
 from macpie._config import get_option, set_option, reset_option
 
 # let init-time option registration happen
 import macpie.core.config_init
 
-# top-level api
+# top-level api. ordering matters
+from macpie.tools import *
+
 from macpie.core.api import *
 
 from macpie.collections import *
@@ -17,7 +18,6 @@ from macpie.io import *
 
 from macpie.pandas.accessor_df import MacDataFrameAccessor
 
-from macpie.tools import *
 
 # sub-level api
 from macpie import pandas

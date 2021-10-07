@@ -3,7 +3,7 @@ import click
 from macpie._config import get_option
 from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
 from macpie.core.dataset import Dataset
-from macpie.exceptions import DatasetIDColError, DateProximityError
+from macpie.exceptions import DateProximityError
 from macpie.io.excel import MACPieExcelWriter
 from macpie.tools import path as pathtools
 
@@ -33,19 +33,19 @@ from macpie.cli.core import allowed_file, ClickPath
 @click.option(
     "-i",
     "--secondary-id-col",
-    default=get_option("dataset.id_col"),
+    default=get_option("dataset.id_col_name"),
     help="Secondary ID Column Header",
 )
 @click.option(
     "-d",
     "--secondary-date-col",
-    default=get_option("dataset.date_col"),
+    default=get_option("dataset.date_col_name"),
     help="Secondary Date Column Header",
 )
 @click.option(
     "-j",
     "--secondary-id2-col",
-    default=get_option("dataset.id2_col"),
+    default=get_option("dataset.id2_col_name"),
     help="Secondary ID2 Column Header",
 )
 @click.option("--merge-results/--no-merge-results", default=True)
@@ -106,13 +106,13 @@ def link(
         if invoker.get_opt("verbose"):
             collection.get_dataset_history_info().to_excel(writer)
         invoker.get_command_info().to_excel(writer)
-        invoker.get_client_system_info().to_excel(writer)
+        invoker.get_client_system_info().to_excel(writer, dump_json=True)
 
     msg = (
         "\nNOTE: If you want to merge/filter fields from the linked data in the "
         "above results file, perform the following steps:\n"
         "\t1. Open the results file and go to the "
-        f'"{get_option("sheet.name.available_fields")}" worksheet\n'
+        f'"{get_option("excel.sheet_name.available_fields")}" worksheet\n'
         f'\t2. In the column labeled "{get_option("column.to_merge")}", '
         'mark an "x" in each field you want to merge/keep\n'
         "\t3. Save the file\n"
@@ -163,28 +163,22 @@ class _LinkCommand:
 
     def execute(self):
 
-        try:
-            prim_dset = Dataset.from_file(
-                self.primary,
-                id_col=self.id_col,
-                date_col=self.date_col,
-                id2_col=self.id2_col,
-                name=self.primary.stem,
-            )
-        except DatasetIDColError:
+        prim_dset = Dataset.from_file(
+            self.primary,
+            id_col_name=None,
+            date_col_name=self.date_col,
+            id2_col_name=self.id2_col,
+            name=self.primary.stem,
+        )
+
+        if self.id_col in prim_dset.columns:
+            prim_dset.id_col_name = self.id_col
+        else:
             click.echo(
                 "\nWARNING: ID Column Header (-i, --id-col) not specified "
                 'and default of "InstrID" not found in your PRIMARY file.'
             )
             click.echo(f'         Creating one for you called "{get_option("column.link_id")}"\n')
-
-            prim_dset = Dataset.from_file(
-                self.primary,
-                id_col=None,
-                date_col=self.date_col,
-                id2_col=self.id2_col,
-                name=self.primary.stem,
-            )
 
             prim_dset.create_id_col(col_name=get_option("column.link_id"))
 
@@ -195,19 +189,23 @@ class _LinkCommand:
                 try:
                     sec_dset = Dataset.from_file(
                         sec,
-                        id_col=self.secondary_id_col,
-                        date_col=self.secondary_date_col,
-                        id2_col=self.secondary_id2_col,
+                        id_col_name=self.secondary_id_col,
+                        date_col_name=self.secondary_date_col,
+                        id2_col_name=self.secondary_id2_col,
                         name=sec.stem,
                     )
-                    sec_dset.date_proximity(
-                        anchor_dset=prim_dset,
+
+                    sec_dset_linked = prim_dset.date_proximity(
+                        right_dset=sec_dset,
                         get=self.secondary_get,
                         when=self.secondary_when,
                         days=self.secondary_days,
                         merge_suffixes=get_option("operators.binary.column_suffixes"),
+                        prepend_level_name=False,
                     )
-                    collection.add_secondary(sec_dset)
+
+                    collection.add_secondary(sec_dset_linked)
+
                 except DateProximityError as dpe:
                     click.echo(f'\nERROR linking secondary dataset "{sec}"\n')
                     click.echo(dpe)

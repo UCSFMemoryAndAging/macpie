@@ -1,154 +1,128 @@
+from copy import copy
 from pathlib import Path
+from macpie.core.dataset import DEFAULT_NAME
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from macpie import Dataset
-from macpie.exceptions import (
-    DatasetIDColError,
-    DatasetDateColError,
-    DatasetID2ColError
-)
+from macpie import Dataset, LavaDataset, MergeableAnchoredList
 
+from tests.data.data import primary_data
+
+data_dir = Path("tests/data/").resolve()
 current_dir = Path("tests/core/dataset/").resolve()
 
 
 def test_dataset():
-    d = {
-        'col1': [1, 2, 3],
-        'col2': [4, '5', 6],
-        'col3': [7, 8, 9],
-        'date': ['1/1/2001', '2/2/2002', '3/3/2003'],
-        'date_bad': ['bad_date', '2/2/2002', '3/3/2003'],
-        'misc': ['john', 'paul', 'mary'],
-        'col6': [10, '11', 12],
-        'id_col': [1, 2, 3],
-        'id_col_with_dups': [1, 1, 3],
-        'id_col_with_nan': [np.nan, np.nan, 3],
-        'id_col_with_none': [None, None, 3],
+    data = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "date_bad": ["bad_date", "2/2/2002", "3/3/2003"],
+        "misc": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+        "ids": [1, 2, 3],
+        "id_col_with_dups": [1, 1, 3],
+        "id_col_with_nan": [np.nan, np.nan, 3],
+        "id_col_with_none": [None, None, 3],
     }
-    df = pd.DataFrame(data=d)
+    # df = pd.DataFrame(data=data)
 
-    # no dataframe raises ValueError
+    # invalid id_col_name raises ValueError
     with pytest.raises(ValueError):
         dset = Dataset(
-            None,
-            name="test_name"
+            data=data, id_col_name="doesnt_exist", date_col_name="col3", name="test_name"
         )
 
-    # invalid id_col raises DatasetIDColError
-    with pytest.raises(DatasetIDColError):
+    # invalid date_col_name raises TypeError
+    with pytest.raises(TypeError):
         dset = Dataset(
-            df,
-            id_col="doesnt_exist",
-            date_col="col3",
-            name="test_name"
+            data=data,
+            id_col_name="ids",
+            date_col_name="date_bad",
+            id2_col_name="col2",
+            name="test_name",
         )
 
-    # duplicate ids raises DatasetIDColDuplicateError
-    # TODO: Determine whether Datsets should allow duplicate IDs
-    # When doing a date_proximity join, duplicate IDs can definitely
-    # be created when the primary dataset has records that match the
-    # same secondary record.
-    """
-    with pytest.raises(DatasetIDColDuplicateError):
+    # dataframe with date_col_name created without error
+    dset = Dataset(data=data, id_col_name="COL1", date_col_name="col3", name="test_name")
+    assert dset.mac.is_date_col(dset.date_col_name) is True
+
+    # invalid id2_col_name raises DatasetID2ColError
+    with pytest.raises(ValueError):
         dset = Dataset(
-            df,
-            id_col="id_col_with_dups",
-            date_col="col3",
-            name="test_name"
-        )
-    """
-
-    # id_col with nan values raises DatasetIDColError
-    # TODO: Determine whether Datasets should allow nan IDs
-    """
-    with pytest.raises(DatasetIDColError):
-       dset = Dataset(
-           df,
-           id_col="id_col_with_nan",
-           date_col="col3",
-           name="test_name"
-       )
-    """
-
-    # id_col with None values raises DatasetIDColError
-    # TODO: Determine whether Datasets should allow null IDs
-    """
-    with pytest.raises(DatasetIDColError):
-        dset = Dataset(
-            df,
-            id_col="id_col_with_none",
-            date_col="col3",
-            name="test_name"
-        )
-    """
-
-    # invalid date_col raises KeyError
-    with pytest.raises(DatasetDateColError):
-        dset = Dataset(
-            df,
-            id_col="id_col",
-            date_col="date_bad",
-            id2_col="col2",
-            name="test_name"
+            data=data,
+            id_col_name="COL1",
+            date_col_name="col3",
+            id2_col_name="doesnt_exist",
+            name="test_name",
         )
 
-    # dataframe with date_col created without error
-    dset = Dataset(
-        df,
-        id_col="COL1",
-        date_col="col3",
-        name="test_name"
-    )
-    assert dset.df.mac.is_date_col(dset.date_col) is True
+    dset_copy = dset.copy()
+    assert dset.equals(dset_copy)
 
-    # original dataframe is same as current df
-    assert dset.df.equals(dset.df_orig)
-    assert repr(dset) == "Dataset(name='test_name', id_col='col1', date_col='col3', id2_col=None, tags=[])"
-
-    # invalid id2_col raises DatasetID2ColError
-    with pytest.raises(DatasetID2ColError):
-        dset = Dataset(
-            df,
-            id_col="COL1",
-            date_col="col3",
-            id2_col="doesnt_exist",
-            name="test_name"
-        )
-
-    # dataset lacks id_col, date_col, id2_col but created without error
-    dset = Dataset(
-        df.copy()
-    )
-    assert dset.df.equals(df)
-
-    # create_id_col creates id_col if none exists
+    # create_id_col creates id_col_name if none exists
+    dset = Dataset(data=data, name="test_name")
     dset.create_id_col()
-    assert dset.id_col == 'mp_id_col'
+    assert dset.id_col_name == "mp_id_col"
 
-    # now that id_col exists, trying to create another should raise error
+    # now that id_col_name exists, trying to create another should raise error
     with pytest.raises(ValueError):
         dset.create_id_col()
 
-    # dataset lacks date_col but created without error
-    dset = Dataset(
-        df,
-        id_col="COL1",
-        name="test_name"
-    )
-    # id_col is converted to the correct case (in dataframe)
-    assert dset.id_col == "col1"
+    # dataset lacks date_col_name but created without error
+    dset = Dataset(data=data, id_col_name="COL1", name="test_name")
+    # id_col_name is converted to the correct case (in dataframe)
+    assert dset.id_col_name == "col1"
 
 
 def test_dataset_from_file():
-
     # dataframe lacks date column but created without error
     p = current_dir / "basic.csv"
 
-    dset = Dataset.from_file(p, id_col="misc", name="test_name")
+    dset = Dataset.from_file(p, id_col_name="misc", name="test_name")
     assert dset.name == "test_name"
+    assert dset.row_count == 3
+    assert dset.col_count == 6
 
-    dset = Dataset.from_file(p, id_col="misc", date_col="date", name="test_name")
+    dset = Dataset.from_file(p, id_col_name="misc", date_col_name="date", name="test_name")
     assert dset.name == "test_name"
+    assert dset.row_count == 3
+
+
+def test_dataset_constructor_and_file():
+
+    primary_from_constructor = Dataset(data=primary_data)
+    primary_from_file = Dataset.from_file(data_dir / "primary.xlsx")
+
+    assert primary_from_constructor.name != primary_from_file.name
+    assert primary_from_constructor.equals(primary_from_file) is False
+
+    primary_from_constructor = Dataset(data=primary_data, date_col_name="DCDate", name="primary")
+    primary_from_file = Dataset.from_file(data_dir / "primary.xlsx", date_col_name="DCDate")
+
+    assert primary_from_constructor.equals(primary_from_file) is True
+
+
+def test_display_name_generator():
+    df = Dataset({"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]})
+    assert df.display_name == df.name
+
+    df2 = Dataset(
+        {"A": [1, 2, 3], "albert": [4, 5, 6], "C": [7, 8, 9]},
+        id_col_name="albert",
+        name="renee",
+        tags=["a", "b"],
+    )
+    assert df2.display_name == "renee_a_b"
+
+
+def test_lava_dataset():
+
+    primary_from_file = LavaDataset.from_file(data_dir / "primary.xlsx")
+    assert primary_from_file.id_col_name == "InstrID"
+    assert primary_from_file.date_col_name == "DCDate"
+    assert primary_from_file.id2_col_name == "PIDN"
+    assert primary_from_file.name == "primary"

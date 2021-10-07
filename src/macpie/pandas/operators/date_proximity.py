@@ -1,4 +1,5 @@
 from typing import Optional
+import warnings
 
 import pandas as pd
 
@@ -26,6 +27,7 @@ def date_proximity(
     duplicates_indicator: bool = False,
     merge="partial",
     merge_suffixes=get_option("operators.binary.column_suffixes"),
+    prepend_levels=(None, None),
 ) -> pd.DataFrame:
     """Links data across two :class:`pandas.DataFrame` objects by date proximity.
 
@@ -84,6 +86,13 @@ def date_proximity(
     :param merge_suffixes: A length-2 sequence where the first element is
                            suffix to add to the left DataFrame columns, and
                            second element is suffix to add to the right DataFrame columns.
+    :param prepend_levels: A length-2 sequence where each element is optionally a string
+                           indicating a top-level index to add to columnn indexes in ``left``
+                           and ``right`` respectively (thus creating a :class:`pandas.MultiIndex`
+                           if needed). Pass a value of ``None`` instead of a string
+                           to indicate that the column index in ``left`` or ``right`` should be
+                           left as-is. At least one of the values must not be ``None``.
+
     """
     op = _DateProximityOperation(
         left,
@@ -103,6 +112,7 @@ def date_proximity(
         duplicates_indicator=duplicates_indicator,
         merge=merge,
         merge_suffixes=merge_suffixes,
+        prepend_levels=prepend_levels,
     )
     return op.get_result()
 
@@ -127,9 +137,10 @@ class _DateProximityOperation:
         duplicates_indicator: bool = False,
         merge="partial",
         merge_suffixes=get_option("operators.binary.column_suffixes"),
+        prepend_levels=(None, None),
     ):
-        self.left = self.orig_left = left
-        self.right = self.orig_right = right
+        self.left = left
+        self.right = right
 
         self.id_on = seqtools.maybe_make_list(id_on)
         self.id_left_on = seqtools.maybe_make_list(id_left_on)
@@ -164,6 +175,7 @@ class _DateProximityOperation:
 
         self.merge = merge
         self.merge_suffixes = merge_suffixes
+        self.prepend_levels = prepend_levels
 
         self._left_suffix = get_option("operators.binary.column_suffixes")[0]
         self._right_suffix = get_option("operators.binary.column_suffixes")[1]
@@ -184,17 +196,37 @@ class _DateProximityOperation:
         return result
 
     def _get_all(self):
-        everything = pd.merge(
-            self.link_table,
-            self.right,
-            how="left",
-            left_on=self.id_left_on,
-            right_on=self.id_right_on,
-            indicator=self._merge_indicator_col,
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # Ignore the following warning caused when merging on dataframes
+            # with MultiIndex columns:
+            # PerformanceWarning: dropping on a non-lexsorted multi-index
+            # without a level parameter may impact performance.
+            # obj = obj._drop_axis(labels, axis, level=level, errors=errors)
+
+            everything = pd.merge(
+                self.link_table,
+                self.right,
+                how="left",
+                left_on=self.id_left_on,
+                right_on=self.id_right_on,
+                indicator=self._merge_indicator_col,
+            )
+
+        # fix the leveling of the merge indicator column created by pd.merge
+        if self._right_level:
+            everything.rename(
+                columns={
+                    self._merge_indicator_col: self._right_level,
+                    "": self._merge_indicator_col,
+                },
+                inplace=True,
+            )
 
         # create a column 'diff_days' with date difference in days
-        everything = everything.mac.add_diff_days(self.date_left_on, self.date_right_on)
+        everything = everything.mac.add_diff_days(
+            self.date_left_on, self.date_right_on, self._diff_days_col
+        )
 
         # keep rows where the date differences within range
         # create copy to avoid chained indexing and getting a SettingWithCopyWarning
@@ -208,7 +240,7 @@ class _DateProximityOperation:
         return all_candidates
 
     def _get_closest(self, all_candidates):
-        # create a column containing the absoluate value of diff_days
+        # create a column containing the absolute value of diff_days
         all_candidates.loc[:, self._abs_diff_days_col] = all_candidates[self._diff_days_col].abs()
 
         all_candidates = all_candidates.sort_values(
@@ -219,10 +251,13 @@ class _DateProximityOperation:
         )
 
         groupby_cols = self.id_left_on + [self.date_left_on]
+
         closest_candidates = all_candidates[
             (
                 all_candidates[self._abs_diff_days_col]
-                == all_candidates.groupby(groupby_cols)[self._abs_diff_days_col].transform("min")
+                == all_candidates.groupby(groupby_cols)[[self._abs_diff_days_col]].transform(
+                    "min"
+                )[self._abs_diff_days_col]
             )
         ]
 
@@ -297,11 +332,20 @@ class _DateProximityOperation:
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
-            self.date_left_on = self.left.mac.get_col_name(self.date_on)
-            self.date_right_on = self.right.mac.get_col_name(self.date_on)
+            self.date_left_on = self.date_right_on = self.left.mac.get_col_name(self.date_on)
 
-        self.date_left_on = self.left.mac.to_datetime(self.date_left_on)
-        self.date_right_on = self.right.mac.to_datetime(self.date_right_on)
+        self.date_left_on = self.left.mac.get_col_name(self.date_left_on)
+        self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
+
+        if not self.left.mac.is_date_col(self.date_left_on):
+            raise TypeError(
+                f"'date_left_on' column of '{self.date_left_on}' is not a valid date column"
+            )
+
+        if not self.right.mac.is_date_col(self.date_right_on):
+            raise TypeError(
+                f"'date_right_on' column of '{self.date_right_on}' is not a valid date column"
+            )
 
         if self.get not in ["all", "closest"]:
             raise ValueError(f"invalid get option: {self.get}")
@@ -343,13 +387,43 @@ class _DateProximityOperation:
             )
 
         self._add_suffixes()
+
+        if not seqtools.is_list_like(self.prepend_levels):
+            raise ValueError(
+                "'prepend_levels' needs to be a tuple or list of two values "
+                "(e.g. ('left','right') or (None,'right'))"
+            )
+        elif len(self.prepend_levels) != 2:
+            raise ValueError(
+                "'prepend_levels' needs to be a tuple or list of two values "
+                "(e.g. ('left','right') or (None,'right'))"
+            )
+
+        self._left_level = self.prepend_levels[0]
+        self._right_level = self.prepend_levels[1]
+
+        if self._left_level:
+            self.left = self.left.mac.prepend_multi_index_level(self._left_level, axis=1)
+            self.id_left_on = [(self._left_level, id_left_on) for id_left_on in self.id_left_on]
+            self.date_left_on = (self._left_level, self.date_left_on)
+            if self.left_link_id:
+                self.left_link_id = (self._left_level, self.left_link_id)
+        if self._right_level:
+            self.right = self.right.mac.prepend_multi_index_level(self._right_level, axis=1)
+            self.id_right_on = [
+                (self._right_level, id_right_on) for id_right_on in self.id_right_on
+            ]
+            self.date_right_on = (self._right_level, self.date_right_on)
+            self._diff_days_col = (self._right_level, self._diff_days_col)
+            self._abs_diff_days_col = (self._right_level, self._abs_diff_days_col)
+
         self._create_link_helpers()
 
     def _add_suffixes(self):
         self.left = self.left.add_suffix(self._left_suffix)
         self.right = self.right.add_suffix(self._right_suffix)
-        self.id_left_on = [id_col + self._left_suffix for id_col in self.id_left_on]
-        self.id_right_on = [id_col + self._right_suffix for id_col in self.id_right_on]
+        self.id_left_on = [id_col_name + self._left_suffix for id_col_name in self.id_left_on]
+        self.id_right_on = [id_col_name + self._right_suffix for id_col_name in self.id_right_on]
         self.date_left_on = self.date_left_on + self._left_suffix
         self.date_right_on = self.date_right_on + self._right_suffix
 
@@ -357,7 +431,8 @@ class _DateProximityOperation:
             self.left_link_id = self.left_link_id + self._left_suffix
 
     def _create_link_helpers(self):
-        link_table_cols = self.id_left_on.copy()
+        link_table_cols = []
+        link_table_cols.extend(self.id_left_on)
         link_table_cols.append(self.date_left_on)
         if self.left_link_id:
             link_table_cols.append(self.left_link_id)
