@@ -1,8 +1,7 @@
-from macpie import pandas
-from macpie.core.dataset import Dataset
+import macpie as mp
 
 
-def group_by_keep_one(dset: Dataset, keep: str = "all", drop_duplicates: bool = False) -> None:
+def group_by_keep_one(dset: mp.Dataset, keep: str = "all", drop_duplicates: bool = False) -> None:
     """Given a :class:`Dataset` object, group on the :attr:`Dataset.id2_col_name` column
     and keep only the earliest or latest row in each group as determined by the date
     in the :attr:`Dataset.date_col_name` column.
@@ -27,7 +26,7 @@ def group_by_keep_one(dset: Dataset, keep: str = "all", drop_duplicates: bool = 
                             except the first occurrence. ``dset``'s ``id_col_name`` will
                             be used for identifying duplicates
     """
-    result_df = pandas.operators.group_by_keep_one.group_by_keep_one(
+    result_df = mp.pandas.operators.group_by_keep_one.group_by_keep_one(
         df=dset,
         group_by_col=dset.id2_col_name,
         date_col_name=dset.date_col_name,
@@ -36,5 +35,5 @@ def group_by_keep_one(dset: Dataset, keep: str = "all", drop_duplicates: bool = 
         drop_duplicates=drop_duplicates,
     )
 
-    return Dataset(data=result_df)
+    return mp.Dataset(data=result_df)
     # dset.df = result_df

@@ -1,9 +1,10 @@
-from itertools import islice
+import itertools
 
 import openpyxl as pyxl
 import pandas as pd
 
 from . import listlike as lltools
+
 
 YELLOW = "00FFFF00"
 
@@ -117,7 +118,9 @@ def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
     :param num_idx: number of index columns
     """
     if num_header == 1 and num_idx == 0:
-        return _ws_to_df_default(ws)
+        data = ws.values
+        cols = next(data)
+        return pd.DataFrame(data, columns=cols)
 
     data = ws.values
 
@@ -140,16 +143,9 @@ def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
         else:
             tuples = [r[:num_idx] for r in data]
             idx = pd.MultiIndex.from_tuples(tuples)
-        data = (islice(r, num_idx, None) for r in data)
+        data = (itertools.islice(r, num_idx, None) for r in data)
         df = pd.DataFrame(data, index=idx, columns=cols)
     else:
         df = pd.DataFrame(data, columns=cols)
 
-    return df
-
-
-def _ws_to_df_default(ws):
-    data = ws.values
-    cols = next(data)
-    df = pd.DataFrame(data, columns=cols)
     return df

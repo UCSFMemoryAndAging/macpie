@@ -2,8 +2,7 @@ from typing import Callable
 
 import networkx as nx
 
-from macpie.core.dataset import Dataset
-from macpie.tools import string as strtools
+from macpie import Dataset, strtools
 
 from .basicgraph import BasicGraph
 

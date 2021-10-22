@@ -1,7 +1,7 @@
 import pandas as pd
 
 from macpie._config import get_option
-from macpie.tools import validator as validatortools
+from macpie import validatortools
 
 
 def group_by_keep_one(

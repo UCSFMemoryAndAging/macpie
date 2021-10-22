@@ -1,9 +1,5 @@
-"""
-Base and utility classes for macpie objects.
-"""
-
 import datetime
-from dateutil import parser
+import dateutil
 import decimal
 import json
 from pathlib import Path
@@ -48,6 +44,6 @@ class MACPieJSONDecoder(json.JSONDecoder):
 
         type = obj["_type"]
         if type == "datetime" or type == "date":
-            return parser.parse(obj["value"])
+            return dateutil.parser.parse(obj["value"])
 
         return obj

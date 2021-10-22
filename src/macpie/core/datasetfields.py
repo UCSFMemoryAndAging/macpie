@@ -1,10 +1,8 @@
-from collections import defaultdict, deque, namedtuple, UserList
-from typing import List, NamedTuple, Optional
-import pandas as pd
+import collections
+from typing import NamedTuple
 
 from macpie._config import get_option
 from macpie.tools import tablib as tablibtools
-from macpie.util.simpledataset import SimpleDataset
 
 
 class DatasetField(NamedTuple):
@@ -12,7 +10,7 @@ class DatasetField(NamedTuple):
     field: str
 
 
-class DatasetFields(SimpleDataset):
+class DatasetFields(tablibtools.SimpleDataset):
     """A tabular representation of a set of :class:`macpie.Dataset` fields.
     First column is the Dataset name.
     Second column is the Dataset column name.
@@ -60,18 +58,20 @@ class DatasetFields(SimpleDataset):
 
     def to_dict(self):
         """Convert this :class:`DatasetFields` to a dictionary."""
-        d = defaultdict(list)
+        d = collections.defaultdict(list)
         for dataset_field in self:
             d[dataset_field.dataset].append(dataset_field.field)
         return d
 
+    """
     @classmethod
     def from_excel(cls, filepath, sheet_name) -> "DatasetFields":
-        """Construct :class:`DatasetFields` from a :class:`pandas.DataFrame`."""
+    
         instance = cls()
         df = pd.read_excel(filepath, sheet_name=sheet_name, header=0, index_col=None)
-        df.apply(lambda x: instance.append_with_tags(x), axis="columns")
+        df.apply(lambda x: instance.append_series(x, with_tags=True), axis="columns")
         return instance
+    """
 
     @classmethod
     def from_collection(cls, collection, **kwargs) -> "DatasetFields":

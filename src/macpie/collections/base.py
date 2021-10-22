@@ -1,14 +1,13 @@
-from abc import abstractmethod
-from collections.abc import Collection
+import collections
 import itertools
-import json
+from abc import abstractmethod
 
+from macpie import tablibtools
 from macpie._config import get_option
 from macpie.io.excel import MACPieExcelFile
-from macpie.util.simpledataset import DictLikeDataset
 
 
-class BaseCollection(Collection):
+class BaseCollection(collections.abc.Collection):
     """Abstract base class for all collections."""
 
     def __contains__(self, x):
@@ -55,13 +54,15 @@ class BaseCollection(Collection):
         """
         dictionary = {"class_name": self.__class__.__name__}
         dictionary.update(self.to_excel_dict())
-        return DictLikeDataset.from_dict(dictionary, title=MACPieExcelFile.collection_sheet_name)
+        return tablibtools.DictLikeDataset.from_dict(
+            dictionary, title=MACPieExcelFile.collection_sheet_name
+        )
 
     def get_dataset_history_info(self):
         """Contruct and return an :class:`macpie.core.DictLikeDataset` object containing
         all :attr:`macpie.Dataset.history` information.
         """
-        info = DictLikeDataset(title=get_option("excel.sheet_name.dsets_history"))
+        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.dsets_history"))
         for dset in self:
             if dset.history:
                 for record in dset.history:

@@ -1,13 +1,11 @@
-from collections import OrderedDict
-from pathlib import Path
+import collections
 import platform
+from pathlib import Path
 
 import click
 
-from macpie import __version__
+from macpie import __version__, pathtools, tablibtools
 from macpie._config import get_option
-from macpie.tools import path as pathtools
-from macpie.util.simpledataset import DictLikeDataset
 
 from .keepone import keepone
 from .link import link
@@ -44,7 +42,7 @@ class Invoker:
         return self.args[k]
 
     def get_command_info(self):
-        info = DictLikeDataset(title=get_option("excel.sheet_name.command_info"))
+        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.command_info"))
         info.append(("command_name", self.command_name))
         info.append_separator("Arguments")
         info.append_dict(self.args)
@@ -53,7 +51,7 @@ class Invoker:
         return info
 
     def get_client_system_info(self):
-        info = DictLikeDataset(title=get_option("excel.sheet_name.client_system_info"))
+        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.client_system_info"))
         info.append(("python_version", platform.python_version()))
         info.append(("platform", platform.platform()))
         info.append(("computer_network_name", platform.node()))
@@ -81,8 +79,8 @@ class Invoker:
 @click.pass_context
 def main(ctx, verbose, id_col, date_col, id2_col):
     command_name = ctx.info_name
-    opts = OrderedDict()
-    args = OrderedDict()
+    opts = collections.OrderedDict()
+    args = collections.OrderedDict()
 
     opts["verbose"] = verbose
     opts["id_col"] = id_col

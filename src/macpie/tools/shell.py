@@ -1,6 +1,3 @@
-"""
-Module contains tools for processing files (e.g. csv, xlsx) into DataFrames or other objects
-"""
 import shutil
 from pathlib import Path
 

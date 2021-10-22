@@ -1,10 +1,7 @@
 import click
 
+from macpie import Dataset, MACPieExcelWriter, MergeableAnchoredList, pathtools
 from macpie._config import get_option
-from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
-from macpie.core.dataset import Dataset
-from macpie.io.excel import MACPieExcelWriter
-from macpie.tools import path as pathtools
 
 from macpie.cli.core import allowed_path, ClickPath
 

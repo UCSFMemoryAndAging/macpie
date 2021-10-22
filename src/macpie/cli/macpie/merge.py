@@ -1,7 +1,6 @@
 import click
 
-from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
-from macpie.io.excel import read_excel, MACPieExcelWriter
+from macpie import read_excel, MACPieExcelWriter
 
 from macpie.cli.core import ClickPath
 

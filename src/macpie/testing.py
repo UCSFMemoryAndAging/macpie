@@ -3,7 +3,6 @@ Public testing utility functions.
 """
 
 import pandas as pd
-from pandas.testing import assert_index_equal
 
 from macpie import datetimetools
 
@@ -41,7 +40,7 @@ def assert_dfs_equal(
         assert False, f"\nleft_only_cols: {left_only_cols}\nright_only_cols: {right_only_cols}"
 
     # check rows
-    assert_index_equal(left.index, right.index)
+    pd.testing.assert_index_equal(left.index, right.index)
 
     row_diffs = left.mac.diff_rows(right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat)
 

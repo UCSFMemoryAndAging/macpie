@@ -3,10 +3,11 @@ from pathlib import Path
 import click
 import pandas as pd
 
+from macpie import pathtools
+from macpie.util import IdMapCols, Masker
+
 from macpie.cli.core import show_parameter_source
 from macpie.cli.macpie.masker import masker_params
-from macpie.util.masker import IdMapCols, Masker
-from macpie.tools import path as pathtools
 
 from .dbconnections import mysql_connector_connection, sqlalchemy_connection
 from .helpers import execute_multiline_query, show_create_table, transform_table

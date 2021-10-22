@@ -1,12 +1,7 @@
 from collections import UserList
-from collections.abc import MutableSequence
-
-from copy import copy
-import re
-from typing import List
 
 from macpie import Dataset, DatasetFields
-from macpie.io.excel import read_excel, MACPieExcelFile
+from macpie.io.excel import MACPieExcelFile
 
 from .base import BaseCollection
 

@@ -43,10 +43,11 @@ Examples:
 
 import click
 import pandas as pd
+
+import macpie as mp
+from macpie.util import IdMapCols, Masker
+
 from macpie.cli.core import allowed_path, show_parameter_source, ClickPath
-from macpie.pandas.io import file_to_dataframe
-from macpie.tools import path as pathtools
-from macpie.util.masker import IdMap, IdMapCols, Masker
 
 # Note that pseudo-random number generation always produces the same output
 # given the same seed. So if the same seed and ID ranges are used, you should
@@ -196,7 +197,7 @@ def masker(
 ):
     invoker = ctx.obj
 
-    valid_filepaths, invalid_filepaths = pathtools.validate_paths(input_path, allowed_path)
+    valid_filepaths, invalid_filepaths = mp.pathtools.validate_paths(input_path, allowed_path)
 
     for i in invalid_filepaths:
         click.echo(f"WARNING: Ignoring invalid file: {i}")
@@ -234,7 +235,7 @@ def mask_file(masker, input_filepath, output_dir):
     output_filepath = output_dir / input_filepath.name
 
     if input_filepath.suffix == ".csv":
-        df = file_to_dataframe(input_filepath)
+        df = mp.pandas.file_to_dataframe(input_filepath)
         try:
             masked_df, _ = masker.mask_df(df)
             masked_df.to_csv(output_filepath, index=False)

@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from macpie.core.dataset import Dataset
-from macpie.tools import string as strtools
+from macpie import Dataset, strtools
 
 from .base import BaseCollection
 

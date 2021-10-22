@@ -31,10 +31,9 @@ In summary, given a pandas DataFrame, these operations will be performed on the 
 A dataframe can only be masked ONLY if there is at least one ID column found.
 
 """
-
-import random
+import collections
 import itertools
-from collections import defaultdict, namedtuple
+import random
 from typing import Dict
 
 import pandas as pd
@@ -219,7 +218,7 @@ class IdMapCols:
 
 
 # stores the masking data for each unique, original ID
-_MaskedData = namedtuple("_MaskedData", "masked_id, day_shift")
+_MaskedData = collections.namedtuple("_MaskedData", "masked_id, day_shift")
 
 
 class IdMap:

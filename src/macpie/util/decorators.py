@@ -1,5 +1,5 @@
-from collections import OrderedDict
-from functools import partial, update_wrapper
+import collections
+import functools
 import time
 
 
@@ -16,7 +16,7 @@ class TrackHistory:
 
     def __init__(self, func):
         # wrap the method
-        update_wrapper(self, func)
+        functools.update_wrapper(self, func)
         self.func = func
 
     def __call__(self, *args, **kwargs):
@@ -24,7 +24,7 @@ class TrackHistory:
         instance = args[0]  # thanks to __get__ below
 
         func_name = self.func.__name__
-        func_sig = OrderedDict()
+        func_sig = collections.OrderedDict()
         for i, arg in enumerate(args):
             func_sig["arg" + str(i + 1)] = repr(arg)
 
@@ -64,4 +64,4 @@ class TrackHistory:
         # this decorator is supposed to decorate ***instance*** methods
         # (i.e. bound methods), we need to pass the instance
         # (i.e. bound object) as the first argument before __call__ happens.
-        return partial(self.__call__, instance)
+        return functools.partial(self.__call__, instance)

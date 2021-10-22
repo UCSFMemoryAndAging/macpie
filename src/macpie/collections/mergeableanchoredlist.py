@@ -3,9 +3,8 @@ import warnings
 
 import numpy as np
 
+from macpie import Dataset, DatasetFields, strtools
 from macpie._config import get_option
-from macpie.core.api import Dataset, DatasetFields
-from macpie.tools import strtools
 from macpie.io.excel import MACPieExcelFile
 
 from .anchoredlist import AnchoredList

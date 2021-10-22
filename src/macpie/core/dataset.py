@@ -1,14 +1,12 @@
-import json
 from typing import ClassVar, List
-from macpie.util.simpledataset import DictLikeDataset
 
 import numpy as np
 import pandas as pd
 
+from macpie import lltools, strtools, tablibtools
 from macpie._config import get_option
 from macpie.io.excel import safe_xlsx_sheet_title, MACPieExcelFile
-from macpie.pandas.general import get_col_name, is_date_col, to_datetime
-from macpie import lltools, strtools
+from macpie.pandas.general import get_col_name, to_datetime
 from macpie.util.decorators import TrackHistory
 
 from .datasetfields import DatasetField, DatasetFields
@@ -486,7 +484,7 @@ class Dataset(pd.DataFrame):
         return dset
 
     def get_excel_repr(self):
-        return DictLikeDataset(
+        return tablibtools.DictLikeDataset(
             *[(self.get_excel_sheetname(), self.to_excel_dict())],
             title=MACPieExcelFile.datasets_sheet_name,
         )
@@ -566,7 +564,7 @@ class Dataset(pd.DataFrame):
         Calls :func:`macpie.date_proximity`, passing in ``right_dset`` as
         the "left" Dataset, and this Dataset as the "right" Dataset.
         """
-        from macpie.core.operators.date_proximity import date_proximity
+        from macpie.operators.date_proximity import date_proximity
 
         return date_proximity(
             left=self,
@@ -584,7 +582,7 @@ class Dataset(pd.DataFrame):
     @TrackHistory
     def group_by_keep_one(self, keep="all", drop_duplicates=False):
         """ """
-        from macpie.core.operators.group_by_keep_one import group_by_keep_one
+        from macpie.operators.group_by_keep_one import group_by_keep_one
 
         return group_by_keep_one(self, keep, drop_duplicates)
 

@@ -3,23 +3,14 @@ Utilities for conversion to Excel representation.
 """
 import json
 import re
-from typing import Dict
 
 import pandas as pd
-from pandas._typing import (
-    Buffer,
-    DtypeArg,
-    FilePathOrBuffer,
-    StorageOptions,
-)
-from macpie.util.simpledataset import SimpleDataset
 import tablib as tl
 
-import macpie
+import macpie as mp
 from macpie._config import get_option
-from macpie.core.datasetfields import DatasetFields
-from macpie.tools import openpyxl as openpyxltools
-from macpie.util import DictLikeDataset
+from macpie import openpyxltools, tablibtools
+
 
 ENGINES = ["openpyxl"]
 
@@ -151,16 +142,19 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
     def parse_simple_dataset(self, sheet_name):
         tlset = self._reader.parse_tablib_dataset(sheet_name)
-        return SimpleDataset.from_tlset(tlset)
+        return tablibtools.SimpleDataset.from_tlset(tlset)
 
     def parse_dictlike_dataset(self, sheet_name):
         tlset = self._reader.parse_tablib_dataset(sheet_name)
-        return DictLikeDataset.from_tlset(tlset)
+        return tablibtools.DictLikeDataset.from_tlset(tlset)
 
     def parse_dataset_fields(self, sheet_name):
         sdset = self._reader.parse_simple_dataset(sheet_name)
-        dataset_fields = DatasetFields()
-        sdset.df.apply(lambda x: dataset_fields.append_with_tags(x), axis="columns")
+        dataset_fields = mp.DatasetFields()
+        sdset.df.apply(
+            lambda x: dataset_fields.append_series(x, with_tags=True, tag_value="x"),
+            axis="columns",
+        )
         return dataset_fields
 
     def parse_collection(self):
@@ -170,7 +164,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             )
 
         collection_class_name = self._collection_repr["class_name"]
-        collection_class = getattr(macpie.collections, collection_class_name)
+        collection_class = getattr(mp.collections, collection_class_name)
         return collection_class.from_excel_dict(self, self._collection_repr)
 
     def parse(
@@ -257,8 +251,6 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
                 tags=excel_dict.get("tags"),
             )
 
-            # return Dataset.from_excel_dict(excel_dict, ret_val)
-
     @property
     def sheet_names(self):
         return [
@@ -289,15 +281,15 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
 
     def parse_simple_dataset(self, sheet_name, headers=True):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
-        return SimpleDataset.from_tlset(tlset)
+        return tablibtools.SimpleDataset.from_tlset(tlset)
 
     def parse_dictlike_dataset(self, sheet_name, headers=True):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
-        return DictLikeDataset.from_tlset(tlset)
+        return tablibtools.DictLikeDataset.from_tlset(tlset)
 
     def parse_excel_repr(self, sheet_name, headers=True):
         sheet = self.book.active if sheet_name is None else self.book[sheet_name]
-        excel_repr = DictLikeDataset()
+        excel_repr = tablibtools.DictLikeDataset()
         excel_repr.title = sheet.title
 
         for i, row in enumerate(sheet.rows):
@@ -315,7 +307,7 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
             sheet_name = get_option("excel.sheet_name.default")
         return super()._get_sheet_name(sheet_name)
 
-    def write_excel_repr(self, excel_repr: DictLikeDataset):
+    def write_excel_repr(self, excel_repr: tablibtools.DictLikeDataset):
         sheet_name = excel_repr.title
         if sheet_name in self.book.sheetnames:
             if sheet_name in (
@@ -333,7 +325,7 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
         for row in excel_repr.data:
             ws.append([json.dumps(cell) for cell in row])
 
-    def write_simple_dataset(self, simple_dataset: SimpleDataset):
+    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
         self.write_tablib_dataset(simple_dataset._tlset)
 
     def write_tablib_dataset(self, tlset: tl.Dataset):

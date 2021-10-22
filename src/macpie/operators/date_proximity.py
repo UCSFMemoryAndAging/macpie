@@ -1,11 +1,10 @@
-from macpie import pandas
+import macpie as mp
 from macpie._config import get_option
-from macpie.core.dataset import Dataset
 
 
 def date_proximity(
-    left: Dataset,
-    right: Dataset,
+    left: mp.Dataset,
+    right: mp.Dataset,
     get: str = "all",
     when: str = "earlier_or_later",
     days: int = 90,
@@ -64,7 +63,7 @@ def date_proximity(
     else:
         prepend_levels = (None, None)
 
-    result_df = pandas.operators.date_proximity.date_proximity(
+    result_df = mp.pandas.operators.date_proximity.date_proximity(
         left,
         right,
         id_left_on=left.id2_col_name,
@@ -92,7 +91,7 @@ def date_proximity(
         new_date_col_name = right.date_col_name
         new_id2_col_name = right.id2_col_name
 
-    return Dataset(
+    return mp.Dataset(
         result_df,
         id_col_name=new_id_col_name,
         date_col_name=new_date_col_name,

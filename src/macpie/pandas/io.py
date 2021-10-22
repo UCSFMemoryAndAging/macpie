@@ -6,8 +6,7 @@ import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
-from macpie import pathtools
-from macpie.tools import openpyxl as openpyxltools
+from macpie import openpyxltools, pathtools
 
 
 def file_to_dataframe(filepath):

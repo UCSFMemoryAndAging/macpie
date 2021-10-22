@@ -1,4 +1,4 @@
-from collections import defaultdict
+import collections
 import itertools
 
 from . import string as strtools
@@ -59,7 +59,7 @@ def get_indices_of_duplicates(seq):
         ('b', [1, 3])
     """
 
-    tally = defaultdict(list)
+    tally = collections.defaultdict(list)
 
     for i, item in enumerate(seq):
         tally[item].append(i)
