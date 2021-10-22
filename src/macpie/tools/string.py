@@ -77,3 +77,10 @@ def strip_suffix(s: str, suffix: str):
     if s is not None and s.endswith(suffix):
         return s[: -len(suffix)]
     return s
+
+
+def str_equals(a: str, b: str, case_sensitive=True):
+    if case_sensitive:
+        return str(a) == str(b)
+    else:
+        return str(a).casefold() == str(b).casefold()

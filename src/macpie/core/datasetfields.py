@@ -32,53 +32,22 @@ class DatasetFields(SimpleDataset):
         headers = kwargs.pop("headers", (self._col_header_dataset, self._col_header_field))
         super().__init__(*args, headers=headers, **kwargs)
 
+    def __iter__(self):
+        return (DatasetField(row[0], row[1]) for row in self.data)
+
     @property
     def unique_datasets(self):
         """A list of unique :class:`macpie.Dataset` names."""
-        return set(self.datasets)
+        return list(set(self.tlset[self._col_header_dataset]))
 
-    def append_with_tags(self, ser: pd.Series, tag_value: str = "x"):
-        """Adds ``ser`` as a row to ``dset`` with tags derived
-        from the labels in ``ser`` that are not headers in ``dset``,
-        and whose value is ``'x'`` or ``'X'``.
-
-            >>> dset = tl.Dataset()
-            >>> dset.headers = ('Dataset', 'Field')
-            >>> dset.append(('CDR', 'Col1'))
-            >>> dset.export("df")
-            Dataset Field
-            0     CDR  Col1
-            >>> ser_data = {'Dataset':'CDR', 'Field':'Col2', 'Merge?': 'x'}
-            >>> ser = pd.Series(data=ser_data, index=['Dataset','Field','Merge?'])
-            >>> ser
-            Dataset     CDR
-            Field      Col2
-            Merge?        x
-            >>> mp.tablibtools.append_with_tags(dset, ser)
-            >>> dset.export("df")
-            Dataset Field
-            0     CDR  Col1
-            1     CDR  Col2
-            >>> dset2 = dset.filter('Merge?')
-            Dataset Field
-            0     CDR  Col2
-
-        :param dset: The :class:`tablib.Dataset` that gets ``ser`` appended to
-        :param ser: A row of data to append to ``dset``
-        """
-        ser = ser.copy()
-        tag_value = tag_value.lower()
-        dataset = ser.pop(item=self._col_header_dataset)
-        field = ser.pop(item=self._col_header_field)
-        tags = ser[ser.str.lower() == tag_value].index.tolist()
-        self.append(DatasetField(dataset, field), tags=tags)
-
+    """
     def extendleft(self, dataset_fields, tags=()):
-        """Prepend a list of Dataset fields."""
+        
         other_fields = [field for field in self]
         self.wipe_data()
         self.extend(dataset_fields, tags=tags)
         self.extend(other_fields)
+    """
 
     def sort(self, collection):
         """Sort the Dataset fields according to the order they have in
@@ -89,20 +58,11 @@ class DatasetFields(SimpleDataset):
         self.wipe_data()
         self.extend(fields)
 
-    """
-    def to_excel(self, excel_writer, sheet_name, **kwargs):
-        
-        index = kwargs.pop("index", False)
-        self.to_simpledataset().to_excel(
-            excel_writer, sheet_name=sheet_name, index=index, **kwargs
-        )
-    """
-
     def to_dict(self):
         """Convert this :class:`DatasetFields` to a dictionary."""
         d = defaultdict(list)
-        for dataset, field, _ in self.data:
-            d[dataset].append(field)
+        for dataset_field in self:
+            d[dataset_field.dataset].append(dataset_field.field)
         return d
 
     @classmethod

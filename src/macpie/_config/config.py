@@ -2,7 +2,7 @@
 The config module holds package-wide configurables and provides
 a uniform API for working with them.
 
-Entire module adapted from the pandas library.
+Module adapted from the pandas library.
 URL: https://github.com/pandas-dev/pandas/blob/b524462e1f88319912ee5ad91a45e6d1986c9dba/pandas/_config/config.py
 Date: 2021-03-19
 """

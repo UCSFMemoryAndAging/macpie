@@ -26,3 +26,9 @@ def test_strip_suffix():
     assert strtools.strip_suffix(None, "_y") is None
 
     assert strtools.strip_suffix("hello", "_y") == "hello"
+
+
+def test_str_equals():
+    assert strtools.str_equals("ab", "AB", case_sensitive=True) is False
+
+    assert strtools.str_equals("ab", "AB", case_sensitive=False) is True

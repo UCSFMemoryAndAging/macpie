@@ -43,7 +43,7 @@ Examples:
 
 import click
 import pandas as pd
-from macpie.cli.core import allowed_file, show_parameter_source, ClickPath
+from macpie.cli.core import allowed_path, show_parameter_source, ClickPath
 from macpie.pandas.io import file_to_dataframe
 from macpie.tools import path as pathtools
 from macpie.util.masker import IdMap, IdMapCols, Masker
@@ -196,7 +196,7 @@ def masker(
 ):
     invoker = ctx.obj
 
-    valid_filepaths, invalid_filepaths = pathtools.validate_filepaths(input_path, allowed_file)
+    valid_filepaths, invalid_filepaths = pathtools.validate_paths(input_path, allowed_path)
 
     for i in invalid_filepaths:
         click.echo(f"WARNING: Ignoring invalid file: {i}")

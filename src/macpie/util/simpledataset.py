@@ -1,9 +1,10 @@
 from copy import copy
 import json
 
+import pandas as pd
 import tablib as tl
 
-from macpie.tools import tablib as tablibtools
+from macpie import tablibtools
 
 
 class SimpleDataset:
@@ -56,10 +57,6 @@ class SimpleDataset:
     def data(self):
         return self._tlset._data
 
-    @data.setter
-    def data(self, data):
-        self._tlset._data = data
-
     @property
     def tlset(self):
         return self._tlset
@@ -67,7 +64,7 @@ class SimpleDataset:
     @property
     def df(self):
         """Get :class:`pandas.DataFrame` representation of data."""
-        return self._tlset.export("df")
+        return self.tlset.export("df")
 
     def append_col_fill(self, fill_value, header=None):
         """Adds a column to the Dataset with a specified `fill_value`.
@@ -76,20 +73,64 @@ class SimpleDataset:
         :param header: Header for new column. Defaults to None.
         """
         fill_values = [fill_value] * self._tlset.height
-        self._tlset.append_col(fill_values, header)
+        self.tlset.append_col(fill_values, header)
+
+    def append_with_tags(self, ser: pd.Series, tag_value: str = "x"):
+        """Adds ``ser`` as a row to ``dset`` with tags derived
+        from the labels in ``ser`` that are not headers in ``dset``,
+        and whose value is ``'x'`` or ``'X'``.
+
+            >>> dset = tl.Dataset()
+            >>> dset.headers = ('Dataset', 'Field')
+            >>> dset.append(('CDR', 'Col1'))
+            >>> dset.export("df")
+            Dataset Field
+            0     CDR  Col1
+            >>> ser_data = {'Dataset':'CDR', 'Field':'Col2', 'Merge?': 'x'}
+            >>> ser = pd.Series(data=ser_data, index=['Dataset','Field','Merge?'])
+            >>> ser
+            Dataset     CDR
+            Field      Col2
+            Merge?        x
+            >>> mp.tablibtools.append_with_tags(dset, ser)
+            >>> dset.export("df")
+            Dataset Field
+            0     CDR  Col1
+            1     CDR  Col2
+            >>> dset2 = dset.filter('Merge?')
+            Dataset Field
+            0     CDR  Col2
+
+        :param dset: The :class:`tablib.Dataset` that gets ``ser`` appended to
+        :param ser: A row of data to append to ``dset``
+        """
+        ser = ser.copy()
+        row = [ser.pop(item=header) for header in self.headers]
+
+        # dataset = ser.pop(item=self._col_header_dataset)
+        # field = ser.pop(item=self._col_header_field)
+        tags = ser[ser.str.lower() == tag_value.lower()].index.tolist()
+        self.append(row, tags=tags)
+
+    def extendleft(self, rows, tags=()):
+        """Prepend a list of Dataset fields."""
+        other_rows = [row for row in self]
+        self.wipe_data()
+        self.extend(rows, tags=tags)
+        self.extend(other_rows)
 
     def filter(self, tag):
         """Returns a new instance, excluding any rows that
         do not contain the given tag.
         """
-        return self.from_tlset(self._tlset.filter(tag))
+        return self.from_tlset(self.tlset.filter(tag))
 
     def to_excel(self, excel_writer):
-        excel_writer.write_tablib_dataset(self._tlset)
+        excel_writer.write_tablib_dataset(self.tlset)
 
     def wipe_data(self):
         """Removes all content (but not headers)."""
-        self._tlset._data = list()
+        self.tlset._data = list()
 
     def print(self):
         """Print a representation table suited to a terminal in grid format."""
@@ -99,7 +140,7 @@ class SimpleDataset:
     def from_df(cls, df, title: str = None) -> "SimpleDataset":
         """Construct instance from a :class:`pandas.DataFrame`."""
         instance = cls(title=title)
-        instance._tlset.dict = df.to_dict(orient="records")
+        instance.tlset.dict = df.to_dict(orient="records")
 
         return instance
 
@@ -157,7 +198,7 @@ class DictLikeDataset(SimpleDataset):
     def to_dict(self):
         """Convert to native dict for easy reading/access."""
         # convert to a native dict for easy reading
-        return dict(self._tlset._data)
+        return dict(self.data)
 
     @classmethod
     def from_dict(cls, dictionary, **kwargs) -> "DictLikeDataset":
@@ -166,23 +207,3 @@ class DictLikeDataset(SimpleDataset):
         instance = cls(**kwargs)
         instance.append_dict(dictionary, tags=tags)
         return instance
-
-    def to_excel(self, excel_writer, dump_json=False):
-        if dump_json:
-            _data = copy(self.data)
-            self.data = [(json.dumps(row[0]), json.dumps(row[1])) for row in _data]
-            excel_writer.write_excel_repr(self)
-        else:
-            super().to_excel(excel_writer)
-
-    @classmethod
-    def from_excel(cls, filepath, sheet_name, load_json=False):
-        """Construct :class:`ExcelRepr` from an Excel sheet."""
-        if load_json:
-            dld = DictLikeDataset.from_excel(filepath, sheet_name)
-            instance = cls(headers=dld.headers, title=dld.title)
-            for row in dld.data:
-                instance.append((json.loads(row[0]), json.loads(row[1])))
-            return instance
-        else:
-            return super().from_excel(filepath, sheet_name)

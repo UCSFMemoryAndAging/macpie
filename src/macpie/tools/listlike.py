@@ -1,6 +1,8 @@
 from collections import defaultdict
 import itertools
 
+from . import string as strtools
+
 
 def chunks(seq, chunk_size=None):
     """Make an iterator returning successive chunks of size ``chunk_size``
@@ -93,7 +95,7 @@ def is_list_like(obj):
     return isinstance(obj, (tuple, list))
 
 
-def list_like_str_equal(a, b, case_insensitive=False):
+def list_like_str_equal(a, b, case_sensitive=True):
     """Whether list of strings in ``a`` is equal to the list
     of strings in ``b``.
 
@@ -101,11 +103,11 @@ def list_like_str_equal(a, b, case_insensitive=False):
     :param b: list
     :param case_insensitive: whether equality comparison should be case insensitive
     """
-    if is_list_like(a) and is_list_like(b) and len(a) == len(b):
-        if case_insensitive:
-            return str(a).lower() == str(b).lower()
-        else:
-            return str(a) == str(b)
+    if len(a) == len(b):
+        for strs in zip(a, b):
+            if not strtools.str_equals(strs[0], strs[1], case_sensitive=case_sensitive):
+                return False
+        return True
     return False
 
 

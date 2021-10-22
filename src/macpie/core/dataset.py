@@ -4,16 +4,14 @@ from macpie.util.simpledataset import DictLikeDataset
 
 import numpy as np
 import pandas as pd
-from pandas.core.dtypes.generic import ABCDataFrame
 
 from macpie._config import get_option
 from macpie.io.excel import safe_xlsx_sheet_title, MACPieExcelFile
 from macpie.pandas.general import get_col_name, is_date_col, to_datetime
-from macpie.tools import sequence as seqtools
-from macpie.tools import string as strtools
+from macpie import lltools, strtools
 from macpie.util.decorators import TrackHistory
 
-from .datasetfields import DatasetField
+from .datasetfields import DatasetField, DatasetFields
 
 DEFAULT_ID_COL_NAME = "PIDN"
 DEFAULT_DATE_COL_NAME = "DCDate"
@@ -31,7 +29,6 @@ class Dataset(pd.DataFrame):
         "_name",
         "_tags",
         "_display_name_generator",
-        "_history",
     ]
 
     # _id_col_name = DEFAULT_ID_COL_NAME
@@ -58,7 +55,12 @@ class Dataset(pd.DataFrame):
         self.id2_col_name = id2_col_name
         self.name = name
         self.tags = tags
-        self.display_name_generator = display_name_generator
+
+        self.display_name_generator = (
+            display_name_generator
+            if display_name_generator
+            else self.default_display_name_generator
+        )
 
         if id_col_dropna:
             self.dropna(subset=["id_col_name"], inplace=True)
@@ -68,7 +70,7 @@ class Dataset(pd.DataFrame):
         # Specifically, avoids the the following warning:
         # UserWarning: Pandas doesn't allow columns to be created via a new attribute name -
         # see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
-        if attr in ("id_col_name", "date_col_name", "id2_col_name", "tags"):
+        if attr in ("id_col_name", "date_col_name", "id2_col_name", "tags", "_history"):
             object.__setattr__(self, attr, val)
         else:
             super().__setattr__(attr, val)
@@ -83,6 +85,8 @@ class Dataset(pd.DataFrame):
             f"tags={self.tags!r}, "
             f"df=\n{super().__repr__()}\n)"
         )
+
+    __hash__ = object.__hash__
 
     @property
     def row_count(self):
@@ -204,10 +208,10 @@ class Dataset(pd.DataFrame):
 
     @display_name_generator.setter
     def display_name_generator(self, val):
-        if callable(val):
-            self._display_name_generator = val
-        else:
-            self._display_name_generator = self.default_display_name_generator
+        if not callable(val):
+            raise ValueError("display_name_generator must be a callable type")
+
+        self._display_name_generator = val
 
     @property
     def history(self):
@@ -215,7 +219,7 @@ class Dataset(pd.DataFrame):
         :class:`macpie.util.TrackHistory` decorator.
         """
         if "_history" in self.__dict__:
-            return self.__dict__["_history"]
+            return self._history
         return []
 
     @property
@@ -241,8 +245,8 @@ class Dataset(pd.DataFrame):
     def replace_tag(self, old_tag, new_tag):
         """Replace ``old_tag`` with ``new_tag``."""
         if set(old_tag).issubset(set(self._tags)):
-            old_tag = seqtools.maybe_make_list(old_tag)
-            new_tag = seqtools.maybe_make_list(new_tag)
+            old_tag = lltools.maybe_make_list(old_tag)
+            new_tag = lltools.maybe_make_list(new_tag)
             for ot in old_tag:
                 self._tags.remove(ot)
             self._tags.extend(new_tag)
@@ -291,7 +295,11 @@ class Dataset(pd.DataFrame):
         defined as any columns starting with ``column.system.prefix`` option.
         """
         sys_col_prefix = get_option("column.system.prefix")
-        return [col for col in self.columns if col.startswith(sys_col_prefix)]
+
+        if isinstance(self.columns, pd.MultiIndex):
+            return [col for col in self.columns if col[-1].startswith(sys_col_prefix)]
+        else:
+            return [col for col in self.columns if col.startswith(sys_col_prefix)]
 
     @property
     def non_key_cols(self):
@@ -351,6 +359,64 @@ class Dataset(pd.DataFrame):
         self._id_col_name = col_name
         self.insert(0, col_name, np.arange(start_index, len(self) + 1))
 
+    def rename_col(self, old_col, new_col, inplace=False):
+        """
+        Rename ``old_col`` to ``new_col``. Note: ``old_col``
+        cannot be a `key` column.
+        """
+        if old_col in self.non_key_cols or old_col in self.sys_cols:
+            return super().rename(columns={old_col: new_col}, inplace=inplace)
+        else:
+            raise KeyError(f"Column '{old_col}' not in dataset or is a key column.")
+
+    def prepend_level(self, level, inplace=False):
+        if isinstance(self.columns, pd.MultiIndex):
+            raise NotImplementedError("Dataset already has multiple levels.")
+
+        if inplace:
+            dset = self
+        else:
+            dset = self.copy()
+
+        dset.columns = pd.MultiIndex.from_product([[level], dset.columns])
+        dset._id_col_name = (level, dset._id_col_name) if dset._id_col_name else None
+        dset._date_col_name = (level, dset._date_col_name) if dset._date_col_name else None
+        dset._id2_col_name = (level, dset._id2_col_name) if dset._id2_col_name else None
+
+        if not inplace:
+            return dset
+
+    def drop_sys_cols(self, inplace=False):
+        """Drop all :attr:`sys_cols` from :class:`Dataset`."""
+        return self.drop(columns=self.sys_cols, inplace=inplace)
+
+    def keep_cols(self, cols, inplace=False):
+        """Keep specified columns (thus dropping the rest).
+        Note: `Key` columns will always be kept.
+        """
+        cols_to_keep = self.key_cols
+
+        # preserve order of the key columns by sorting them according
+        # to existing order
+        cols_to_keep.sort(key=lambda i: self.columns.tolist().index(i))
+
+        cols = lltools.maybe_make_list(cols)
+        cols_to_keep.extend([c for c in cols if c not in cols_to_keep])
+
+        result = self[cols_to_keep]
+        if inplace:
+            return self._update_inplace(result)
+        else:
+            return result
+
+    def keep_fields(self, selected_fields: DatasetFields, inplace=False):
+        """Keep specified fields (and drop the rest)."""
+        if self.name in selected_fields.unique_datasets:
+            if inplace:
+                self.keep_cols(selected_fields.to_dict()[self.name], inplace=True)
+            else:
+                return self.keep_cols(selected_fields.to_dict()[self.name], inplace=False)
+
     # -------------------------------------------------------------------------
     # Sorting
     # -------------------------------------------------------------------------
@@ -381,6 +447,17 @@ class Dataset(pd.DataFrame):
             "col_count": self.col_count,
         }
 
+    @staticmethod
+    def excel_dict_has_tags(excel_dict, tags):
+        excel_dict_tags = excel_dict["tags"]
+        if tags is None:
+            return False
+        elif isinstance(tags, str):
+            return tags in excel_dict_tags
+        else:
+            return bool(len(set(tags) & set(excel_dict_tags)))
+
+    """
     @classmethod
     def from_excel_dict(cls, excel_dict, df):
         return Dataset(
@@ -391,11 +468,27 @@ class Dataset(pd.DataFrame):
             name=excel_dict.get("name"),
             tags=excel_dict.get("tags"),
         )
+    """
+
+    def cross_section(self, excel_dict):
+        if not isinstance(self.columns, pd.MultiIndex):
+            raise NotImplementedError
+
+        df = self.xs(excel_dict["name"], axis="columns", level=0)
+        dset = Dataset(
+            df,
+            id_col_name=excel_dict["id_col_name"],
+            date_col_name=excel_dict["date_col_name"],
+            id2_col_name=excel_dict["id2_col_name"],
+            name=excel_dict["name"],
+        )
+        dset.drop_sys_cols()
+        return dset
 
     def get_excel_repr(self):
         return DictLikeDataset(
             *[(self.get_excel_sheetname(), self.to_excel_dict())],
-            title=MACPieExcelFile._datasets_sheet_name,
+            title=MACPieExcelFile.datasets_sheet_name,
         )
 
     def to_excel(self, excel_writer, write_repr=True, **kwargs) -> None:
@@ -424,7 +517,8 @@ class Dataset(pd.DataFrame):
             super().to_excel(excel_writer, sheet_name=sheet_name, index=index, **kwargs)
 
             if write_repr:
-                self.get_excel_repr().to_excel(excel_writer)
+                excel_writer.write_excel_repr(self.get_excel_repr())
+
         finally:
             # make sure to close opened file handles
             if need_save:

@@ -16,13 +16,15 @@ from .merge import merge
 
 
 class Invoker:
-    def __init__(self, command_name, opts, args, output_dir: Path = None):
+    def __init__(self, command_name, opts, args, output_dir: Path = Path(".")):
         self.command_name = command_name
         self.opts = opts
         self.args = args
 
-        self.output_dir = output_dir or Path(".")
-        self.results_dir = pathtools.create_output_dir(output_dir, "results")
+        self.output_dir = output_dir
+        self.results_dir = pathtools.create_dir_with_datetime(
+            dir_name_prefix="results_", where=self.output_dir
+        )
         self.results_file = self.results_dir / (self.results_dir.stem + ".xlsx")
 
         self.post_messages = [

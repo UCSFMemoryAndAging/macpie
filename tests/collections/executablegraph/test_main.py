@@ -103,9 +103,9 @@ def test_link():
         operation=partial(
             date_proximity,
             id_left_on=prim.id2_col_name,
-            id_right_on=sec_1.id2_col_name,
+            id_right_on=sec_2.id2_col_name,
             date_left_on=prim.date_col_name,
-            date_right_on=sec_1.date_col_name,
+            date_right_on=sec_2.date_col_name,
             get="closest",
             when="earlier_or_later",
             days=90,
@@ -117,8 +117,12 @@ def test_link():
 
     edges_with_operation_results = G.get_all_edge_data("operation_result")
 
-    sec_1_copy.date_proximity(
-        right_dset=prim_copy, get="closest", when="earlier_or_later", days=90
+    sec_1_copy = prim_copy.date_proximity(
+        right_dset=sec_1_copy,
+        get="closest",
+        when="earlier_or_later",
+        days=90,
+        prepend_level_name=False,
     )
 
     assert_dfs_equal(
@@ -128,9 +132,14 @@ def test_link():
         output_dir=output_dir,
     )
 
-    sec_2_copy.date_proximity(
-        right_dset=prim_copy, get="closest", when="earlier_or_later", days=90
+    sec_2_copy = prim_copy.date_proximity(
+        right_dset=sec_2_copy,
+        get="closest",
+        when="earlier_or_later",
+        days=90,
+        prepend_level_name=False,
     )
+
     assert_dfs_equal(
         sec_2_copy,
         edges_with_operation_results[1]["operation_result"],

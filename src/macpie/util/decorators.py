@@ -32,9 +32,10 @@ class TrackHistory:
             func_sig[k] = repr(v)
 
         if "_history" not in instance.__dict__:
-            instance.__dict__["_history"] = []
+            instance._history = []
+            # instance.__dict__["_history"] = []
 
-        history = instance.__dict__["_history"]
+        # history = instance.__dict__["_history"]
 
         record = {
             "func_name": func_name,
@@ -44,15 +45,15 @@ class TrackHistory:
             "run_time": None,
         }
 
-        history.append(record)
+        instance._history.append(record)
 
         start_time = time.perf_counter()
         value = self.func(*args, **kwargs)
         end_time = time.perf_counter()
         run_time = end_time - start_time
 
-        history[-1]["after"] = instance.to_dict()
-        history[-1]["run_time"] = f"{run_time:.3f} secs"
+        instance._history[-1]["after"] = instance.to_dict()
+        instance._history[-1]["run_time"] = f"{run_time:.3f} secs"
 
         return value
 

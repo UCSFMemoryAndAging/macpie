@@ -6,7 +6,7 @@ from macpie.core.dataset import Dataset
 from macpie.io.excel import MACPieExcelWriter
 from macpie.tools import path as pathtools
 
-from macpie.cli.core import allowed_file, ClickPath
+from macpie.cli.core import allowed_path, ClickPath
 
 
 @click.command()
@@ -37,7 +37,6 @@ def keepone(ctx, keep, primary):
 
     with MACPieExcelWriter(invoker.results_file) as writer:
         collection.to_excel(writer)
-        collection.get_collection_info().to_excel(writer)
         invoker.get_command_info().to_excel(writer)
         invoker.get_client_system_info().to_excel(writer)
 
@@ -65,15 +64,17 @@ class _KeepOneCommand:
                 name=filepath.stem,
             )
 
-            dset.group_by_keep_one(keep=self.keep, drop_duplicates=False)
+            dset = dset.group_by_keep_one(keep=self.keep, drop_duplicates=False)
+
             if get_option("column.system.duplicates") in dset.columns:
                 dset.add_tag(get_option("dataset.tag.duplicates"))
+
             collection.append(dset)
 
         return collection
 
     def _validate(self):
-        primary_valid, primary_invalid = pathtools.validate_filepaths(self.primary, allowed_file)
+        primary_valid, primary_invalid = pathtools.validate_paths(self.primary, allowed_path)
 
         for p in primary_invalid:
             click.echo(f"WARNING: Ignoring invalid file: {p}")

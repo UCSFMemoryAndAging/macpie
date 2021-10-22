@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 import click
 
-from macpie.tools import io as iotools
+from macpie import pathtools
 
 
 def show_parameter_source(ctx, param, value):
@@ -42,11 +42,11 @@ class ClickPath(click.Path):
         return Path(super().convert(value=value, param=param, ctx=ctx)).resolve(strict=True)
 
 
-def allowed_file(p):
-    """Determines if a file is considered allowed"""
+def allowed_path(p):
+    """Determines if a filepath is considered allowed"""
     stem = p.stem
     if stem.startswith("~"):
         return False
-    if iotools.has_csv_extension(p) or iotools.has_excel_extension(p):
+    if pathtools.has_csv_extension(p) or pathtools.has_excel_extension(p):
         return True
     return False

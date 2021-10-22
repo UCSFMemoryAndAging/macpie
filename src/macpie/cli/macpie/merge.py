@@ -1,7 +1,7 @@
 import click
 
 from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
-from macpie.io.excel import MACPieExcelWriter
+from macpie.io.excel import read_excel, MACPieExcelWriter
 
 from macpie.cli.core import ClickPath
 
@@ -41,5 +41,5 @@ class _MergeCommand:
         self.primary = primary
 
     def execute(self):
-        collection = MergeableAnchoredList.from_excel(self.primary)
+        collection = read_excel(self.primary, as_collection=True)
         return collection

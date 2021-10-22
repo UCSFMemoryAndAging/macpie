@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 from macpie.pandas import file_to_dataframe
-from macpie.exceptions import ParserError
 
 data_dir = Path("tests/data/").resolve()
 current_dir = Path("tests/io/data/").resolve()
@@ -17,14 +16,14 @@ def test_file_to_dataframe():
 
     bad_suffix = current_dir / "badfile.zzz"
 
-    with pytest.raises(ParserError):
+    with pytest.raises(Exception):
         file_to_dataframe(bad_suffix)
 
 
 def test_csv_to_dataframe():
 
     empty_file = current_dir / "empty.csv"
-    with pytest.raises(ParserError):
+    with pytest.raises(Exception):
         file_to_dataframe(empty_file)
 
     p1 = current_dir / "test.csv"
@@ -41,7 +40,7 @@ def test_csv_to_dataframe():
 
 def test_import_xl():
     bad_file = current_dir / "bad_xl.xlsx"
-    with pytest.raises(ParserError):
+    with pytest.raises(Exception):
         file_to_dataframe(bad_file)
 
     p1 = current_dir / "test.xlsx"

@@ -50,7 +50,7 @@ def test_basic():
         result = runner.invoke(main, primary_is_dir)
         assert result.exit_code != 0
 
-    validate_filepaths = "keepone " + str((current_dir).resolve())
+    validate_paths = "keepone " + str((current_dir).resolve())
     with runner.isolated_filesystem():
-        result = runner.invoke(main, validate_filepaths)
+        result = runner.invoke(main, validate_paths)
         assert result.exit_code != 0

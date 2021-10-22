@@ -3,7 +3,6 @@ from .general import (
     add_diff_days,
     any_duplicates,
     assimilate,
-    col_count,
     diff_cols,
     diff_rows,
     drop_cols,
@@ -16,7 +15,6 @@ from .general import (
     is_date_col,
     mark_duplicates_by_cols,
     replace_suffix,
-    row_count,
     to_datetime,
 )
 

@@ -73,7 +73,7 @@ class ExecutableGraph(BasicGraph):
         for n, d in self.g.nodes.items():
             if "operation" in d:
                 node_operation = d["operation"]
-                self.g.nodes[n]["operation_result"] = node_operation(n.df)
+                self.g.nodes[n]["operation_result"] = node_operation(n)
                 # log the node operation
                 self.log_node_operation(n, node_operation)
 
@@ -84,12 +84,12 @@ class ExecutableGraph(BasicGraph):
                 left_df = (
                     self.g.nodes[u]["operation_result"]
                     if "operation_result" in self.g.nodes[u]
-                    else u.df
+                    else u
                 )
                 right_df = (
                     self.g.nodes[v]["operation_result"]
                     if "operation_result" in self.g.nodes[v]
-                    else v.df
+                    else v
                 )
                 operation_result = edge_operation(left_df, right_df)
                 self.g.edges[u, v]["operation_result"] = operation_result
@@ -103,7 +103,7 @@ class ExecutableGraph(BasicGraph):
                 "right_operand": "N/A",
                 "operation": node_operation.func.__name__,
                 "operation_params": node_operation.keywords,
-                "operation_results_shape": f"({a.df.mac.row_count()}, {a.df.mac.num_cols()})",
+                "operation_results_shape": f"({a.mac.row_count()}, {a.mac.col_count()})",
             }
         )
 
@@ -116,7 +116,7 @@ class ExecutableGraph(BasicGraph):
                 "operation": edge_operation.func.__name__,
                 "operation_params": edge_operation.keywords,
                 "operation_results_shape": (
-                    f"({results.mac.row_count()}, {results.mac.num_cols()})"
+                    f"({results.mac.row_count()}, {results.mac.col_count()})"
                     if results is not None
                     else ""
                 ),

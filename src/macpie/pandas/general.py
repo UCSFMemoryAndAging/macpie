@@ -1,17 +1,16 @@
-from dateutil.parser import ParserError
-import json
+import dateutil
 from typing import List
 
 import numpy as np
 import pandas as pd
 
 from macpie._config import get_option
-from macpie.io.json import MACPieJSONDecoder, MACPieJSONEncoder
-from macpie.tools import sequence as seqtools
-from macpie.tools import string as strtools
+from macpie import lltools, strtools
 
 
-def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str, diff_days_col: str = None):
+def add_diff_days(
+    df: pd.DataFrame, col_start: str, col_end: str, diff_days_col: str = None, inplace=False
+):
     """Adds a column to DataFrame called ``_diff_days`` which contains
     the number of days between ``col_start`` and ``col_end``
 
@@ -25,12 +24,15 @@ def add_diff_days(df: pd.DataFrame, col_start: str, col_end: str, diff_days_col:
     if col_start == col_end:
         raise KeyError("date columns have the same name: {col_start}=={col_end}")
 
+    if not inplace:
+        df = df.copy()
+
     df[diff_days_col] = df[col_end] - df[col_start]
     df[diff_days_col] = df[diff_days_col] / np.timedelta64(1, "D")
 
     # df.assign(**{diff_days_col: (df[col_end] - df[col_start]) / np.timedelta64(1, "D")})
-
-    return df
+    if not inplace:
+        return df
 
 
 def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
@@ -55,34 +57,23 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     """
     # give me all the elements in left that are also in right
 
-    # if one set of columns are MultiIndex, then both should be
-    if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
-        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(
-            right.columns, pd.MultiIndex
-        ):
-            raise IndexError("One set of columns is a MultiIndex and the other is not.")
-
     left_columns = set(left.columns)
     right_columns = set(right.columns)
 
+    left_dtypes_dict = left.dtypes.to_dict()
+
     # find columns that are only in left but not in right
-    diff_cols = left_columns.difference(right_columns)
+    left_only_cols = left_columns.difference(right_columns)
+    for col in left_only_cols:
+        del left_dtypes_dict[col]
 
-    left_dtypes = left.dtypes.to_dict()
+    for col_name, dtype in left_dtypes_dict.items():
+        try:
+            right = right.astype({col_name: dtype})
+        except pd.errors.IntCastingNaNError:
+            pass
 
-    for col_name in diff_cols:
-        left_dtypes.pop(col_name)
-
-    return right.astype(left_dtypes)
-
-
-def col_count(df: pd.DataFrame):
-    """Return number of columns in ``df``.
-
-    :param df: DataFrame
-    """
-    # faster than df.shape[1]
-    return len(df.columns)
+    return right
 
 
 def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
@@ -157,14 +148,14 @@ def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
 
     if isinstance(df.columns, pd.MultiIndex):
         last_level = df.columns.nlevels - 1
-        cols_match_pat = df.columns.get_level_values(last_level).str.contains(cols_pat, regex=True)
+        cols = df.columns.get_level_values(last_level)
     else:
-        cols_match_pat = df.columns.str.contains(cols_pat, regex=True)
+        cols = df.columns
 
+    cols_match_pat = cols.str.contains(cols_pat, regex=True)
     cols_to_keep = np.invert(cols_match_pat)
 
     df = df.loc[:, cols_to_keep]
-
     df = df.drop(columns=cols_list, errors="ignore")
 
     return df
@@ -190,18 +181,24 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_igno
                             Defaults to None, which uses the pattern
                             ``'$^'`` to match nothing to ignore nothing
     """
-    if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
-        if not isinstance(left.columns, pd.MultiIndex) or not isinstance(
-            right.columns, pd.MultiIndex
-        ):
-            raise IndexError("One set of columns is a MultiIndex and the other is not.")
+    # columns should be same type (e.g. Index or MultiIndex)
+    if type(left.columns) != type(right.columns):
+        raise TypeError(
+            f"Left columns type ('{type(left.columns)}') is "
+            f"different than right columns type ('{type(right.columns)}')"
+        )
+
+    if isinstance(left.columns, pd.MultiIndex):
         if left.columns.nlevels != right.columns.nlevels:
-            raise IndexError("MultiIndexes have different levels.")
+            raise ValueError("MultiIndexes have different levels.")
 
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
 
-    right = left.mac.assimilate(right)
+    try:
+        right = left.mac.assimilate(right)
+    except NotImplementedError:
+        pass
 
     return left.equals(right)
 
@@ -231,19 +228,15 @@ def get_col_name(df: pd.DataFrame, col_name):
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
-    if seqtools.is_list_like(col_name):
+    if lltools.is_list_like(col_name):
         for col in df.columns:
-            if seqtools.list_like_str_equal(col, col_name, True):
+            if lltools.list_like_str_equal(col, col_name, case_sensitive=False):
                 return col
         raise KeyError(f"column not found: {col_name}")
 
     if isinstance(col_name, str):
         for col in df.columns:
-            if isinstance(col, str) and col.lower() == col_name.lower():
-                return col
-    else:
-        for col in df.columns:
-            if col == col_name:
+            if strtools.str_equals(col, col_name, case_sensitive=False):
                 return col
 
     raise KeyError(f"column not found: {col_name}")
@@ -312,15 +305,6 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
     )
 
 
-def row_count(df: pd.DataFrame):
-    """Return number of rows in ``df``.
-
-    :param df: DataFrame
-    """
-    # faster than df.shape[0] or len(df)
-    return len(df.index)
-
-
 def to_datetime(df: pd.DataFrame, date_col_name):
     """Convert ``date_col_name`` column in ``df`` to datetime.
 
@@ -346,7 +330,7 @@ def to_datetime(df: pd.DataFrame, date_col_name):
                 f"that are not convertible to datetime"
             )
         ) from e
-    except ParserError:
+    except dateutil.parser.ParserError:
         raise ValueError(
             (
                 f"Date column '{date_col_name}' in dataframe could not be parsed "

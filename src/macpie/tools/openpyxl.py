@@ -3,9 +3,23 @@ from itertools import islice
 import openpyxl as pyxl
 import pandas as pd
 
-from . import sequence as seqtools
+from . import listlike as lltools
 
 YELLOW = "00FFFF00"
+
+
+def wb_move_sheets(wb, sheets_to_move, to_sheet):
+    """Get row index of the first time ``val`` is found in specified column index.
+
+    :param book: :class:`openpyxl.workbook.workbook.Workbook`
+    :param sheets_to_move: list of sheetnames to move
+    :param to_sheet: move sheets in ``sheets_to_move`` right before this sheetname
+    """
+    sheets_to_move = lltools.maybe_make_list(sheets_to_move)
+    ws_order = wb.sheetnames.copy()
+    for sheetname in sheets_to_move:
+        lltools.move(ws_order, sheetname, to_sheet)
+    wb._sheets = [wb[sheetname] for sheetname in ws_order]
 
 
 def ws_autoadjust_colwidth(ws):
@@ -14,7 +28,7 @@ def ws_autoadjust_colwidth(ws):
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet` to adjust
     """
     for column_cells in ws.columns:
-        length = max(len(str(cell.value or '')) for cell in column_cells)
+        length = max(len(str(cell.value or "")) for cell in column_cells)
         length = min((length + 2) * 1.2, 65)
         ws.column_dimensions[column_cells[0].column_letter].width = length
 
@@ -92,20 +106,6 @@ def ws_is_row_empty(ws, row_index, delete_if_empty=False):
                 ws.delete_rows(row_index, 1)
             return True
     return False
-
-
-def wb_move_sheets(wb, sheets_to_move, to_sheet):
-    """Get row index of the first time ``val`` is found in specified column index.
-
-    :param book: :class:`openpyxl.workbook.workbook.Workbook`
-    :param sheets_to_move: list of sheetnames to move
-    :param to_sheet: move sheets in ``sheets_to_move`` right before this sheetname
-    """
-    sheets_to_move = seqtools.maybe_make_list(sheets_to_move)
-    ws_order = wb.sheetnames.copy()
-    for sheetname in sheets_to_move:
-        seqtools.move(ws_order, sheetname, to_sheet)
-    wb._sheets = [wb[sheetname] for sheetname in ws_order]
 
 
 def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):

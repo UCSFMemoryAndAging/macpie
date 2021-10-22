@@ -40,7 +40,7 @@ from typing import Dict
 import pandas as pd
 import tablib as tl
 
-from macpie.tools import sequence as seqtools
+from macpie import lltools
 
 
 class Masker:
@@ -65,7 +65,7 @@ class Masker:
     @mappers.setter
     def mappers(self, mappers):
         self._mappers = []
-        mappers = seqtools.maybe_make_list(mappers)
+        mappers = lltools.maybe_make_list(mappers)
         for mapper in mappers:
             self.add_mapper(mapper)
 
@@ -82,7 +82,7 @@ class Masker:
         return self.id_cols + self.date_cols
 
     def add_mapper(self, mapper):
-        common_cols = seqtools.common_members(self.cols, mapper.cols)
+        common_cols = lltools.common_members(self.cols, mapper.cols)
         if common_cols:
             raise KeyError(f"A mask for the following columns already exists: {str(common_cols)}")
 
@@ -110,15 +110,15 @@ class Masker:
 
         # identify columns not to mask (leave untouched)
         cols_no_mask = [c for c in df.mac.get_col_names(self.cols_no_mask, strict=False) if c]
-        cols_no_mask = seqtools.diff(cols_no_mask, cols_to_mask)
+        cols_no_mask = lltools.diff(cols_no_mask, cols_to_mask)
 
         # identify columns to drop
         cols_to_drop = [c for c in df.mac.get_col_names(self.cols_to_drop, strict=False) if c]
-        cols_to_drop = seqtools.diff(cols_to_drop, cols_to_mask)
+        cols_to_drop = lltools.diff(cols_to_drop, cols_to_mask)
 
         # identify columns to rename
         cols_not_to_rename = set().union(cols_to_mask, cols_no_mask, cols_to_drop)
-        cols_to_rename = seqtools.diff(df.columns.tolist(), cols_not_to_rename)
+        cols_to_rename = lltools.diff(df.columns.tolist(), cols_not_to_rename)
 
         # now perform the masking
 

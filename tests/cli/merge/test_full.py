@@ -6,7 +6,7 @@ import openpyxl as pyxl
 import pytest
 
 from macpie._config import get_option
-from macpie.io.excel import MACPieExcelWriter
+from macpie.io.excel import MACPieExcelWriter, MACPieExcelFile
 from macpie.testing import assert_dfs_equal
 from macpie.core.datasetfields import DatasetFields
 
@@ -72,11 +72,12 @@ def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
         # expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
 
         expected_sheetnames = [
-            "MERGED_RESULTS",
             "instr2_all_DUPS",
             "instr3_all_DUPS",
+            MACPieExcelFile.collection_sheet_name,
+            MACPieExcelFile.datasets_sheet_name,
             get_option("excel.sheet_name.available_fields"),
-            get_option("excel.sheet_name.collection_info"),
+            get_option("excel.sheet_name.merged_results"),
         ]
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)

@@ -6,7 +6,7 @@ import re
 from typing import List
 
 from macpie import Dataset, DatasetFields
-from macpie.io.excel import read_excel
+from macpie.io.excel import read_excel, MACPieExcelFile
 
 from .base import BaseCollection
 
@@ -19,15 +19,6 @@ class BasicList(UserList, BaseCollection):
         """The list of Datasets."""
         return self.data
 
-    @property
-    def key_fields(self):
-        """A list of all :attr:`macpie.Dataset.key_fields` contained
-        in this :class:`BasicList`.
-        """
-        key_fields = []
-        for dset in self.data:
-            key_fields.extend(dset.key_fields)
-
     def filter(self, tag):
         """Returns a new instance of :class:`BasicList`, excluding any
         :class:`macpie.Dataset` objects that do not contain the given ``tag``.
@@ -38,10 +29,12 @@ class BasicList(UserList, BaseCollection):
         """Iterate over Datasets in this list and
         replace ``old_tag`` with ``new_tag``.
         """
-        for dset in self.data:
+        for dset in self.dsets:
             dset.replace_tag(old_tag, new_tag)
 
-    def keep_fields(self, selected_fields: DatasetFields, keep_unselected: bool = False):
+    def keep_fields(
+        self, selected_fields: DatasetFields, keep_unselected: bool = False, inplace=False
+    ):
         """Keep specified fields (and drop the rest).
 
         :param selected_fields: Fields to keep
@@ -50,12 +43,16 @@ class BasicList(UserList, BaseCollection):
         """
         new_list = []
         for dset in self.data:
-            if dset.name in selected_fields.to_dict():
-                dset.keep_fields(selected_fields)
+            if dset.name in selected_fields.unique_datasets:
+                dset = dset.keep_fields(selected_fields)
                 new_list.append(dset)
             elif keep_unselected:
-                new_list.append(dset)
-        self.dsets = new_list
+                new_list.append(dset.copy())
+
+        if inplace:
+            self.data = new_list
+        else:
+            return BasicList(new_list)
 
     def to_excel(self, excel_writer, write_repr=True, **kwargs):
         """Write :class:`BasicList` to an Excel file by calling
@@ -64,8 +61,9 @@ class BasicList(UserList, BaseCollection):
         """
         for dset in self.data:
             dset.to_excel(excel_writer, **kwargs)
+
         if write_repr:
-            self.get_excel_repr().to_excel(excel_writer, dump_json=True)
+            excel_writer.write_excel_repr(self.get_excel_repr())
 
     def to_excel_dict(self):
         """Convert the :class:`BasicList` to a dictionary."""
@@ -73,13 +71,39 @@ class BasicList(UserList, BaseCollection):
         excel_dict.update({dset.get_excel_sheetname(): dset.to_excel_dict() for dset in self.data})
         return excel_dict
 
+    @staticmethod
+    def excel_dict_dsets(excel_dict):
+        return [
+            value
+            for value in excel_dict.values()
+            if type(value) is dict and value["class_name"] == "Dataset"
+        ]
+
+    @staticmethod
+    def excel_dict_filter_tags(excel_dict, tags):
+        excel_dict_dsets = BasicList.excel_dict_dsets(excel_dict)
+        return [
+            excel_dict_dset
+            for excel_dict_dset in excel_dict_dsets
+            if Dataset.excel_dict_has_tags(excel_dict_dset, tags)
+        ]
+
+    @staticmethod
+    def excel_dict_filterfalse_tags(excel_dict, tags):
+        excel_dict_dsets = BasicList.excel_dict_dsets(excel_dict)
+        return [
+            excel_dict_dset
+            for excel_dict_dset in excel_dict_dsets
+            if not Dataset.excel_dict_has_tags(excel_dict_dset, tags)
+        ]
+
     @classmethod
-    def from_excel_dict(cls, filepath, excel_dict):
+    def from_excel_dict(cls, excel_file: MACPieExcelFile, excel_dict):
         instance = cls()
-        print("ecel_dic", excel_dict)
         for value in excel_dict.values():
-            print("value", value)
             if type(value) is dict and value["class_name"] == "Dataset":
-                dset = read_excel(filepath, sheet_name=value["excel_sheetname"])
+                dset_excel_dict = value
+                # dset = read_excel(excel_file, sheet_name=dset_excel_dict["excel_sheetname"])
+                dset = excel_file.parse(sheet_name=dset_excel_dict["excel_sheetname"])
                 instance.append(dset)
         return instance

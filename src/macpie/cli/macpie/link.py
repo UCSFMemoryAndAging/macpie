@@ -3,11 +3,10 @@ import click
 from macpie._config import get_option
 from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
 from macpie.core.dataset import Dataset
-from macpie.exceptions import DateProximityError
 from macpie.io.excel import MACPieExcelWriter
 from macpie.tools import path as pathtools
 
-from macpie.cli.core import allowed_file, ClickPath
+from macpie.cli.core import allowed_path, ClickPath
 
 
 @click.command()
@@ -106,7 +105,7 @@ def link(
         if invoker.get_opt("verbose"):
             collection.get_dataset_history_info().to_excel(writer)
         invoker.get_command_info().to_excel(writer)
-        invoker.get_client_system_info().to_excel(writer, dump_json=True)
+        invoker.get_client_system_info().to_excel(writer)
 
     msg = (
         "\nNOTE: If you want to merge/filter fields from the linked data in the "
@@ -205,10 +204,6 @@ class _LinkCommand:
                     )
 
                     collection.add_secondary(sec_dset_linked)
-
-                except DateProximityError as dpe:
-                    click.echo(f'\nERROR linking secondary dataset "{sec}"\n')
-                    click.echo(dpe)
                 except Exception as e:
                     click.echo(f'\nERROR loading secondary dataset "{sec}"\n')
                     click.echo(e)
@@ -217,11 +212,12 @@ class _LinkCommand:
         return collection
 
     def _validate(self):
-        self.primary = pathtools.validate_filepath(self.primary, allowed_file)
+        if not allowed_path(self.primary):
+            raise click.UsageError(f"ERROR: Invalid primary file: {self.primary}")
 
         if self.secondary:
-            (secondary_valid, secondary_invalid) = pathtools.validate_filepaths(
-                self.secondary, allowed_file
+            (secondary_valid, secondary_invalid) = pathtools.validate_paths(
+                self.secondary, allowed_path
             )
 
             for sec in secondary_invalid:

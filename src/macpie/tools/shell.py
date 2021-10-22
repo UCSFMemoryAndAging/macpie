@@ -1,9 +1,8 @@
 """
 Module contains tools for processing files (e.g. csv, xlsx) into DataFrames or other objects
 """
-
+import shutil
 from pathlib import Path
-from shutil import copy
 
 
 def copy_file(orig_filepath, copy_filename):
@@ -15,25 +14,7 @@ def copy_file(orig_filepath, copy_filename):
     :return: Filepath of copied file
     """
     orig_dir = Path(orig_filepath).parent.absolute()
-    copy_filepath = copy(orig_filepath, orig_dir)
+    copy_filepath = shutil.copy(orig_filepath, orig_dir)
     Path(copy_filepath).rename(orig_dir / copy_filename)
     copy_filepath = orig_dir / copy_filename
     return copy_filepath
-
-
-def has_csv_extension(filepath):
-    """Return True if ``filepath`` has an extension compatabile with
-    csv files.
-    """
-    if filepath.suffix in set(['.csv', '.txt']):
-        return True
-    return False
-
-
-def has_excel_extension(filepath):
-    """Return True if ``filepath`` has an extension compatible with
-    Excel files.
-    """
-    if filepath.suffix in set(['.xls', '.xlsx']):
-        return True
-    return False

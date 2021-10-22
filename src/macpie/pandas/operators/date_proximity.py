@@ -4,9 +4,7 @@ import warnings
 import pandas as pd
 
 from macpie._config import get_option
-from macpie.exceptions import DateProximityError
-from macpie.tools import sequence as seqtools
-from macpie.tools import validator as validatortools
+from macpie import lltools, validatortools
 
 
 def date_proximity(
@@ -142,9 +140,9 @@ class _DateProximityOperation:
         self.left = left
         self.right = right
 
-        self.id_on = seqtools.maybe_make_list(id_on)
-        self.id_left_on = seqtools.maybe_make_list(id_left_on)
-        self.id_right_on = seqtools.maybe_make_list(id_right_on)
+        self.id_on = lltools.maybe_make_list(id_on)
+        self.id_left_on = lltools.maybe_make_list(id_left_on)
+        self.id_right_on = lltools.maybe_make_list(id_right_on)
 
         self.date_on = date_on
         self.date_left_on = date_left_on
@@ -301,7 +299,7 @@ class _DateProximityOperation:
     def _validate_specification(self):
         if self.id_on:
             if self.id_left_on or self.id_right_on:
-                raise DateProximityError(
+                raise ValueError(
                     'Must pass argument "id_on" OR "id_left_on" '
                     'and "id_right_on", but not a combination of both.'
                 )
@@ -313,14 +311,14 @@ class _DateProximityOperation:
             self.id_left_on = self.left.mac.get_col_names(self.id_left_on)
             self.id_right_on = self.right.mac.get_col_names(self.id_right_on)
         else:
-            raise DateProximityError(
+            raise ValueError(
                 'Must pass argument "id_on" OR "id_left_on" '
                 'and "id_right_on", but not a combination of both.'
             )
 
         if not self.date_on:
             if not self.date_left_on or not self.date_right_on:
-                raise DateProximityError(
+                raise ValueError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -328,7 +326,7 @@ class _DateProximityOperation:
             self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
         else:
             if self.date_left_on or self.date_right_on:
-                raise DateProximityError(
+                raise ValueError(
                     'Must pass argument "date_on" OR "date_left_on" '
                     'and "date_right_on", but not a combination of both.'
                 )
@@ -338,14 +336,16 @@ class _DateProximityOperation:
         self.date_right_on = self.right.mac.get_col_name(self.date_right_on)
 
         if not self.left.mac.is_date_col(self.date_left_on):
-            raise TypeError(
-                f"'date_left_on' column of '{self.date_left_on}' is not a valid date column"
-            )
+            self.left.mac.to_datetime(self.date_left_on)
+            # raise TypeError(
+            #    f"'date_left_on' column of '{self.date_left_on}' is not a valid date column"
+            # )
 
         if not self.right.mac.is_date_col(self.date_right_on):
-            raise TypeError(
-                f"'date_right_on' column of '{self.date_right_on}' is not a valid date column"
-            )
+            self.right.mac.to_datetime(self.date_right_on)
+            # raise TypeError(
+            #    f"'date_right_on' column of '{self.date_right_on}' is not a valid date column"
+            # )
 
         if self.get not in ["all", "closest"]:
             raise ValueError(f"invalid get option: {self.get}")
@@ -377,7 +377,7 @@ class _DateProximityOperation:
         if self.merge not in ["partial", "full"]:
             raise ValueError(f"invalid merge option: {self.merge}")
 
-        if not seqtools.is_list_like(self.merge_suffixes):
+        if not lltools.is_list_like(self.merge_suffixes):
             raise ValueError(
                 "'merge_suffixes' needs to be a tuple or list of two strings (e.g. ('_x','_y'))"
             )
@@ -388,7 +388,7 @@ class _DateProximityOperation:
 
         self._add_suffixes()
 
-        if not seqtools.is_list_like(self.prepend_levels):
+        if not lltools.is_list_like(self.prepend_levels):
             raise ValueError(
                 "'prepend_levels' needs to be a tuple or list of two values "
                 "(e.g. ('left','right') or (None,'right'))"

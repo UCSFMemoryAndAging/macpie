@@ -48,7 +48,7 @@ def assert_dfs_equal(
     if row_diffs.mac.row_count() > 0:
         if output_dir is not None:
             row_diffs_filename = (
-                datetimetools.append_current_datetime_ms_str("row_diffs") + ".xlsx"
+                "row_diffs_" + datetimetools.current_datetime_str(ms=True) + ".xlsx"
             )
             row_diffs.to_excel(output_dir / row_diffs_filename, index=False)
 

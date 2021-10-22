@@ -1,14 +1,12 @@
+from collections import defaultdict
 import warnings
 
 import numpy as np
-import pandas as pd
-import openpyxl as pyxl
 
 from macpie._config import get_option
 from macpie.core.api import Dataset, DatasetFields
 from macpie.tools import strtools
-from macpie.exceptions import MergeableAnchoredListError, ParserError
-from macpie.util import DictLikeDataset
+from macpie.io.excel import MACPieExcelFile
 
 from .anchoredlist import AnchoredList
 from .basiclist import BasicList
@@ -111,9 +109,9 @@ class MergeableAnchoredList(AnchoredList):
             return super().all_fields
 
         fields = []
-        if self._primary:
+        if self._primary is not None:
             fields.extend(self._primary.all_fields)
-        if self._secondary:
+        if self._secondary is not None:
             for sec in self._secondary:
                 sec_anchor_field = (sec.name, self._secondary_anchor_col)
                 fields.append(sec_anchor_field)
@@ -133,7 +131,7 @@ class MergeableAnchoredList(AnchoredList):
         if dups.any():
             dups_col = get_option("column.system.duplicates")
             if dups_col in dset.sys_cols:
-                dset.rename_col(dups_col, dups_col + "_prior")
+                dset.rename_col(dups_col, dups_col + "_prior", inplace=True)
             dset.mac.insert(dups_col, dups)
             dset.add_tag(MergeableAnchoredList.tag_duplicates)
         else:
@@ -145,7 +143,7 @@ class MergeableAnchoredList(AnchoredList):
 
         self._merged_dset = None
 
-    def keep_fields(self, selected_fields, keep_unselected: bool = False):
+    def keep_fields(self, selected_fields, keep_unselected: bool = False, inplace=True):
         """Keep specified fields (and drop the rest).
 
         :param selected_fields: Fields to keep
@@ -153,7 +151,7 @@ class MergeableAnchoredList(AnchoredList):
                                 then keep entire Dataset. Defaults to False.
         """
         fields_to_include = []
-        selected_dsets = selected_fields.datasets
+        selected_dsets = selected_fields.unique_datasets
 
         if self._primary.name not in selected_dsets:
             fields_to_include.extend(
@@ -167,25 +165,35 @@ class MergeableAnchoredList(AnchoredList):
             [field for field in self.sys_fields if field[0] in selected_dsets]
         )
 
-        selected_fields.prepend(fields_to_include)
+        selected_fields.extendleft(fields_to_include)
         selected_fields.sort(self)
 
-        super().keep_fields(selected_fields, keep_unselected=keep_unselected)
+        if inplace:
+            super().keep_fields(selected_fields, keep_unselected=keep_unselected, inplace=True)
+        else:
+            al = super().keep_fields(
+                selected_fields, keep_unselected=keep_unselected, inplace=False
+            )
+            return MergeableAnchoredList(
+                al.primary,
+                al.secondary,
+                self.primary_anchor_col,
+                self.secondary_anchor_col,
+                selected_fields,
+            )
 
     def merge(self):
         """Perform the merge."""
         if self._selected_fields:
-            self.keep_fields(self._selected_fields, keep_unselected=True)
+            self.keep_fields(self._selected_fields, keep_unselected=True, inplace=True)
 
-        merged_dset = self._primary.copy(deep=True)
-        merged_dset.columns = pd.MultiIndex.from_product(
-            [[self._primary.name], merged_dset.columns]
-        )
+        merged_dset = self._primary.prepend_level(self._primary.name)
+        merged_dset.clear_tags()
 
         mergeable_secondary = self._secondary.filter(MergeableAnchoredList.tag_mergeable)
 
         for sec in mergeable_secondary:
-            if self._selected_fields and sec.name not in self._selected_fields.datasets:
+            if self._selected_fields and sec.name not in self._selected_fields.unique_datasets:
                 sec.add_tag(MergeableAnchoredList.tag_not_merged)
             else:
                 merged_dset = merged_dset.mac.merge(
@@ -201,6 +209,7 @@ class MergeableAnchoredList(AnchoredList):
         merged_dset.index = np.arange(start_index, len(merged_dset) + start_index)
 
         self._merged_dset = merged_dset
+        self._merged_dset.name = get_option("excel.sheet_name.merged_results")
 
     def get_available_fields(self):
         """Get all "available" fields in this collection.
@@ -217,10 +226,6 @@ class MergeableAnchoredList(AnchoredList):
         )
         available_fields = available_fields.filter(DatasetFields.tag_non_key_field)
         available_fields.title = self._sheetname_available_fields
-
-        available_fields.append_col_fill(None, header=get_option("column.to_merge"))
-        print("avaol", available_fields)
-        print("avaol title", available_fields.title, self._sheetname_available_fields)
         return available_fields
 
     def get_duplicates(self):
@@ -229,25 +234,24 @@ class MergeableAnchoredList(AnchoredList):
         if not dup_dsets:
             return {}
 
-        result = {}
-
-        for dset in dup_dsets:
-            result[dset.name] = []
+        result = defaultdict(list)
 
         for dset in dup_dsets:
             dup_rows_df = dset.duplicated(subset=[self._secondary_anchor_col], keep=False)
-            result[dset.name].extend(list(dset[dup_rows_df].array))
+            result[dset.name].extend(dset[dup_rows_df].to_numpy())
 
         return result
 
-    def to_dict(self):
+    def to_excel_dict(self):
         """Convert the MergeableAnchoredList to a dictionary."""
         return {
-            "primary": self._primary,
-            "secondary": self._secondary,
+            "merged": self._merged_dset.to_excel_dict() if self._merged_dset is not None else None,
+            "primary": self._primary.to_excel_dict(),
+            "secondary": self._secondary.to_excel_dict(),
             "primary_anchor_col": self._primary_anchor_col,
             "secondary_anchor_col": self._secondary_anchor_col,
-            "selected_fields": self._selected_fields,
+            "available_fields": self.get_available_fields().to_dict(),
+            "selected_fields": self._selected_fields.to_dict() if self._selected_fields else None,
         }
 
     def to_excel(self, excel_writer, write_repr=True, merge: bool = True, **kwargs):
@@ -261,7 +265,6 @@ class MergeableAnchoredList(AnchoredList):
             if not self._merged_dset:
                 self.merge()
 
-            self._merged_dset.name = get_option("excel.sheet_name.merged_results")
             self._merged_dset.to_excel(excel_writer, **kwargs)
             self._secondary.filter([MergeableAnchoredList.tag_not_merged]).to_excel(
                 excel_writer, write_repr=False, **kwargs
@@ -276,10 +279,13 @@ class MergeableAnchoredList(AnchoredList):
             excel_writer, write_repr=False, **kwargs
         )
 
-        self.get_available_fields().to_excel(excel_writer)
+        available_fields = self.get_available_fields()
+        available_fields.append_col_fill(None, header=get_option("column.to_merge"))
+
+        excel_writer.write_simple_dataset(available_fields)
 
         if write_repr:
-            self.get_excel_repr().to_excel(excel_writer)
+            excel_writer.write_excel_repr(self.get_excel_repr())
 
     @staticmethod
     def dataset_display_name_generator(dset: Dataset):
@@ -292,11 +298,13 @@ class MergeableAnchoredList(AnchoredList):
         return strtools.add_suffixes_with_base(dset.name, suffixes, max_length=-1, delimiter="_")
 
     @classmethod
-    def from_excel_dict(cls, filepath, excel_dict) -> "MergeableAnchoredList":
+    def from_excel_dict(cls, excel_file: MACPieExcelFile, excel_dict) -> "MergeableAnchoredList":
         """Construct :class:`MergeableAnchoredList` from an Excel file."""
 
-        available_fields = DatasetFields.from_excel_sheet_create_tags(
-            filepath, sheet_name=get_option("excel.sheet_name.available_fields")
+        secondary_excel_dict = excel_dict["secondary"]
+
+        available_fields = excel_file.parse_dataset_fields(
+            sheet_name=get_option("excel.sheet_name.available_fields")
         )
 
         selected_fields = available_fields.filter(get_option("column.to_merge"))
@@ -308,78 +316,50 @@ class MergeableAnchoredList(AnchoredList):
         _secondary_anchor_col = None
         _selected_fields = selected_fields if len(selected_fields) > 0 else None
 
-        wb = pyxl.load_workbook(filepath)
-
-        primary_repr = info["primary"]
-        primary_sheetname = primary_repr["excel_sheetname"]
-
-        if primary_sheetname in wb.sheetnames:  # collection was not merged
-            primary_df = pd.read_excel(
-                filepath, sheet_name=primary_sheetname, index_col=None, header=0
+        if excel_dict["merged"] is None:
+            _primary = excel_file.parse(sheet_name=excel_dict["primary"]["excel_sheetname"])
+            # _primary = read_excel(excel_file, sheet_name=excel_dict["primary"]["excel_sheetname"])
+            # _secondary = BasicList.from_excel_dict(excel_file, excel_dict["secondary"])
+        else:
+            """
+            merged_dset = read_excel(
+                excel_file,
+                sheet_name=excel_dict["merged"]["excel_sheetname"],
+                index_col=0,
+                header=[0, 1],
             )
-            _primary = Dataset(
-                primary_df,
-                id_col_name=primary_repr["id_col_name"],
-                date_col_name=primary_repr["date_col_name"],
-                id2_col_name=primary_repr["id2_col_name"],
-                name=primary_repr["name"],
-            )
-
-        else:  # collection was merged
-            merged_dset_sheet_name = get_option("excel.sheet_name.merged_results")
-            if merged_dset_sheet_name not in wb.sheetnames:
-                raise ParserError(
-                    f"Excel sheet '{primary_sheetname}' nor "
-                    f"'{merged_dset_sheet_name}' not found in file: {filepath}"
-                )
-
-            ws = wb[sheet_name]
-            if ws["A2"].value == get_option("excel.row_index_header"):
-                _merged_dset = pd.read_excel(
-                    filepath, sheet_name=merged_dset_sheet_name, index_col=0, header=[0, 1]
-                )
-            else:
-                _merged_dset = pd.read_excel(
-                    filepath, sheet_name=merged_dset_sheet_name, index_col=None, header=[0, 1]
-                )
-
-            primary_name = info["primary"]["name"]
-            primary_df = _merged_dset.xs(primary_name, axis="columns", level=0)
-            _primary = Dataset(
-                primary_df,
-                id_col_name=info["primary"]["id_col_name"],
-                date_col_name=info["primary"]["date_col_name"],
-                id2_col_name=info["primary"]["id2_col_name"],
-                name=primary_name,
+            """
+            merged_dset = excel_file.parse(
+                sheet_name=excel_dict["merged"]["excel_sheetname"],
+                index_col=0,
+                header=[0, 1],
             )
 
-            for sec in info["secondary"]:
-                secondary_name = sec["name"]
-                secondary_tags = sec["tags"]
+            _primary = merged_dset.cross_section(excel_dict["primary"])
 
-                if MergeableAnchoredList.tag_merged in secondary_tags:
-                    secondary_df = _merged_dset.xs(secondary_name, axis="columns", level=0)
-                    secondary_dset = Dataset(
-                        secondary_df,
-                        id_col_name=sec["id_col_name"],
-                        date_col_name=sec["date_col_name"],
-                        id2_col_name=sec["id2_col_name"],
-                        name=secondary_name,
-                    )
-                    secondary_dset.clear_tags()
-                    secondary_dset.drop_sys_cols()
-                    _secondary.append(secondary_dset)
+            filtered_secondary_dict = BasicList.excel_dict_filter_tags(
+                secondary_excel_dict, MergeableAnchoredList.tag_merged
+            )
 
-        for sec in info["secondary"]:
-            secondary_tags = sec["tags"]
-            if MergeableAnchoredList.tag_merged not in secondary_tags:
-                secondary_dset = Dataset.from_excel_sheet(filepath, sec)
+            for dset_dict in filtered_secondary_dict:
+                secondary_dset = merged_dset.cross_section(dset_dict)
                 secondary_dset.clear_tags()
                 secondary_dset.drop_sys_cols()
                 _secondary.append(secondary_dset)
 
-        _primary_anchor_col = info["primary_anchor_col"]
-        _secondary_anchor_col = info["secondary_anchor_col"]
+        filtered_secondary_dict = BasicList.excel_dict_filterfalse_tags(
+            secondary_excel_dict, MergeableAnchoredList.tag_merged
+        )
+
+        for dset_dict in filtered_secondary_dict:
+            # secondary_dset = read_excel(excel_file, sheet_name=dset_dict["excel_sheetname"])
+            secondary_dset = excel_file.parse(sheet_name=dset_dict["excel_sheetname"])
+            secondary_dset.clear_tags()
+            secondary_dset.drop_sys_cols()
+            _secondary.append(secondary_dset)
+
+        _primary_anchor_col = excel_dict["primary_anchor_col"]
+        _secondary_anchor_col = excel_dict["secondary_anchor_col"]
 
         instance = cls(
             primary=_primary,

@@ -29,9 +29,11 @@ class MacDataFrameAccessor:
         pass
 
     # general functions
-    def add_diff_days(self, col_start: str, col_end: str, diff_days_col: str = None):
+    def add_diff_days(
+        self, col_start: str, col_end: str, diff_days_col: str = None, inplace=False
+    ):
         """see :meth:`macpie.pandas.add_diff_days`"""
-        return general.add_diff_days(self._df, col_start, col_end, diff_days_col)
+        return general.add_diff_days(self._df, col_start, col_end, diff_days_col, inplace=inplace)
 
     def any_duplicates(self, col: str, ignore_nan: bool = False):
         """see :meth:`macpie.pandas.any_duplicates`"""
@@ -43,7 +45,7 @@ class MacDataFrameAccessor:
 
     def col_count(self):
         """see :meth:`macpie.pandas.num_cols`"""
-        return general.col_count(self._df)
+        return len(self._df.columns)
 
     def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.diff_cols`"""
@@ -98,7 +100,7 @@ class MacDataFrameAccessor:
 
     def row_count(self):
         """see :meth:`macpie.pandas.num_rows`"""
-        return general.row_count(self._df)
+        return len(self._df.index)
 
     def to_datetime(self, date_col_name):
         """see :meth:`macpie.pandas.to_datetime`"""

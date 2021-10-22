@@ -62,7 +62,7 @@ def masktable(
         execute_multiline_query(db_cfg, new_table_def)
 
     output_dir = Path(".")
-    results_dir = pathtools.create_output_dir(output_dir, "results")
+    results_dir = pathtools.create_dir_with_datetime(dir_name_prefix="results_", where=output_dir)
 
     sql_script = results_dir / (masked_tablename + ".sql")
     with open(sql_script, "w") as f:

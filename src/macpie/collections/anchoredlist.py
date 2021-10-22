@@ -1,4 +1,4 @@
-from itertools import chain
+import itertools
 
 from macpie._config import get_option
 from macpie import Dataset, DatasetFields
@@ -38,7 +38,9 @@ class AnchoredList(BaseCollection):
         return False
 
     def __iter__(self):
-        return chain([self._primary] if self._primary is not None else [], self._secondary)
+        return itertools.chain(
+            [self._primary] if self._primary is not None else [], self._secondary
+        )
 
     def __len__(self):
         counter = 0
@@ -92,51 +94,12 @@ class AnchoredList(BaseCollection):
             for sec in dsets:
                 self.add_secondary(sec)
 
-    @property
-    def key_fields(self):
-        """A list of all :attr:`macpie.Dataset.key_fields` contained
-        in this :class:`AnchoredList`.
-        """
-        key_fields = []
-        if self._primary is not None:
-            key_fields.extend(self._primary.key_fields)
-        if self._secondary:
-            for sec in self._secondary:
-                key_fields.extend(sec.key_fields)
-        return key_fields
-
-    @property
-    def sys_fields(self):
-        """A list of all :attr:`macpie.Dataset.sys_fields` contained
-        in this :class:`AnchoredList`.
-        """
-        sys_fields = []
-        if self._primary is not None:
-            sys_fields.extend(self._primary.sys_fields)
-        if self._secondary:
-            for sec in self._secondary:
-                sys_fields.extend(sec.sys_fields)
-        return sys_fields
-
-    @property
-    def all_fields(self):
-        """A list of all :attr:`macpie.Dataset.all_fields` contained
-        in this :class:`AnchoredList`.
-        """
-        fields = []
-        if self._primary is not None:
-            fields.extend(self._primary.all_fields)
-        if self._secondary:
-            for sec in self._secondary:
-                fields.extend(sec.all_fields)
-        return fields
-
     def add_secondary(self, dset: Dataset):
         """Append `dset` to :attr:`AnchoredList.secondary`."""
         dset.add_tag(AnchoredList.tag_secondary)
         self._secondary.append(dset)
 
-    def keep_fields(self, selected_fields, keep_unselected: bool = False):
+    def keep_fields(self, selected_fields, keep_unselected: bool = False, inplace=False):
         """Keep specified fields (and drop the rest).
 
         :param selected_fields: Fields to keep
@@ -144,16 +107,23 @@ class AnchoredList(BaseCollection):
                                 then keep entire Dataset. Defaults to False.
         """
         if self._primary is not None:
-            self._primary.keep_fields(selected_fields)
+            primary = self._primary.keep_fields(selected_fields)
         if self._secondary:
-            self._secondary.keep_fields(selected_fields, keep_unselected=keep_unselected)
+            secondary = self._secondary.keep_fields(
+                selected_fields, keep_unselected=keep_unselected
+            )
+
+        if inplace:
+            self._primary = primary
+            self._secondary = secondary
+        else:
+            return AnchoredList(primary, secondary)
 
     def get_available_fields(self):
         """Get all "available" fields in this collection.
 
         :return: :class:`macpie.util.DatasetFields`
         """
-        return self.all_fields
         return DatasetFields.from_collection(self, title=self._sheetname_available_fields)
 
     def to_excel_dict(self):
@@ -173,4 +143,4 @@ class AnchoredList(BaseCollection):
         self._secondary.to_excel(excel_writer, write_repr=False, **kwargs)
 
         if write_repr:
-            self.get_excel_repr().to_excel(excel_writer, dump_json=True, **kwargs)
+            excel_writer.write_excel_repr(self.get_excel_repr())

@@ -100,10 +100,6 @@ cf.register_option(
 cf.register_option("excel.sheet_name.command_info", "_cmd_info", "", validator=pandas_cf.is_str)
 
 cf.register_option(
-    "excel.sheet_name.collection_info", "_dsets_info", "", validator=pandas_cf.is_str
-)
-
-cf.register_option(
     "excel.sheet_name.dsets_history", "_dsets_history", "", validator=pandas_cf.is_str
 )
 
