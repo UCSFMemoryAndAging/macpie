@@ -49,7 +49,7 @@ class BasicList(UserList, BaseCollection):
         else:
             return BasicList(new_list)
 
-    def to_excel(self, excel_writer, write_repr=True, **kwargs):
+    def to_excel(self, excel_writer, write_excel_dict=True, **kwargs):
         """Write :class:`BasicList` to an Excel file by calling
         :meth:`macpie.Dataset.to_excel` on each :class:`macpie.Dataset`
         in this list.
@@ -57,8 +57,8 @@ class BasicList(UserList, BaseCollection):
         for dset in self.data:
             dset.to_excel(excel_writer, **kwargs)
 
-        if write_repr:
-            excel_writer.write_excel_repr(self.get_excel_repr())
+        if write_excel_dict:
+            excel_writer.write_excel_dict(self.to_excel_dict())
 
     def to_excel_dict(self):
         """Convert the :class:`BasicList` to a dictionary."""

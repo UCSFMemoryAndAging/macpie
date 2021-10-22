@@ -3,7 +3,6 @@ import itertools
 from macpie._config import get_option
 from macpie import Dataset, DatasetFields
 
-
 from .base import BaseCollection
 from .basiclist import BasicList
 
@@ -134,13 +133,13 @@ class AnchoredList(BaseCollection):
             "secondary": self._secondary.to_excel_dict(),
         }
 
-    def to_excel(self, excel_writer, write_repr=True, **kwargs):
+    def to_excel(self, excel_writer, write_excel_dict=True, **kwargs):
         """Write :class:`AnchoredList` to an Excel file by calling
         :meth:`macpie.Dataset.to_excel` on :attr:`AnchoredList.primary`
         and :attr:`AnchoredList.secondary`.
         """
         self._primary.to_excel(excel_writer, **kwargs)
-        self._secondary.to_excel(excel_writer, write_repr=False, **kwargs)
+        self._secondary.to_excel(excel_writer, write_excel_dict=False, **kwargs)
 
-        if write_repr:
-            excel_writer.write_excel_repr(self.get_excel_repr())
+        if write_excel_dict:
+            excel_writer.write_excel_dict(self.to_excel_dict())

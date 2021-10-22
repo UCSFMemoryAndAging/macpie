@@ -5,6 +5,7 @@ import json
 import re
 
 import pandas as pd
+from macpie.tools.tablib import DictLikeDataset
 import tablib as tl
 
 import macpie as mp
@@ -105,40 +106,40 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         super().__init__(path_or_buffer, engine="openpyxl", storage_options=storage_options)
         self._reader = MACPieExcelReader(self._io, storage_options=storage_options)
 
-        self._dataset_reprs = self.get_dataset_reprs()
-        self._collection_repr = self.get_collection_repr()
+        self._dataset_dicts = self.get_dataset_dicts()
+        self._collection_dict = self.get_collection_dict()
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
             f"io={self._io!r}, "
             f"datasets={self.get_dataset_names()!r}, "
-            f"collection_class={self.get_collection_class()!r})"
+            f"collection_class={self.get_collection_class_name()!r})"
         )
 
-    def get_dataset_reprs(self):
+    def get_dataset_dicts(self):
         if self.datasets_sheet_name not in self.sys_sheet_names:
             raise ValueError(
                 f"Cannot read Excel file without a '{self.datasets_sheet_name}' sheet"
             )
 
-        dataset_reprs = self._reader.parse_excel_repr(self.datasets_sheet_name)
-        return dataset_reprs.to_dict()
+        dataset_dicts = self._reader.parse_excel_dict(self.datasets_sheet_name)
+        return dataset_dicts
 
-    def get_collection_repr(self):
+    def get_collection_dict(self):
         if self.collection_sheet_name not in self.sys_sheet_names:
             return None
 
-        collection_repr = self._reader.parse_excel_repr(self.collection_sheet_name)
-        return collection_repr.to_dict()
+        collection_dict = self._reader.parse_excel_dict(self.collection_sheet_name)
+        return collection_dict
 
     def get_dataset_names(self):
-        return list(self._dataset_reprs.keys())
+        return list(self._dataset_dicts.keys())
 
-    def get_collection_class(self):
-        if self._collection_repr is None:
+    def get_collection_class_name(self):
+        if self._collection_dict is None:
             return None
-        return self._collection_repr["class_name"]
+        return self._collection_dict["class_name"]
 
     def parse_simple_dataset(self, sheet_name):
         tlset = self._reader.parse_tablib_dataset(sheet_name)
@@ -158,14 +159,14 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         return dataset_fields
 
     def parse_collection(self):
-        if not self._collection_repr:
+        if not self._collection_dict:
             raise ValueError(
                 f"Cannot parse as collection without '{self.collection_sheet_name}' sheet."
             )
 
-        collection_class_name = self._collection_repr["class_name"]
+        collection_class_name = self._collection_dict["class_name"]
         collection_class = getattr(mp.collections, collection_class_name)
-        return collection_class.from_excel_dict(self, self._collection_repr)
+        return collection_class.from_excel_dict(self, self._collection_dict)
 
     def parse(
         self,
@@ -227,7 +228,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         if type(ret_val) is dict:
             for sheet_name in ret_val:
                 if sheet_name in self.sheet_names:
-                    excel_dict = self._dataset_reprs.get(sheet_name)
+                    excel_dict = self._dataset_dicts.get(sheet_name)
                     dset = Dataset.from_excel_dict(excel_dict, ret_val[sheet_name])
                     ret_val[sheet_name] = dset
         else:
@@ -235,7 +236,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
                 sheet = self._reader.get_sheet_by_index(sheet_name)
                 sheet_name = sheet.title
 
-            excel_dict = self._dataset_reprs.get(sheet_name)
+            excel_dict = self._dataset_dicts.get(sheet_name)
             if excel_dict is None:
                 raise ValueError(
                     f"No dataset info for sheet '{sheet_name}' found "
@@ -265,19 +266,16 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
 
 class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
+    def parse_excel_dict(self, sheet_name, headers=True):
+        ws = self.book.active if sheet_name is None else self.book[sheet_name]
+        df = openpyxltools.ws_to_df(ws)
+        df = df.applymap(json.loads)
+        dld = DictLikeDataset.from_df(df)
+        return dld.to_dict()
+
     def parse_tablib_dataset(self, sheet_name, headers=True):
-        sheet = self.book.active if sheet_name is None else self.book[sheet_name]
-        dset = tl.Dataset()
-        dset.title = sheet.title
-
-        for i, row in enumerate(sheet.rows):
-            row_vals = [c.value for c in row]
-            if (i == 0) and (headers):
-                dset.headers = row_vals
-            else:
-                dset.append(row_vals)
-
-        return dset
+        ws = self.book.active if sheet_name is None else self.book[sheet_name]
+        return openpyxltools.ws_to_tablib_dataset(ws)
 
     def parse_simple_dataset(self, sheet_name, headers=True):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
@@ -287,19 +285,6 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
         return tablibtools.DictLikeDataset.from_tlset(tlset)
 
-    def parse_excel_repr(self, sheet_name, headers=True):
-        sheet = self.book.active if sheet_name is None else self.book[sheet_name]
-        excel_repr = tablibtools.DictLikeDataset()
-        excel_repr.title = sheet.title
-
-        for i, row in enumerate(sheet.rows):
-            if (i == 0) and (headers):
-                excel_repr.headers = [c.value for c in row]
-            else:
-                excel_repr.append([json.loads(c.value) for c in row])
-
-        return excel_repr
-
 
 class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
     def _get_sheet_name(self, sheet_name):
@@ -307,26 +292,24 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
             sheet_name = get_option("excel.sheet_name.default")
         return super()._get_sheet_name(sheet_name)
 
-    def write_excel_repr(self, excel_repr: tablibtools.DictLikeDataset):
-        sheet_name = excel_repr.title
+    def write_excel_dict(self, excel_dict: dict):
+        if excel_dict["class_name"] == "Dataset":
+            sheet_name = MACPieExcelFile.datasets_sheet_name
+            excel_dict = {excel_dict["excel_sheetname"]: excel_dict}
+        else:
+            sheet_name = MACPieExcelFile.collection_sheet_name
+
+        dld = tablibtools.DictLikeDataset.from_dict(excel_dict)
+
         if sheet_name in self.book.sheetnames:
-            if sheet_name in (
-                MACPieExcelFile.datasets_sheet_name,
-                MACPieExcelFile.collection_sheet_name,
-            ):
-                ws = self.book[sheet_name]
-            else:
-                raise ValueError(f"Cannot write excel_repr. Sheet '{sheet_name}' already exists.")
+            ws = self.book[sheet_name]
         else:
             ws = self.book.create_sheet()
             ws.title = sheet_name
-            ws.append(excel_repr.headers)
+            ws.append(dld.headers)
 
-        for row in excel_repr.data:
+        for row in dld.data:
             ws.append([json.dumps(cell) for cell in row])
-
-    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
-        self.write_tablib_dataset(simple_dataset._tlset)
 
     def write_tablib_dataset(self, tlset: tl.Dataset):
         ws = self.book.create_sheet()
@@ -339,6 +322,9 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
         from tablib.formats._xlsx import XLSXFormat
 
         XLSXFormat.dset_sheet(tlset, ws)
+
+    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
+        self.write_tablib_dataset(simple_dataset.tlset)
 
     def save(self):
         for ws in self.book.worksheets:

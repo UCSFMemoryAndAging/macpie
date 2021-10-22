@@ -2,6 +2,7 @@ import itertools
 
 import openpyxl as pyxl
 import pandas as pd
+import tablib as tl
 
 from . import listlike as lltools
 
@@ -149,3 +150,17 @@ def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
         df = pd.DataFrame(data, columns=cols)
 
     return df
+
+
+def ws_to_tablib_dataset(ws, headers=True):
+    dset = tl.Dataset()
+    dset.title = ws.title
+
+    for i, row in enumerate(ws.rows):
+        row_vals = [c.value for c in row]
+        if (i == 0) and (headers):
+            dset.headers = row_vals
+        else:
+            dset.append(row_vals)
+
+    return dset

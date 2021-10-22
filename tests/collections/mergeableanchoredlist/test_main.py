@@ -33,12 +33,6 @@ def test_read_file(cli_link_small_with_merge):
     assert mal_dict["primary"]["name"] == "small"
     assert mal_dict["primary"]["id_col_name"] == "InstrID"
 
-    mal_repr = mal.get_excel_repr().to_dict()
-
-    assert mal_repr["class_name"] == "MergeableAnchoredList"
-    assert mal_repr["primary"]["name"] == "small"
-    assert mal_repr["primary"]["id_col_name"] == "InstrID"
-
 
 def test_dups(cli_link_small_with_dups):
     mal = mp.read_excel(cli_link_small_with_dups, as_collection=True)

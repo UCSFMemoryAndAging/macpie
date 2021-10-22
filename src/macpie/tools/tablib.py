@@ -2,6 +2,8 @@ import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
+from . import openpyxl as openpyxltools
+
 
 class SimpleDataset:
     """Wrap a :class:`tablib.Dataset` with extra functionality."""
@@ -211,16 +213,5 @@ def read_excel(filepath, sheet_name: str = None, headers=True):
     """Returns a Tablib Dataset from an Excel file."""
 
     wb = pyxl.load_workbook(filepath, read_only=True, data_only=True)
-    sheet = wb.active if sheet_name is None else wb[sheet_name]
-
-    dset = tl.Dataset()
-    dset.title = sheet.title
-
-    for i, row in enumerate(sheet.rows):
-        row_vals = [c.value for c in row]
-        if (i == 0) and (headers):
-            dset.headers = row_vals
-        else:
-            dset.append(row_vals)
-
-    return dset
+    ws = wb.active if sheet_name is None else wb[sheet_name]
+    return openpyxltools.ws_to_tablib_dataset(ws)

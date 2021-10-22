@@ -483,13 +483,7 @@ class Dataset(pd.DataFrame):
         dset.drop_sys_cols()
         return dset
 
-    def get_excel_repr(self):
-        return tablibtools.DictLikeDataset(
-            *[(self.get_excel_sheetname(), self.to_excel_dict())],
-            title=MACPieExcelFile.datasets_sheet_name,
-        )
-
-    def to_excel(self, excel_writer, write_repr=True, **kwargs) -> None:
+    def to_excel(self, excel_writer, write_excel_dict=True, **kwargs) -> None:
         """Write :class:`Dataset` to an Excel sheet.
 
         :param excel_writer: File path or existing ExcelWriter.
@@ -514,8 +508,8 @@ class Dataset(pd.DataFrame):
             sheet_name = kwargs.pop("sheet_name", self.get_excel_sheetname())
             super().to_excel(excel_writer, sheet_name=sheet_name, index=index, **kwargs)
 
-            if write_repr:
-                excel_writer.write_excel_repr(self.get_excel_repr())
+            if write_excel_dict:
+                excel_writer.write_excel_dict(self.to_excel_dict())
 
         finally:
             # make sure to close opened file handles

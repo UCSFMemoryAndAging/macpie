@@ -48,16 +48,6 @@ class BaseCollection(collections.abc.Collection):
     def to_excel_dict(self):
         return {"class_name": self.__class__.__name__}
 
-    def get_excel_repr(self):
-        """Contruct and return an :class:`macpie.core.DictLikeDataset` object
-        describing this collection.
-        """
-        dictionary = {"class_name": self.__class__.__name__}
-        dictionary.update(self.to_excel_dict())
-        return tablibtools.DictLikeDataset.from_dict(
-            dictionary, title=MACPieExcelFile.collection_sheet_name
-        )
-
     def get_dataset_history_info(self):
         """Contruct and return an :class:`macpie.core.DictLikeDataset` object containing
         all :attr:`macpie.Dataset.history` information.

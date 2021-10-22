@@ -244,6 +244,7 @@ class MergeableAnchoredList(AnchoredList):
     def to_excel_dict(self):
         """Convert the MergeableAnchoredList to a dictionary."""
         return {
+            "class_name": self.__class__.__name__,
             "merged": self._merged_dset.to_excel_dict() if self._merged_dset is not None else None,
             "primary": self._primary.to_excel_dict(),
             "secondary": self._secondary.to_excel_dict(),
@@ -253,7 +254,7 @@ class MergeableAnchoredList(AnchoredList):
             "selected_fields": self._selected_fields.to_dict() if self._selected_fields else None,
         }
 
-    def to_excel(self, excel_writer, write_repr=True, merge: bool = True, **kwargs):
+    def to_excel(self, excel_writer, write_excel_dict=True, merge: bool = True, **kwargs):
         """Write :class:`MergeableAnchoredList` to an Excel file.
 
         :param merge: If True, output merged result. If False, keep everything
@@ -266,16 +267,16 @@ class MergeableAnchoredList(AnchoredList):
 
             self._merged_dset.to_excel(excel_writer, **kwargs)
             self._secondary.filter([MergeableAnchoredList.tag_not_merged]).to_excel(
-                excel_writer, write_repr=False, **kwargs
+                excel_writer, write_excel_dict=False, **kwargs
             )
         else:
             self._primary.to_excel(excel_writer, **kwargs)
             self._secondary.filter([MergeableAnchoredList.tag_mergeable]).to_excel(
-                excel_writer, write_repr=False, **kwargs
+                excel_writer, write_excel_dict=False, **kwargs
             )
 
         self._secondary.filter(MergeableAnchoredList.tag_duplicates).to_excel(
-            excel_writer, write_repr=False, **kwargs
+            excel_writer, write_excel_dict=False, **kwargs
         )
 
         available_fields = self.get_available_fields()
@@ -283,8 +284,8 @@ class MergeableAnchoredList(AnchoredList):
 
         excel_writer.write_simple_dataset(available_fields)
 
-        if write_repr:
-            excel_writer.write_excel_repr(self.get_excel_repr())
+        if write_excel_dict:
+            excel_writer.write_excel_dict(self.to_excel_dict())
 
     @staticmethod
     def dataset_display_name_generator(dset: Dataset):
@@ -317,17 +318,7 @@ class MergeableAnchoredList(AnchoredList):
 
         if excel_dict["merged"] is None:
             _primary = excel_file.parse(sheet_name=excel_dict["primary"]["excel_sheetname"])
-            # _primary = read_excel(excel_file, sheet_name=excel_dict["primary"]["excel_sheetname"])
-            # _secondary = BasicList.from_excel_dict(excel_file, excel_dict["secondary"])
         else:
-            """
-            merged_dset = read_excel(
-                excel_file,
-                sheet_name=excel_dict["merged"]["excel_sheetname"],
-                index_col=0,
-                header=[0, 1],
-            )
-            """
             merged_dset = excel_file.parse(
                 sheet_name=excel_dict["merged"]["excel_sheetname"],
                 index_col=0,
@@ -351,7 +342,6 @@ class MergeableAnchoredList(AnchoredList):
         )
 
         for dset_dict in filtered_secondary_dict:
-            # secondary_dset = read_excel(excel_file, sheet_name=dset_dict["excel_sheetname"])
             secondary_dset = excel_file.parse(sheet_name=dset_dict["excel_sheetname"])
             secondary_dset.clear_tags()
             secondary_dset.drop_sys_cols()
