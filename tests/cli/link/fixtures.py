@@ -37,14 +37,12 @@ def cli_link_small_with_merge(tmp_path_factory):
         str((data_dir / "instr3_all.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_with_merge")):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx"))
-        return Path(
-            copy(results_path.resolve(), tmp_path_factory.mktemp("cli_link_small_with_merge"))
-        )
+        return results_path.resolve()
 
 
 @pytest.fixture(scope="session")
@@ -73,14 +71,12 @@ def cli_link_small_no_merge(tmp_path_factory):
         str((data_dir / "instr3_all.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_no_merge")):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx"))
-        return Path(
-            copy(results_path.resolve(), tmp_path_factory.mktemp("cli_link_small_no_merge"))
-        )
+        return results_path.resolve()
 
 
 @pytest.fixture(scope="session")
@@ -109,14 +105,12 @@ def cli_link_full_no_merge(tmp_path_factory):
         str((data_dir / "instr3_all.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_full_no_merge")):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx"))
-        return Path(
-            copy(results_path.resolve(), tmp_path_factory.mktemp("cli_link_full_no_merge"))
-        )
+        return results_path.resolve()
 
 
 @pytest.fixture(scope="session")
@@ -144,11 +138,9 @@ def cli_link_small_with_dups(tmp_path_factory):
         str((data_dir / "instr3_all.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_with_dups")):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx"))
-        return Path(
-            copy(results_path.resolve(), tmp_path_factory.mktemp("cli_link_small_with_dups"))
-        )
+        return results_path.resolve()

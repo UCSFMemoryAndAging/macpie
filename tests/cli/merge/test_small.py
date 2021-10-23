@@ -50,15 +50,15 @@ def create_available_fields(filepath):
         available_fields.to_excel(writer)
 
 
-def test_small_with_merge(cli_link_small_with_merge, helpers):
-    run(cli_link_small_with_merge, helpers)
+def test_small_with_merge(cli_link_small_with_merge, tmp_path, helpers):
+    run(cli_link_small_with_merge, tmp_path, helpers)
 
 
-def test_small_no_merge(cli_link_small_no_merge, helpers):
-    run(cli_link_small_no_merge, helpers)
+def test_small_no_merge(cli_link_small_no_merge, tmp_path, helpers):
+    run(cli_link_small_no_merge, tmp_path, helpers)
 
 
-def run(filepath, helpers):
+def run(filepath, tmp_path, helpers):
     expected_result = helpers.read_merged_results(current_dir / "small_expected_results.xlsx")
 
     create_available_fields(filepath)
@@ -66,7 +66,7 @@ def run(filepath, helpers):
     runner = CliRunner()
     cli_args = ["merge", str(filepath.resolve())]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
 

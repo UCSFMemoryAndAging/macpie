@@ -57,7 +57,7 @@ def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
     runner = CliRunner()
     cli_args = ["merge", str(copied_file.resolve())]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
 

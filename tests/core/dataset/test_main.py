@@ -1,12 +1,9 @@
-from copy import copy
 from pathlib import Path
-from macpie.core.dataset import DEFAULT_NAME
 
 import numpy as np
-import pandas as pd
 import pytest
 
-from macpie import Dataset, LavaDataset, MergeableAnchoredList
+from macpie import Dataset, LavaDataset
 
 from tests.data.data import primary_data
 

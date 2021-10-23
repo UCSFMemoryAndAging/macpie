@@ -30,9 +30,9 @@ def cli_keepone_big(tmp_path_factory):
         str(Path(data_dir / "instr1_primaryall.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("keepone_big")):
         result = runner.invoke(main, cli_args)
         assert result.exit_code == 0
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx"))
-        return Path(copy(results_path.resolve(), tmp_path_factory.mktemp("keepone_big")))
+        return results_path.resolve()

@@ -1,5 +1,4 @@
 from pathlib import Path
-from macpie.core.dataset import DEFAULT_NAME
 
 import pandas as pd
 

@@ -20,7 +20,7 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
 @pytest.mark.slow
-def test_merge_again(helpers, tmp_path):
+def test_merge_again(tmp_path, helpers):
     # macpie merge tests/cli/merge/merge_again/full_merged_once.xlsx
 
     expected_result = helpers.read_merged_results(current_dir / "expected_results.xlsx")
@@ -33,7 +33,7 @@ def test_merge_again(helpers, tmp_path):
     # instr2_all dataset
     cli_args = ["merge", str((current_dir / "full_merged_once.xlsx").resolve())]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
 

@@ -62,7 +62,7 @@ def test_full_no_merge(cli_link_full_no_merge):
 
 
 @pytest.mark.slow
-def test_full_no_link_id():
+def test_full_no_link_id(tmp_path):
     # macpie link -g closest tests/cli/link/full_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
     runner = CliRunner()
@@ -86,7 +86,7 @@ def test_full_no_link_id():
         str((data_dir / "instr3_all.csv").resolve()),
     ]
 
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
 
         assert results.exit_code == 0
