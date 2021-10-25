@@ -12,7 +12,7 @@ def test_basiclist(tmp_path):
     dset1.to_excel(tmp_path / "dset1.xlsx")
 
     dset1_from_file = mp.read_excel(tmp_path / "dset1.xlsx", sheet_name="NO_NAME")
-    """
+
     assert dset1.equals(dset1_from_file)
 
     dset2 = mp.Dataset(
@@ -34,4 +34,3 @@ def test_basiclist(tmp_path):
     assert basic_list_from_file[0].equals(dset1)
 
     assert basic_list_from_file[1].equals(dset2)
-    """

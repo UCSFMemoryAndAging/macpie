@@ -13,7 +13,7 @@ from macpie.core.datasetfields import DatasetFields
 from macpie.cli.macpie.main import main
 
 
-current_dir = Path("tests/cli/merge/").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None
@@ -68,7 +68,7 @@ def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results_wb = pyxl.load_workbook(results_path)
+        results_wb = pyxl.load_workbook(results_path, read_only=True, data_only=True)
         # expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
 
         expected_sheetnames = [

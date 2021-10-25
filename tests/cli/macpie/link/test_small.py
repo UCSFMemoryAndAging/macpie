@@ -94,7 +94,7 @@ def test_small_no_merge(cli_link_small_no_merge):
 
 
 def test_small_no_link_id(tmp_path, helpers):
-    # macpie link -g closest tests/cli/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+    # macpie link -g closest tests/cli/macpie/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
     expected_result = helpers.read_merged_results(
         current_dir / "small_no_link_id_expected_result.xlsx"
     )
@@ -144,7 +144,7 @@ def test_small_no_link_id(tmp_path, helpers):
 
 
 def test_small_link_suffixes(tmp_path, helpers):
-    # macpie link -g closest tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+    # macpie link -g closest tests/cli/macpie/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
 
     runner = CliRunner()
 

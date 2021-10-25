@@ -98,7 +98,6 @@ class BasicList(UserList, BaseCollection):
         for value in excel_dict.values():
             if type(value) is dict and value["class_name"] == "Dataset":
                 dset_excel_dict = value
-                # dset = read_excel(excel_file, sheet_name=dset_excel_dict["excel_sheetname"])
                 dset = excel_file.parse(sheet_name=dset_excel_dict["excel_sheetname"])
                 instance.append(dset)
         return instance

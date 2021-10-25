@@ -11,12 +11,6 @@ from macpie.util.decorators import TrackHistory
 
 from .datasetfields import DatasetField, DatasetFields
 
-DEFAULT_ID_COL_NAME = "PIDN"
-DEFAULT_DATE_COL_NAME = "DCDate"
-DEFAULT_ID2_COL_NAME = "InstrID"
-
-DEFAULT_NAME = "NO_NAME"
-
 
 class Dataset(pd.DataFrame):
 
@@ -28,10 +22,6 @@ class Dataset(pd.DataFrame):
         "_tags",
         "_display_name_generator",
     ]
-
-    # _id_col_name = DEFAULT_ID_COL_NAME
-    # _date_column_name = DEFAULT_DATE_COL_NAME
-    # _id2_column_name = DEFAULT_ID2_COL_NAME
 
     def __init__(
         self,
@@ -51,7 +41,7 @@ class Dataset(pd.DataFrame):
         self.id_col_name = id_col_name
         self.date_col_name = date_col_name
         self.id2_col_name = id2_col_name
-        self.name = name
+        self.name = name if name else get_option("dataset.default.name")
         self.tags = tags
 
         self.display_name_generator = (
@@ -163,10 +153,7 @@ class Dataset(pd.DataFrame):
 
     @name.setter
     def name(self, val):
-        if val is None:
-            self._name = DEFAULT_NAME
-        else:
-            self._name = val
+        self._name = val
 
     @property
     def tags(self):
@@ -445,17 +432,6 @@ class Dataset(pd.DataFrame):
             "col_count": self.col_count,
         }
 
-    @staticmethod
-    def excel_dict_has_tags(excel_dict, tags):
-        excel_dict_tags = excel_dict["tags"]
-        if tags is None:
-            return False
-        elif isinstance(tags, str):
-            return tags in excel_dict_tags
-        else:
-            return bool(len(set(tags) & set(excel_dict_tags)))
-
-    """
     @classmethod
     def from_excel_dict(cls, excel_dict, df):
         return Dataset(
@@ -466,7 +442,16 @@ class Dataset(pd.DataFrame):
             name=excel_dict.get("name"),
             tags=excel_dict.get("tags"),
         )
-    """
+
+    @staticmethod
+    def excel_dict_has_tags(excel_dict, tags):
+        excel_dict_tags = excel_dict["tags"]
+        if tags is None:
+            return False
+        elif isinstance(tags, str):
+            return tags in excel_dict_tags
+        else:
+            return bool(len(set(tags) & set(excel_dict_tags)))
 
     def cross_section(self, excel_dict):
         if not isinstance(self.columns, pd.MultiIndex):

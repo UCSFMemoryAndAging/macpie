@@ -21,6 +21,8 @@ import macpie._config.config as cf
 
 
 # set macpie options
+cf.register_option("dataset.default.name", "NO_NAME", "", validator=pandas_cf.is_str)
+
 cf.register_option("dataset.id_col_name", "InstrID", "", validator=pandas_cf.is_str)
 
 cf.register_option("dataset.date_col_name", "DCDate", "", validator=pandas_cf.is_str)

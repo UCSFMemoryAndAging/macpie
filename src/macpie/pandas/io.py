@@ -47,7 +47,7 @@ def excel_to_dataframe(filepath_or_buffer, engine="openpyxl"):  # pragma: no cov
     :return: a :class:`pandas.DataFrame` object
     """
     if engine == "openpyxl":
-        book = pyxl.load_workbook(filepath_or_buffer)
+        book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
         ws = book.active
         df = openpyxltools.ws_to_df(ws)
         return df

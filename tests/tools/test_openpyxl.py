@@ -12,7 +12,7 @@ io_data_dir = Path("tests/io/data/").resolve()
 
 def test():
     f = io_data_dir / "multi_index.xlsx"
-    wb = pyxl.load_workbook(str(f))
+    wb = pyxl.load_workbook(str(f), read_only=True, data_only=True)
 
     df_1_0_expected = pd.read_excel(f, sheet_name="1_0", header=0, index_col=None)
     df_1_0_result = openpyxltools.ws_to_df(wb["1_0"], num_header=1, num_idx=0)

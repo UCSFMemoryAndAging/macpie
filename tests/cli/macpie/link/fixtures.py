@@ -6,7 +6,7 @@ import pytest
 from macpie.cli.macpie.main import main
 
 data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/cli/link/").resolve()
+current_dir = Path("tests/cli/macpie/link/").resolve()
 
 # output_dir = current_dir
 output_dir = None
@@ -14,7 +14,7 @@ output_dir = None
 
 @pytest.fixture(scope="session")
 def cli_link_small_with_merge(tmp_path_factory):
-    # macpie link -g closest tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie link -g closest tests/cli/macpie/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
     runner = CliRunner()
 
@@ -47,7 +47,7 @@ def cli_link_small_with_merge(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def cli_link_small_no_merge(tmp_path_factory):
-    # macpie link -g closest --no-merge-results tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+    # macpie link -g closest --no-merge-results tests/cli/macpie/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
 
     runner = CliRunner()
 
@@ -115,7 +115,7 @@ def cli_link_full_no_merge(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def cli_link_small_with_dups(tmp_path_factory):
-    # macpie link -g closest tests/cli/link/small_with_dups.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie link -g closest tests/cli/macpie/link/small_with_dups.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
     runner = CliRunner()
 

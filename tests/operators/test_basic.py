@@ -1,6 +1,9 @@
 from pathlib import Path
-import macpie as mp
+
 import pandas as pd
+
+import macpie as mp
+
 
 data_dir = Path("tests/data/").resolve()
 

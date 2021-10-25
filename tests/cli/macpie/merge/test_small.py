@@ -11,7 +11,7 @@ from macpie.core.datasetfields import DatasetFields
 
 from macpie.cli.macpie.main import main
 
-current_dir = Path("tests/cli/merge/").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None

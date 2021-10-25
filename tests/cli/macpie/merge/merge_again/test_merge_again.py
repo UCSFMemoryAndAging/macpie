@@ -8,7 +8,7 @@ from macpie._config import get_option
 from macpie.cli.macpie.main import main
 from macpie.testing import assert_dfs_equal
 
-current_dir = Path("tests/cli/merge/merge_again").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None

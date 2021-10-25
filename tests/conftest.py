@@ -8,8 +8,8 @@ from macpie._config import get_option, set_option
 from macpie import MacDataFrameAccessor
 
 # import fixtures needed across files
-from tests.cli.keepone.fixtures import cli_keepone_big
-from tests.cli.link.fixtures import (
+from tests.cli.macpie.keepone.fixtures import cli_keepone_big
+from tests.cli.macpie.link.fixtures import (
     cli_link_full_no_merge,
     cli_link_small_no_merge,
     cli_link_small_with_merge,
@@ -21,7 +21,7 @@ class Helpers:
     @staticmethod
     def read_merged_results(f, sheetname: str = get_option("excel.sheet_name.merged_results")):
         filename = str(f)
-        wb = pyxl.load_workbook(filename)
+        wb = pyxl.load_workbook(filename, read_only=True, data_only=True)
         ws = wb[sheetname]
         if ws["A2"].value == get_option("excel.row_index_header"):
             return pd.read_excel(filename, index_col=0, header=[0, 1])

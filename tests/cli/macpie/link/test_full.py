@@ -11,7 +11,7 @@ from macpie.cli.macpie.main import main
 
 
 data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/cli/link/").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 # output_dir = current_dir
 output_dir = None

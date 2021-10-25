@@ -5,7 +5,7 @@ import pandas as pd
 from macpie import Dataset
 
 data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/core/dataset/").resolve()
+current_dir = Path(__file__).parent.absolute()
 
 
 def test_keep_cols():

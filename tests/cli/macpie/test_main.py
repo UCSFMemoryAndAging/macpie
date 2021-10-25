@@ -4,7 +4,7 @@ from click.testing import CliRunner
 
 from macpie.cli.macpie.main import main
 
-current_dir = Path("tests/cli/data/").resolve()
+current_dir = Path("tests/cli/macpie/data/").resolve()
 
 
 def test_basic(tmp_path):

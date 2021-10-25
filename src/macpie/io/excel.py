@@ -4,6 +4,7 @@ Utilities for conversion to Excel representation.
 import json
 import re
 
+import openpyxl as pyxl
 import pandas as pd
 from macpie.tools.tablib import DictLikeDataset
 import tablib as tl
@@ -266,6 +267,19 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
 
 class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
+    def load_workbook(self, filepath_or_buffer):
+        # Closes an xlsx file in read-only mode
+        # https://stackoverflow.com/questions/31416842/openpyxl-does-not-close-excel-workbook-in-read-only-mode
+        import io
+
+        if isinstance(filepath_or_buffer, io.BufferedReader):
+            return super().load_workbook(filepath_or_buffer)
+
+        with open(filepath_or_buffer, "rb") as f:
+            in_mem_file = io.BytesIO(f.read())
+
+        return pyxl.load_workbook(in_mem_file, read_only=True, data_only=True, keep_links=False)
+
     def parse_excel_dict(self, sheet_name, headers=True):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
         df = openpyxltools.ws_to_df(ws)

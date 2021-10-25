@@ -56,9 +56,9 @@ def test_keepone(cli_keepone_big):
 
 @pytest.mark.slow
 def test_link():
-    # macpie link -g closest tests/cli/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie link -g closest tests/cli/macpie/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
-    prim = LavaDataset.from_file(Path("tests/cli/link/small.xlsx"))
+    prim = LavaDataset.from_file(Path("tests/cli/macpie/link/small.xlsx"))
     sec_1 = LavaDataset.from_file(Path(data_dir / "instr2_all.csv"))
     sec_2 = LavaDataset.from_file(Path(data_dir / "instr3_all.csv"))
 
