@@ -5,10 +5,13 @@ from click.testing import CliRunner
 import openpyxl as pyxl
 import pytest
 
+from macpie import DatasetFields, MACPieExcelFile, MACPieExcelWriter, MergeableAnchoredList
 from macpie._config import get_option
-from macpie.io.excel import MACPieExcelWriter, MACPieExcelFile
+from macpie.io.excel import (
+    DATASETS_SHEET_NAME,
+    COLLECTION_SHEET_NAME,
+)
 from macpie.testing import assert_dfs_equal
-from macpie.core.datasetfields import DatasetFields
 
 from macpie.cli.macpie.main import main
 
@@ -48,8 +51,10 @@ def create_available_fields(filepath):
 
 
 @pytest.mark.slow
-def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
-    expected_result = helpers.read_merged_results(current_dir / "full_expected_results.xlsx")
+def test_full_no_merge(cli_link_full_no_merge, tmp_path):
+    expected_result = MACPieExcelFile(
+        current_dir / "full_expected_results.xlsx"
+    ).parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
     copied_file = Path(copy(cli_link_full_no_merge, tmp_path))
     create_available_fields(copied_file)
@@ -74,13 +79,17 @@ def test_full_no_merge(cli_link_full_no_merge, helpers, tmp_path):
         expected_sheetnames = [
             "instr2_all_DUPS",
             "instr3_all_DUPS",
-            MACPieExcelFile.collection_sheet_name,
-            MACPieExcelFile.datasets_sheet_name,
+            COLLECTION_SHEET_NAME,
+            DATASETS_SHEET_NAME,
             get_option("excel.sheet_name.available_fields"),
-            get_option("excel.sheet_name.merged_results"),
+            MergeableAnchoredList.merged_dsetname,
         ]
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)
 
-        results = helpers.read_merged_results(results_path)
+        results = MACPieExcelFile(results_path).parse_multiindex_df(
+            MergeableAnchoredList.merged_dsetname
+        )
+
+        current_dir / "full_expected_results.xlsx"
         assert_dfs_equal(results, expected_result, output_dir=output_dir)

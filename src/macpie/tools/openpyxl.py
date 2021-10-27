@@ -10,18 +10,24 @@ from . import listlike as lltools
 YELLOW = "00FFFF00"
 
 
-def wb_move_sheets(wb, sheets_to_move, to_sheet):
+def wb_move_sheet_to(wb, sheetname_to_move, sheetname_to_move_to):
+    sheetnames = wb.sheetnames.copy()
+    lltools.move_item_to(sheetnames, sheetname_to_move, sheetname_to_move_to)
+    wb._sheets = [wb[sheetname] for sheetname in sheetnames]
+
+
+def wb_move_sheets_to(wb, sheetnames_to_move, sheetname_to_move_to):
     """Get row index of the first time ``val`` is found in specified column index.
 
     :param book: :class:`openpyxl.workbook.workbook.Workbook`
     :param sheets_to_move: list of sheetnames to move
     :param to_sheet: move sheets in ``sheets_to_move`` right before this sheetname
     """
-    sheets_to_move = lltools.maybe_make_list(sheets_to_move)
-    ws_order = wb.sheetnames.copy()
-    for sheetname in sheets_to_move:
-        lltools.move(ws_order, sheetname, to_sheet)
-    wb._sheets = [wb[sheetname] for sheetname in ws_order]
+    sheetnames_to_move = lltools.maybe_make_list(sheetnames_to_move)
+    sheetnames = wb.sheetnames.copy()
+    for sheetname_to_move in sheetnames_to_move:
+        lltools.move_item_to(sheetnames, sheetname_to_move, sheetname_to_move_to)
+    wb._sheets = [wb[sheetname] for sheetname in sheetnames]
 
 
 def ws_autoadjust_colwidth(ws):

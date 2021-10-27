@@ -1,6 +1,5 @@
 # flake8: noqa
 from . import datetime as datetimetools
-from . import excel as exceltools
 from . import iterator as itertools
 from . import listlike as lltools
 from . import openpyxl as openpyxltools

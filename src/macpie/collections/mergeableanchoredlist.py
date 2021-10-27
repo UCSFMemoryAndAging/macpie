@@ -37,6 +37,8 @@ class MergeableAnchoredList(AnchoredList):
     #: Tag that denotes a Dataset cannot be merged (i.e. has duplicates)
     tag_duplicates = get_option("dataset.tag.duplicates")
 
+    merged_dsetname = "MERGED_RESULTS"
+
     def __init__(
         self,
         primary: Dataset = None,
@@ -208,7 +210,7 @@ class MergeableAnchoredList(AnchoredList):
         merged_dset.index = np.arange(start_index, len(merged_dset) + start_index)
 
         self._merged_dset = merged_dset
-        self._merged_dset.name = get_option("excel.sheet_name.merged_results")
+        self._merged_dset.name = self.merged_dsetname
 
     def get_available_fields(self):
         """Get all "available" fields in this collection.
@@ -260,12 +262,12 @@ class MergeableAnchoredList(AnchoredList):
         :param merge: If True, output merged result. If False, keep everything
                       unmerged. Defaults to True.
         """
-
         if merge:
             if not self._merged_dset:
                 self.merge()
 
             self._merged_dset.to_excel(excel_writer, **kwargs)
+
             self._secondary.filter([MergeableAnchoredList.tag_not_merged]).to_excel(
                 excel_writer, write_excel_dict=False, **kwargs
             )

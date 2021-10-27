@@ -15,7 +15,7 @@ output_dir = None
 
 
 @pytest.mark.slow
-def test_cli_keepone(cli_keepone_big, helpers):
+def test_cli_keepone(cli_keepone_big):
 
     # copy file to current dir if you want to debug more
     if output_dir is not None:

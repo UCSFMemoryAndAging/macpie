@@ -4,6 +4,7 @@ from shutil import copy
 from click.testing import CliRunner
 import pytest
 
+from macpie import MACPieExcelFile, MergeableAnchoredList
 from macpie._config import get_option
 from macpie.cli.macpie.main import main
 from macpie.testing import assert_dfs_equal
@@ -20,10 +21,12 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
 @pytest.mark.slow
-def test_merge_again(tmp_path, helpers):
+def test_merge_again(tmp_path):
     # macpie merge tests/cli/merge/merge_again/full_merged_once.xlsx
 
-    expected_result = helpers.read_merged_results(current_dir / "expected_results.xlsx")
+    expected_result = MACPieExcelFile(current_dir / "expected_results.xlsx").parse_multiindex_df(
+        MergeableAnchoredList.merged_dsetname
+    )
 
     runner = CliRunner()
 
@@ -44,7 +47,10 @@ def test_merge_again(tmp_path, helpers):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = helpers.read_merged_results(results_path)
+        results = MACPieExcelFile(results_path).parse_multiindex_df(
+            MergeableAnchoredList.merged_dsetname
+        )
+
         assert_dfs_equal(
             results,
             expected_result,

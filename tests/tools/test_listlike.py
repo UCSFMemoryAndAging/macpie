@@ -25,31 +25,43 @@ def test_is_list_like():
     assert lltools.is_list_like("nope") is False
 
 
-def test_move():
+def test_move_item_to():
     l1 = [0, 1, 2, 3, 4]
     # move item 0 to same position should do nothing
-    lltools.move(l1, 1, 1)
+    lltools.move_item_to(l1, 1, 1)
     assert l1 == [0, 1, 2, 3, 4]
 
     l2 = [0, 1, 2, 3, 4]
     # move item 0 to where 3 is
     # test when item is before the new position
-    lltools.move(l2, 0, 3)
+    lltools.move_item_to(l2, 0, 3)
     assert l2 == [1, 2, 0, 3, 4]
 
     l3 = [0, 1, 2, 3, 4]
     # move item 4 to where 3 is
     # test when item is after the new position
-    lltools.move(l3, 4, 3)
+    lltools.move_item_to(l3, 4, 3)
     assert l3 == [0, 1, 2, 4, 3]
 
     l4 = ["c", "a", "b", "d", "e"]
-    lltools.move(l4, "c", "d")
+    lltools.move_item_to(l4, "c", "d")
     assert l4 == ["a", "b", "c", "d", "e"]
 
     l5 = ["a", "b", "d", "e", "c"]
-    lltools.move(l5, "c", "d")
+    lltools.move_item_to(l5, "c", "d")
     assert l5 == ["a", "b", "c", "d", "e"]
+
+    l6 = ["a", "b", "d", "e", "c"]
+    lltools.move_item_to(l6, "c", "c", offset=-1)
+    assert l6 == ["a", "b", "d", "c", "e"]
+
+    l7 = ["a", "b", "d", "e", "c"]
+    lltools.move_item_to(l7, "c", "c", offset=-2)
+    assert l7 == ["a", "b", "c", "d", "e"]
+
+    l8 = ["a", "b", "d", "e", "c"]
+    lltools.move_item_to(l8, "d", "c", offset=1)
+    assert l8 == ["a", "b", "e", "c", "d"]
 
 
 def test_list_like_str_equal():

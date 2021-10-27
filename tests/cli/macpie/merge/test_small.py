@@ -4,10 +4,9 @@ from shutil import copy
 from click.testing import CliRunner
 import openpyxl as pyxl
 
+from macpie import DatasetFields, MACPieExcelFile, MACPieExcelWriter, MergeableAnchoredList
 from macpie._config import get_option
-from macpie.io.excel import MACPieExcelWriter
 from macpie.testing import assert_dfs_equal
-from macpie.core.datasetfields import DatasetFields
 
 from macpie.cli.macpie.main import main
 
@@ -50,16 +49,19 @@ def create_available_fields(filepath):
         available_fields.to_excel(writer)
 
 
-def test_small_with_merge(cli_link_small_with_merge, tmp_path, helpers):
-    run(cli_link_small_with_merge, tmp_path, helpers)
+def test_small_with_merge(cli_link_small_with_merge, tmp_path):
+    run(cli_link_small_with_merge, tmp_path)
 
 
-def test_small_no_merge(cli_link_small_no_merge, tmp_path, helpers):
-    run(cli_link_small_no_merge, tmp_path, helpers)
+def test_small_no_merge(cli_link_small_no_merge, tmp_path):
+    run(cli_link_small_no_merge, tmp_path)
 
 
-def run(filepath, tmp_path, helpers):
-    expected_result = helpers.read_merged_results(current_dir / "small_expected_results.xlsx")
+def run(filepath, tmp_path):
+
+    expected_result = MACPieExcelFile(
+        current_dir / "small_expected_results.xlsx"
+    ).parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
     create_available_fields(filepath)
 
@@ -77,7 +79,9 @@ def run(filepath, tmp_path, helpers):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = helpers.read_merged_results(results_path)
+        results = MACPieExcelFile(results_path).parse_multiindex_df(
+            MergeableAnchoredList.merged_dsetname
+        )
 
         assert_dfs_equal(
             results,

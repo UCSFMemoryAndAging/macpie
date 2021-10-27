@@ -87,12 +87,15 @@ def is_disjoint(a, b):
     return True
 
 
-def is_list_like(obj):
+def is_list_like(obj, allow_sets: bool = True):
     """Whether ``obj`` is a tuple or list
 
     :param obj: object to check
     """
-    return isinstance(obj, (tuple, list))
+    if allow_sets:
+        return isinstance(obj, (tuple, list))
+    else:
+        return isinstance(obj, (set, tuple, list))
 
 
 def list_like_str_equal(a, b, case_sensitive=True):
@@ -111,27 +114,48 @@ def list_like_str_equal(a, b, case_sensitive=True):
     return False
 
 
-def maybe_make_list(obj):
+def make_list_if_list_like(obj, allow_sets: bool = True):
+    if is_list_like(obj, allow_sets=allow_sets):
+        return list(obj)
+    return obj
+
+
+def make_tuple_if_list_like(obj, allow_sets: bool = True):
+    if is_list_like(obj, allow_sets=allow_sets):
+        return tuple(obj)
+    return obj
+
+
+def maybe_make_list(obj, allow_sets: bool = True):
     """If ``obj`` is not list-like, return as a single item list.
 
     :param obj: obj to maybe make as a list
 
     :return: list
     """
-    if is_list_like(obj):
-        return list(obj)
-    elif obj:
+    if obj is not None and not is_list_like(obj, allow_sets=allow_sets):
         return [obj]
-    else:
-        return []
+    return obj
 
 
-def move(a, item, item_to_move_to):
+def maybe_make_tuple(obj, allow_sets: bool = True):
+    """If ``obj`` is not list-like, return as a single item list.
+
+    :param obj: obj to maybe make as a list
+
+    :return: list
+    """
+    if obj is not None and not is_list_like(obj, allow_sets=allow_sets):
+        return (obj,)
+    return obj
+
+
+def move_item_to(l, item, item_to_move_to, offset=0):
     """
     Move an item in a list to the just before the position of another item. ::
 
         >>> lst = ['c', 'a', 'b', 'd', 'e']
-        >>> move(lst, 'c', 'd')
+        >>> move_item_to(lst, 'c', 'd')
         >>> lst
         ['a', 'b', 'c', 'd', 'e']
 
@@ -139,13 +163,15 @@ def move(a, item, item_to_move_to):
     :param item: list item to move
     :param item_to_move_to: ``item`` will be moved to the position just before this item
     """
-    item_idx = a.index(item)
-    item_to_move_to_idx = a.index(item_to_move_to)
+
+    item_idx = l.index(item)
+    item_to_move_to_idx = l.index(item_to_move_to)
+    item_to_move_to_idx = item_to_move_to_idx + offset
 
     if item_idx < item_to_move_to_idx:
-        a.insert(item_to_move_to_idx - 1, a.pop(item_idx))
-    elif item_idx > item_to_move_to_idx:
-        a.insert(item_to_move_to_idx, a.pop(item_idx))
+        l.insert(item_to_move_to_idx - 1, l.pop(item_idx))
+    elif item_idx >= item_to_move_to_idx:
+        l.insert(item_to_move_to_idx, l.pop(item_idx))
 
 
 def remove_trailers(iterable, predicate=None):

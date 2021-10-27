@@ -11,8 +11,11 @@ import tablib as tl
 
 import macpie as mp
 from macpie._config import get_option
-from macpie import openpyxltools, tablibtools
+from macpie import lltools, openpyxltools, tablibtools
 
+
+DATASETS_SHEET_NAME = "_mp_datasets"
+COLLECTION_SHEET_NAME = "_mp_collection"
 
 ENGINES = ["openpyxl"]
 
@@ -100,14 +103,12 @@ def read_excel(
 
 
 class MACPieExcelFile(pd.io.excel._base.ExcelFile):
-    datasets_sheet_name = "_datasets"
-    collection_sheet_name = "_collection"
-
     def __init__(self, path_or_buffer, storage_options=None):
         super().__init__(path_or_buffer, engine="openpyxl", storage_options=storage_options)
         self._reader = MACPieExcelReader(self._io, storage_options=storage_options)
 
         self._dataset_dicts = self.get_dataset_dicts()
+        self._mi_dataset_dicts = self.get_mi_dataset_dicts()
         self._collection_dict = self.get_collection_dict()
 
     def __repr__(self):
@@ -119,20 +120,30 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         )
 
     def get_dataset_dicts(self):
-        if self.datasets_sheet_name not in self.sys_sheet_names:
-            raise ValueError(
-                f"Cannot read Excel file without a '{self.datasets_sheet_name}' sheet"
-            )
+        if DATASETS_SHEET_NAME not in self.sys_sheet_names:
+            return None
+            # raise ValueError(f"Cannot read Excel file without a '{DATASETS_SHEET_NAME}' sheet")
 
-        dataset_dicts = self._reader.parse_excel_dict(self.datasets_sheet_name)
+        dataset_dicts = self._reader.parse_excel_dict(DATASETS_SHEET_NAME)
         return dataset_dicts
 
     def get_collection_dict(self):
-        if self.collection_sheet_name not in self.sys_sheet_names:
+        if COLLECTION_SHEET_NAME not in self.sys_sheet_names:
             return None
 
-        collection_dict = self._reader.parse_excel_dict(self.collection_sheet_name)
+        collection_dict = self._reader.parse_excel_dict(COLLECTION_SHEET_NAME)
         return collection_dict
+
+    def get_mi_dataset_dicts(self):
+        if self._dataset_dicts is None:
+            return None
+
+        mi_datasets = {}
+        for dset_sheetname, dset_excel_dict in self._dataset_dicts.items():
+            if lltools.is_list_like(dset_excel_dict.get("id_col_name")):
+                # indicates multiindex columns
+                mi_datasets[dset_sheetname] = dset_excel_dict
+        return mi_datasets
 
     def get_dataset_names(self):
         return list(self._dataset_dicts.keys())
@@ -141,6 +152,12 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         if self._collection_dict is None:
             return None
         return self._collection_dict["class_name"]
+
+    def parse_multiindex_df(self, sheet_name):
+        return self._reader.parse_multiindex_df(sheet_name)
+
+    def parse_multiindex_dataset(self, sheet_name):
+        return self._reader.parse_multiindex_dataset(sheet_name, self._dataset_dicts[sheet_name])
 
     def parse_simple_dataset(self, sheet_name):
         tlset = self._reader.parse_tablib_dataset(sheet_name)
@@ -201,8 +218,38 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         DataFrame or dict of DataFrames
             DataFrame from the passed in Excel file.
         """
+        from macpie import Dataset
 
-        ret_val = self._reader.parse(
+        mi_datasets_to_parse = []
+        index_to_sheetname = {}
+
+        if sheet_name is None:
+            sheet_name = list(self._dataset_dicts.keys())
+
+        if isinstance(sheet_name, list):
+            for asheetname in list(sheet_name):
+                if isinstance(asheetname, int):
+                    sheetname_from_index = self._reader.get_sheetname_by_index(asheetname)
+                    index_to_sheetname[asheetname] = sheetname_from_index
+                    if sheetname_from_index in self._mi_dataset_dicts:
+                        sheet_name.remove(asheetname)
+                        mi_datasets_to_parse.append(sheetname_from_index)
+                else:
+                    if asheetname in self._mi_dataset_dicts:
+                        sheet_name.remove(asheetname)
+                        mi_datasets_to_parse.append(asheetname)
+        else:
+            if isinstance(sheet_name, int):
+                sheet = self._reader.get_sheet_by_index(sheet_name)
+                index_to_sheetname[sheet_name] = sheet.title
+                sheet_name = sheet.title
+
+            if sheet_name in self._mi_dataset_dicts:
+                return self.parse_multiindex_dataset(sheet_name)
+
+        sheetname_to_index = {v: k for k, v in index_to_sheetname.items()}
+
+        dfs_ret_val = self._reader.parse(
             sheet_name=sheet_name,
             header=header,
             names=names,
@@ -224,28 +271,46 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             mangle_dupe_cols=mangle_dupe_cols,
             **kwds,
         )
-        from macpie import Dataset
 
-        if type(ret_val) is dict:
-            for sheet_name in ret_val:
+        if type(dfs_ret_val) is dict:
+            ret_val = {}
+
+            for sheet_name in dfs_ret_val:
+                df = dfs_ret_val[sheet_name]
+
+                if isinstance(sheet_name, int):
+                    sheet_name = index_to_sheetname[sheet_name]
+
                 if sheet_name in self.sheet_names:
                     excel_dict = self._dataset_dicts.get(sheet_name)
-                    dset = Dataset.from_excel_dict(excel_dict, ret_val[sheet_name])
-                    ret_val[sheet_name] = dset
-        else:
-            if isinstance(sheet_name, int):
-                sheet = self._reader.get_sheet_by_index(sheet_name)
-                sheet_name = sheet.title
+                    dset = Dataset.from_excel_dict(excel_dict, df)
 
+                    if sheet_name in sheetname_to_index:
+                        ret_val[sheetname_to_index[sheet_name]] = dset
+                    else:
+                        ret_val[sheet_name] = dset
+
+            for mi_dataset in mi_datasets_to_parse:
+                dset = self._reader.parse_multiindex_dataset(
+                    mi_dataset, self._dataset_dicts[mi_dataset]
+                )
+
+                if mi_dataset in sheetname_to_index:
+                    ret_val[sheetname_to_index[mi_dataset]] = dset
+                else:
+                    ret_val[mi_dataset] = dset
+
+            return ret_val
+        else:
             excel_dict = self._dataset_dicts.get(sheet_name)
             if excel_dict is None:
                 raise ValueError(
                     f"No dataset info for sheet '{sheet_name}' found "
-                    f"in '{self.datasets_sheet_name}' sheet."
+                    f"in '{DATASETS_SHEET_NAME}' sheet."
                 )
 
             return Dataset(
-                data=ret_val,
+                data=dfs_ret_val,
                 id_col_name=excel_dict.get("id_col_name"),
                 date_col_name=excel_dict.get("date_col_name"),
                 id2_col_name=excel_dict.get("id2_col_name"),
@@ -267,6 +332,9 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
 
 class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
+    def get_sheetname_by_index(self, index):
+        return self.get_sheet_by_index(index).title
+
     def load_workbook(self, filepath_or_buffer):
         # Closes an xlsx file in read-only mode
         # https://stackoverflow.com/questions/31416842/openpyxl-does-not-close-excel-workbook-in-read-only-mode
@@ -282,6 +350,7 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
 
     def parse_excel_dict(self, sheet_name, headers=True):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
+        # TODO: use pd.read_excel
         df = openpyxltools.ws_to_df(ws)
         df = df.applymap(json.loads)
         dld = DictLikeDataset.from_df(df)
@@ -299,6 +368,22 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
         return tablibtools.DictLikeDataset.from_tlset(tlset)
 
+    def parse_multiindex_df(self, sheet_name):
+        ws = self.book[sheet_name]
+        if ws["A2"].value == get_option("excel.row_index_header"):
+            return self.parse(sheet_name=sheet_name, index_col=0, header=[0, 1])
+            # return pd.read_excel(filename, index_col=0, header=[0, 1])
+        else:
+            return self.parse(sheet_name=sheet_name, index_col=None, header=[0, 1])
+            # return pd.read_excel(filename, index_col=None, header=[0, 1])
+
+    def parse_multiindex_dataset(self, sheet_name, excel_dict):
+        from macpie import Dataset
+
+        df = self.parse_multiindex_df(sheet_name)
+        dset = Dataset.from_excel_dict(excel_dict, df)
+        return dset
+
 
 class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
     def _get_sheet_name(self, sheet_name):
@@ -308,10 +393,10 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
 
     def write_excel_dict(self, excel_dict: dict):
         if excel_dict["class_name"] == "Dataset":
-            sheet_name = MACPieExcelFile.datasets_sheet_name
+            sheet_name = DATASETS_SHEET_NAME
             excel_dict = {excel_dict["excel_sheetname"]: excel_dict}
         else:
-            sheet_name = MACPieExcelFile.collection_sheet_name
+            sheet_name = COLLECTION_SHEET_NAME
 
         dld = tablibtools.DictLikeDataset.from_dict(excel_dict)
 
@@ -340,21 +425,23 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
     def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
         self.write_tablib_dataset(simple_dataset.tlset)
 
+    def handle_multiindex(self, sheet_name):
+        ws = self.book[sheet_name]
+        if openpyxltools.ws_is_row_empty(ws, row_index=3, delete_if_empty=True):
+            # Special case to handle pandas and openpyxl bugs when writing
+            # dataframes with multiindex.
+            # https://stackoverflow.com/questions/54682506/openpyxl-in-python-delete-rows-function-breaks-the-merged-cell
+            # https://github.com/pandas-dev/pandas/issues/27772
+            # Another openpyxl bug where if number of index cols > 1,
+            # deleting rows doesn't work if adjacent cells in the index have been merged.
+            # Since we are forced to keep the index column due to bug,
+            # might as well give it an informative name
+            ws["A2"].value = get_option("excel.row_index_header")
+
     def save(self):
         for ws in self.book.worksheets:
             if ws.title.startswith("_"):
                 openpyxltools.ws_autoadjust_colwidth(ws)
-            if ws.title == get_option("excel.sheet_name.merged_results"):
-                if openpyxltools.ws_is_row_empty(ws, row_index=3, delete_if_empty=True):
-                    # Special case to handle pandas and openpyxl bugs when writing
-                    # dataframes with multiindex.
-                    # https://stackoverflow.com/questions/54682506/openpyxl-in-python-delete-rows-function-breaks-the-merged-cell
-                    # https://github.com/pandas-dev/pandas/issues/27772
-                    # Another openpyxl bug where if number of index cols > 1,
-                    # deleting rows doesn't work if adjacent cells in the index have been merged.
-                    # Since we are forced to keep the index column due to bug,
-                    # might as well give it an informative name
-                    ws["A2"].value = get_option("excel.row_index_header")
             if ws.title.endswith(get_option("dataset.tag.duplicates")) or ws.title.endswith(
                 get_option("sheet.suffix.duplicates")
             ):

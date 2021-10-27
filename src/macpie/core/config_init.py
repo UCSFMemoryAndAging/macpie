@@ -107,9 +107,6 @@ cf.register_option(
 
 cf.register_option("excel.sheet_name.default", "_mp_sheet", "", validator=pandas_cf.is_str)
 
-cf.register_option(
-    "excel.sheet_name.merged_results", "MERGED_RESULTS", "", validator=pandas_cf.is_str
-)
 
 cf.register_option(
     "excel.sheet_name.selected_fields", "_selected_fields", "", validator=pandas_cf.is_str

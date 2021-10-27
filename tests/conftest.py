@@ -2,6 +2,7 @@ from pathlib import Path
 
 import openpyxl as pyxl
 import pandas as pd
+from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
 import pytest
 
 from macpie._config import get_option, set_option
@@ -15,23 +16,6 @@ from tests.cli.macpie.link.fixtures import (
     cli_link_small_with_merge,
     cli_link_small_with_dups,
 )
-
-
-class Helpers:
-    @staticmethod
-    def read_merged_results(f, sheetname: str = get_option("excel.sheet_name.merged_results")):
-        filename = str(f)
-        wb = pyxl.load_workbook(filename, read_only=True, data_only=True)
-        ws = wb[sheetname]
-        if ws["A2"].value == get_option("excel.row_index_header"):
-            return pd.read_excel(filename, index_col=0, header=[0, 1])
-        else:
-            return pd.read_excel(filename, index_col=None, header=[0, 1])
-
-
-@pytest.fixture
-def helpers():
-    return Helpers
 
 
 def pytest_addoption(parser):
