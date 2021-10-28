@@ -3,8 +3,6 @@ import itertools
 from abc import abstractmethod
 
 from macpie import tablibtools
-from macpie._config import get_option
-from macpie.io.excel import MACPieExcelFile
 
 
 class BaseCollection(collections.abc.Collection):

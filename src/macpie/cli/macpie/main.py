@@ -1,10 +1,11 @@
 import collections
+import json
 import platform
 from pathlib import Path
 
 import click
 
-from macpie import __version__, pathtools, tablibtools
+from macpie import __version__, pathtools, tablibtools, MACPieJSONEncoder
 from macpie._config import get_option
 
 from .keepone import keepone
@@ -42,12 +43,15 @@ class Invoker:
         return self.args[k]
 
     def get_command_info(self):
+        args = {k: json.dumps(v, cls=MACPieJSONEncoder) for k, v in self.args.items()}
+        opts = {k: json.dumps(v, cls=MACPieJSONEncoder) for k, v in self.opts.items()}
+
         info = tablibtools.DictLikeDataset(title="_mp_command_info")
         info.append(("command_name", self.command_name))
         info.append_separator("Arguments")
-        info.append_dict(self.args)
+        info.append_dict(args)
         info.append_separator("Options")
-        info.append_dict(self.opts)
+        info.append_dict(opts)
         return info
 
     def get_client_system_info(self):

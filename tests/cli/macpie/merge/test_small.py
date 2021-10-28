@@ -50,18 +50,18 @@ def create_available_fields(filepath):
 
 
 def test_small_with_merge(cli_link_small_with_merge, tmp_path):
-    run(cli_link_small_with_merge, tmp_path)
+    cli_link_small_with_merge_copy = Path(copy(cli_link_small_with_merge, tmp_path))
+    run(cli_link_small_with_merge_copy, tmp_path)
 
 
 def test_small_no_merge(cli_link_small_no_merge, tmp_path):
-    run(cli_link_small_no_merge, tmp_path)
+    cli_link_small_no_merge_copy = Path(copy(cli_link_small_no_merge, tmp_path))
+    run(cli_link_small_no_merge_copy, tmp_path)
 
 
 def run(filepath, tmp_path):
-
-    expected_result = MACPieExcelFile(
-        current_dir / "small_expected_results.xlsx"
-    ).parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    with MACPieExcelFile(current_dir / "small_expected_results.xlsx") as reader:
+        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
     create_available_fields(filepath)
 
@@ -79,9 +79,8 @@ def run(filepath, tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = MACPieExcelFile(results_path).parse_multiindex_df(
-            MergeableAnchoredList.merged_dsetname
-        )
+        with MACPieExcelFile(results_path) as reader:
+            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
         assert_dfs_equal(
             results,

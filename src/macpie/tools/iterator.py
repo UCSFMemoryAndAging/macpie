@@ -1,4 +1,25 @@
+import collections
 import itertools
+
+
+def duplicate_indices(iterable):
+    """Make an iterator that returns duplicate items from the ``seq`` along
+    with the the indices of that item. ::
+
+        >>> seq = ['a', 'b', 'c', 'b', 'd']
+        >>> dups = duplicate_indices(seq)
+        >>> next(dups)
+        ('b', [1, 3])
+    """
+
+    tally = collections.defaultdict(list)
+
+    for i, item in enumerate(iterable):
+        tally[item].append(i)
+
+    dups = ((item, idxs) for item, idxs in tally.items() if len(idxs) > 1)
+
+    return dups
 
 
 def filter_get_index(predicate, iterable):

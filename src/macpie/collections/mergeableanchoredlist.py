@@ -361,5 +361,4 @@ class MergeableAnchoredList(AnchoredList):
             secondary_anchor_col=_secondary_anchor_col,
             selected_fields=_selected_fields,
         )
-
         return instance

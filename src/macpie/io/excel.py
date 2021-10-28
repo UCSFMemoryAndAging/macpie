@@ -183,7 +183,8 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
         collection_class_name = self._collection_dict["class_name"]
         collection_class = getattr(mp.collections, collection_class_name)
-        return collection_class.from_excel_dict(self, self._collection_dict)
+        with self as reader:
+            return collection_class.from_excel_dict(reader, self._collection_dict)
 
     def parse(
         self,
@@ -370,10 +371,8 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
         ws = self.book[sheet_name]
         if ws["A2"].value == get_option("excel.row_index_header"):
             return self.parse(sheet_name=sheet_name, index_col=0, header=[0, 1])
-            # return pd.read_excel(filename, index_col=0, header=[0, 1])
         else:
             return self.parse(sheet_name=sheet_name, index_col=None, header=[0, 1])
-            # return pd.read_excel(filename, index_col=None, header=[0, 1])
 
     def parse_multiindex_dataset(self, sheet_name, excel_dict):
         from macpie import Dataset
@@ -442,11 +441,7 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
         for row in rows_to_highlight:
             openpyxltools.highlight_row(ws, row)
 
-    def save(self):
-        for ws in self.book.worksheets:
-            if ws.title.startswith("_mp"):
-                openpyxltools.autoadjust_column_widths(ws)
-
+    def reorder_sheets(self):
         try:
             sheetnames = list(self.book.sheetnames)
             dset_sheet_index = sheetnames.index(DATASETS_SHEET_NAME) + 1
@@ -459,6 +454,13 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
             self.book._sheets = [self.book[sheetname] for sheetname in sheetnames]
         except (ValueError, StopIteration) as e:
             pass
+
+    def save(self):
+        for ws in self.book.worksheets:
+            if ws.title.startswith("_mp"):
+                openpyxltools.autoadjust_column_widths(ws)
+
+        self.reorder_sheets()
 
         super().save()
 

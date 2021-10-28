@@ -34,5 +34,6 @@ def cli_keepone_big(tmp_path_factory):
         result = runner.invoke(main, cli_args)
         assert result.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx"))
-        return results_path.resolve()
+        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+
+    return results_path

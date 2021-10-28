@@ -24,9 +24,8 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 def test_merge_again(tmp_path):
     # macpie merge tests/cli/macpie/merge/merge_again/full_merged_once.xlsx
 
-    expected_result = MACPieExcelFile(current_dir / "expected_results.xlsx").parse_multiindex_df(
-        MergeableAnchoredList.merged_dsetname
-    )
+    with MACPieExcelFile(current_dir / "expected_results.xlsx") as reader:
+        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
     runner = CliRunner()
 
@@ -47,9 +46,8 @@ def test_merge_again(tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results = MACPieExcelFile(results_path).parse_multiindex_df(
-            MergeableAnchoredList.merged_dsetname
-        )
+        with MACPieExcelFile(results_path) as reader:
+            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
         assert_dfs_equal(
             results,

@@ -52,15 +52,15 @@ def create_available_fields(filepath):
 
 @pytest.mark.slow
 def test_full_no_merge(cli_link_full_no_merge, tmp_path):
-    expected_result = MACPieExcelFile(
-        current_dir / "full_expected_results.xlsx"
-    ).parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    cli_link_full_no_merge_copy = Path(copy(cli_link_full_no_merge, tmp_path))
 
-    copied_file = Path(copy(cli_link_full_no_merge, tmp_path))
-    create_available_fields(copied_file)
+    with MACPieExcelFile(current_dir / "full_expected_results.xlsx") as reader:
+        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+
+    create_available_fields(cli_link_full_no_merge_copy)
 
     runner = CliRunner()
-    cli_args = ["merge", str(copied_file.resolve())]
+    cli_args = ["merge", str(cli_link_full_no_merge_copy.resolve())]
 
     with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
@@ -87,9 +87,7 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path):
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)
 
-        results = MACPieExcelFile(results_path).parse_multiindex_df(
-            MergeableAnchoredList.merged_dsetname
-        )
+        with MACPieExcelFile(results_path) as reader:
+            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
-        current_dir / "full_expected_results.xlsx"
         assert_dfs_equal(results, expected_result, output_dir=output_dir)

@@ -49,26 +49,6 @@ def diff(a, b):
     return [item for item in a if item not in b]
 
 
-def get_indices_of_duplicates(seq):
-    """Make an iterator that returns duplicate items from the ``seq`` along
-    with the the indices of that item. ::
-
-        >>> seq = ['a', 'b', 'c', 'b', 'd']
-        >>> dups = get_indices_of_duplicates(seq)
-        >>> next(dups)
-        ('b', [1, 3])
-    """
-
-    tally = collections.defaultdict(list)
-
-    for i, item in enumerate(seq):
-        tally[item].append(i)
-
-    dups = ((item, idxs) for item, idxs in tally.items() if len(idxs) > 1)
-
-    return dups
-
-
 def is_disjoint(a, b):
     """Check if two lists are disjoint (i.e. have no element in common). ::
 

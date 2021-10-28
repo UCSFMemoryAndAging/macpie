@@ -3,9 +3,9 @@ from typing import ClassVar, List
 import numpy as np
 import pandas as pd
 
-from macpie import lltools, strtools, tablibtools
+from macpie import lltools, strtools
 from macpie._config import get_option
-from macpie.io.excel import safe_xlsx_sheet_title, MACPieExcelFile
+from macpie.io.excel import safe_xlsx_sheet_title
 from macpie.pandas.general import get_col_name, to_datetime
 from macpie.util.decorators import TrackHistory
 

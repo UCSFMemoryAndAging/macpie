@@ -15,13 +15,13 @@ output_dir = None
 
 
 @pytest.mark.slow
-def test_cli_keepone(cli_keepone_big):
-
+def test_cli_keepone(cli_keepone_big, tmp_path):
+    cli_keepone_big_copy = Path(copy(cli_keepone_big, tmp_path))
     # copy file to current dir if you want to debug more
     if output_dir is not None:
         copy(cli_keepone_big, current_dir)
 
-    result = file_to_dataframe(cli_keepone_big)
+    result = file_to_dataframe(cli_keepone_big_copy)
     expected_result = file_to_dataframe(current_dir / "expected_result.xlsx")
 
     assert_dfs_equal(result, expected_result, output_dir=output_dir)

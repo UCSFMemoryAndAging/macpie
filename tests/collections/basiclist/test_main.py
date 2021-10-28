@@ -11,7 +11,9 @@ def test_basiclist(tmp_path):
 
     dset1.to_excel(tmp_path / "dset1.xlsx")
 
-    dset1_from_file = mp.read_excel(tmp_path / "dset1.xlsx", sheet_name="NO_NAME")
+    with mp.MACPieExcelFile(tmp_path / "dset1.xlsx") as reader:
+        dset1_from_file = mp.read_excel(reader, sheet_name="NO_NAME")
+    # dset1_from_file = mp.read_excel(tmp_path / "dset1.xlsx", sheet_name="NO_NAME")
 
     assert dset1.equals(dset1_from_file)
 
@@ -27,7 +29,9 @@ def test_basiclist(tmp_path):
     with mp.MACPieExcelWriter(tmp_path / "basic_list.xlsx") as writer:
         basic_list.to_excel(writer)
 
-    basic_list_from_file = mp.read_excel(tmp_path / "basic_list.xlsx", as_collection=True)
+    with mp.MACPieExcelFile(tmp_path / "basic_list.xlsx") as reader:
+        basic_list_from_file = mp.read_excel(reader, as_collection=True)
+    # basic_list_from_file = mp.read_excel(tmp_path / "basic_list.xlsx", as_collection=True)
 
     assert len(basic_list_from_file) == 2
 
