@@ -24,8 +24,8 @@ class DatasetFields(tablibtools.SimpleDataset):
     tag_sys_field = "sys_field"
 
     def __init__(self, *args, **kwargs):
-        self._col_header_dataset = get_option("column.dataset")
-        self._col_header_field = get_option("column.field")
+        self._col_header_dataset = "Dataset"
+        self._col_header_field = "Field"
 
         headers = kwargs.pop("headers", (self._col_header_dataset, self._col_header_field))
         super().__init__(*args, headers=headers, **kwargs)

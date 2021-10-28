@@ -52,7 +52,7 @@ class BaseCollection(collections.abc.Collection):
         """Contruct and return an :class:`macpie.core.DictLikeDataset` object containing
         all :attr:`macpie.Dataset.history` information.
         """
-        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.dsets_history"))
+        info = tablibtools.DictLikeDataset(title="_mp_dsets_history")
         for dset in self:
             if dset.history:
                 for record in dset.history:

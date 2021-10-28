@@ -10,27 +10,7 @@ from . import listlike as lltools
 YELLOW = "00FFFF00"
 
 
-def wb_move_sheet_to(wb, sheetname_to_move, sheetname_to_move_to):
-    sheetnames = wb.sheetnames.copy()
-    lltools.move_item_to(sheetnames, sheetname_to_move, sheetname_to_move_to)
-    wb._sheets = [wb[sheetname] for sheetname in sheetnames]
-
-
-def wb_move_sheets_to(wb, sheetnames_to_move, sheetname_to_move_to):
-    """Get row index of the first time ``val`` is found in specified column index.
-
-    :param book: :class:`openpyxl.workbook.workbook.Workbook`
-    :param sheets_to_move: list of sheetnames to move
-    :param to_sheet: move sheets in ``sheets_to_move`` right before this sheetname
-    """
-    sheetnames_to_move = lltools.maybe_make_list(sheetnames_to_move)
-    sheetnames = wb.sheetnames.copy()
-    for sheetname_to_move in sheetnames_to_move:
-        lltools.move_item_to(sheetnames, sheetname_to_move, sheetname_to_move_to)
-    wb._sheets = [wb[sheetname] for sheetname in sheetnames]
-
-
-def ws_autoadjust_colwidth(ws):
+def autoadjust_column_widths(ws):
     """Autoadjust the column widths of a Worksheet
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet` to adjust
@@ -41,7 +21,7 @@ def ws_autoadjust_colwidth(ws):
         ws.column_dimensions[column_cells[0].column_letter].width = length
 
 
-def ws_get_col(ws, col_header: str = None):
+def get_column_index(ws, col_header: str = None):
     """Get column index of the ``col_header``, returning ``-1`` if not found
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
@@ -60,19 +40,7 @@ def ws_get_col(ws, col_header: str = None):
     return -1
 
 
-def ws_get_row_by_col_val(ws, col_index, val):
-    """Get row index of the first time ``val`` is found in specified column index.
-
-    :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
-    :param col_index: column to check for ``val``
-    :param val: value to find in ``col_index``
-    """
-    for row in ws.rows:
-        if row[col_index].value == val:
-            return row[col_index].row
-
-
-def ws_highlight_row(ws, row: int, color: str = YELLOW):
+def highlight_row(ws, row: int, color: str = YELLOW):
     """Highlight row a certain color
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
@@ -85,23 +53,7 @@ def ws_highlight_row(ws, row: int, color: str = YELLOW):
             cell.fill = pyxl.styles.PatternFill("solid", fgColor=color)
 
 
-def ws_highlight_rows_with_col(ws, col: str, color: str = YELLOW):
-    """If a cell in specified column has a value of ``True``, then highlight entire row.
-
-    :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet`
-    :param col: column (header string) to check for ``True`` value
-    :param color: color to highlight in RGB hexadecimal format (e.g. "00FFFF00"=yellow)
-    """
-    col = ws_get_col(ws, col)
-    if col > -1:
-        rows_iter = ws.iter_rows(min_col=col, min_row=1, max_col=col, max_row=ws.max_row)
-        for row in rows_iter:
-            cell = row[0]
-            if cell.value is True:
-                ws_highlight_row(ws, cell.row, color)
-
-
-def ws_is_row_empty(ws, row_index, delete_if_empty=False):
+def is_row_empty(ws, row_index, delete_if_empty=False):
     """Determine if a row is empty.
 
     :param delete_if_empty: If True, and row is empty, row is deleted.
@@ -116,7 +68,27 @@ def ws_is_row_empty(ws, row_index, delete_if_empty=False):
     return False
 
 
-def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
+def iter_rows_with_column_value(ws, column: str, value):
+    col_index = get_column_index(ws, column)
+
+    if col_index > -1:
+        # built-in constants should be compared with 'is'
+        if value is None or isinstance(value, (bool)):
+            predicate = lambda x: x is value
+        else:
+            predicate = lambda x: x == value
+
+        rows_iter = ws.iter_rows(
+            min_col=col_index, min_row=1, max_col=col_index, max_row=ws.max_row
+        )
+
+        for row in rows_iter:
+            cell = row[0]
+            if predicate(cell.value):
+                yield cell.row
+
+
+def to_df(ws, num_header: int = 1, num_idx: int = 0):
     """Converts an Excel worksheet to a :class:`pandas.DataFrame`.
     Better to use :func:`pandas.read_excel` as it takes care of a lot
     more nuances.
@@ -158,7 +130,7 @@ def ws_to_df(ws, num_header: int = 1, num_idx: int = 0):
     return df
 
 
-def ws_to_tablib_dataset(ws, headers=True):
+def to_tablib_dataset(ws, headers=True):
     dset = tl.Dataset()
     dset.title = ws.title
 

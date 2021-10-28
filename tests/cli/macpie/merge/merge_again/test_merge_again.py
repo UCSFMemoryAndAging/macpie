@@ -22,7 +22,7 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 @pytest.mark.slow
 def test_merge_again(tmp_path):
-    # macpie merge tests/cli/merge/merge_again/full_merged_once.xlsx
+    # macpie merge tests/cli/macpie/merge/merge_again/full_merged_once.xlsx
 
     expected_result = MACPieExcelFile(current_dir / "expected_results.xlsx").parse_multiindex_df(
         MergeableAnchoredList.merged_dsetname

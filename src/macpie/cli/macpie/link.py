@@ -5,6 +5,8 @@ from macpie._config import get_option
 
 from macpie.cli.core import allowed_path, ClickPath
 
+NEW_ID_COL_NAME = "link_id"
+
 
 @click.command()
 @click.option(
@@ -108,8 +110,8 @@ def link(
         "\nNOTE: If you want to merge/filter fields from the linked data in the "
         "above results file, perform the following steps:\n"
         "\t1. Open the results file and go to the "
-        f'"{get_option("excel.sheet_name.available_fields")}" worksheet\n'
-        f'\t2. In the column labeled "{get_option("column.to_merge")}", '
+        f'"{MergeableAnchoredList.available_fields_sheetname}" worksheet\n'
+        f'\t2. In the column labeled "{MergeableAnchoredList.to_merge_column_name}", '
         'mark an "x" in each field you want to merge/keep\n'
         "\t3. Save the file\n"
         '\t4. Execute this command: "macpie merge FILE", '
@@ -174,9 +176,9 @@ class _LinkCommand:
                 "\nWARNING: ID Column Header (-i, --id-col) not specified "
                 'and default of "InstrID" not found in your PRIMARY file.'
             )
-            click.echo(f'         Creating one for you called "{get_option("column.link_id")}"\n')
+            click.echo(f'         Creating one for you called "{NEW_ID_COL_NAME}"\n')
 
-            prim_dset.create_id_col(col_name=get_option("column.link_id"))
+            prim_dset.create_id_col(col_name=NEW_ID_COL_NAME)
 
         collection = MergeableAnchoredList(prim_dset)
 

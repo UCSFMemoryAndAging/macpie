@@ -18,14 +18,12 @@ class AnchoredList(BaseCollection):
     """
 
     #: Tag that gets added to the `primary` Dataset
-    tag_anchor = get_option("dataset.tag.anchor")
+    tag_anchor = "anchor"
 
     #: Tag that gets added to all the `secondary` Datasets
-    tag_secondary = get_option("dataset.tag.secondary")
+    tag_secondary = "secondary"
 
     def __init__(self, primary: Dataset = None, secondary: BasicList = None):
-        self._sheetname_available_fields = get_option("excel.sheet_name.available_fields")
-
         self.primary = primary
         self.secondary = secondary
 
@@ -117,13 +115,6 @@ class AnchoredList(BaseCollection):
             self._secondary = secondary
         else:
             return AnchoredList(primary, secondary)
-
-    def get_available_fields(self):
-        """Get all "available" fields in this collection.
-
-        :return: :class:`macpie.util.DatasetFields`
-        """
-        return DatasetFields.from_collection(self, title=self._sheetname_available_fields)
 
     def to_excel_dict(self):
         """Convert the AnchoredList to a dictionary."""

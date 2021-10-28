@@ -35,14 +35,14 @@ def create_available_fields(filepath):
     ]
 
     available_fields = DatasetFields(
-        *available_fields_rows, title=get_option("excel.sheet_name.available_fields")
+        *available_fields_rows, title=MergeableAnchoredList.available_fields_sheetname
     )
 
     # mark them as selected
-    available_fields.append_col_fill("x", header=get_option("column.to_merge"))
+    available_fields.append_col_fill("x", header=MergeableAnchoredList.to_merge_column_name)
 
     wb = pyxl.load_workbook(filepath)
-    del wb[get_option("excel.sheet_name.available_fields")]
+    del wb[MergeableAnchoredList.available_fields_sheetname]
     wb.save(filepath)
 
     with MACPieExcelWriter(filepath, mode="a") as writer:

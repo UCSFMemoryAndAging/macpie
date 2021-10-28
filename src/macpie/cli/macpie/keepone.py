@@ -64,7 +64,7 @@ class _KeepOneCommand:
             dset = dset.group_by_keep_one(keep=self.keep, drop_duplicates=False)
 
             if get_option("column.system.duplicates") in dset.columns:
-                dset.add_tag(get_option("dataset.tag.duplicates"))
+                dset.add_tag(Dataset.tag_duplicates)
 
             collection.append(dset)
 

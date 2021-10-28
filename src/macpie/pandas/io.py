@@ -49,7 +49,7 @@ def excel_to_dataframe(filepath_or_buffer, engine="openpyxl"):  # pragma: no cov
     if engine == "openpyxl":
         book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
         ws = book.active
-        df = openpyxltools.ws_to_df(ws)
+        df = openpyxltools.to_df(ws)
         return df
     elif engine == "pandas":
         df = pd.read_excel(filepath_or_buffer)

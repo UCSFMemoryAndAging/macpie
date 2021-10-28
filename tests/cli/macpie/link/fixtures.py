@@ -81,7 +81,7 @@ def cli_link_small_no_merge(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def cli_link_full_no_merge(tmp_path_factory):
-    # macpie link -g closest --no-merge-results tests/cli/link/full.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
+    # macpie link -g closest --no-merge-results tests/cli/macpie/link/full.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
 
     runner = CliRunner()
 

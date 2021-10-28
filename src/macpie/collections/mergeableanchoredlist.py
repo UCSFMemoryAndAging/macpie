@@ -26,18 +26,20 @@ class MergeableAnchoredList(AnchoredList):
     """
 
     #: Tag that denotes a Dataset can be merged (i.e. no duplicates)
-    tag_mergeable = get_option("dataset.tag.mergeable")
+    tag_mergeable = "mergeable"
 
     #: Tag that denotes a Dataset has been merged (also means mergeable)
-    tag_merged = get_option("dataset.tag.merged")
+    tag_merged = "merged"
 
     #: Tag that denotes a Dataset has not been merged (though mergeable)
-    tag_not_merged = get_option("dataset.tag.not_merged")
+    tag_not_merged = "not_merged"
 
-    #: Tag that denotes a Dataset cannot be merged (i.e. has duplicates)
-    tag_duplicates = get_option("dataset.tag.duplicates")
-
+    #: Name of the merged dataset
     merged_dsetname = "MERGED_RESULTS"
+
+    available_fields_sheetname = "_available_fields"
+    selected_fields_sheetname = "_selected_fields"
+    to_merge_column_name = "Merge?"
 
     def __init__(
         self,
@@ -134,7 +136,7 @@ class MergeableAnchoredList(AnchoredList):
             if dups_col in dset.sys_cols:
                 dset.rename_col(dups_col, dups_col + "_prior", inplace=True)
             dset.mac.insert(dups_col, dups)
-            dset.add_tag(MergeableAnchoredList.tag_duplicates)
+            dset.add_tag(Dataset.tag_duplicates)
         else:
             dset.add_tag(MergeableAnchoredList.tag_mergeable)
 
@@ -222,15 +224,15 @@ class MergeableAnchoredList(AnchoredList):
             tags=[
                 MergeableAnchoredList.tag_anchor,
                 MergeableAnchoredList.tag_mergeable,
-                MergeableAnchoredList.tag_duplicates,
+                Dataset.tag_duplicates,
             ],
         )
         available_fields = available_fields.filter(DatasetFields.tag_non_key_field)
-        available_fields.title = self._sheetname_available_fields
+        available_fields.title = self.available_fields_sheetname
         return available_fields
 
     def get_duplicates(self):
-        dup_dsets = self._secondary.filter(MergeableAnchoredList.tag_duplicates)
+        dup_dsets = self._secondary.filter(Dataset.tag_duplicates)
 
         if not dup_dsets:
             return {}
@@ -277,12 +279,12 @@ class MergeableAnchoredList(AnchoredList):
                 excel_writer, write_excel_dict=False, **kwargs
             )
 
-        self._secondary.filter(MergeableAnchoredList.tag_duplicates).to_excel(
+        self._secondary.filter(Dataset.tag_duplicates).to_excel(
             excel_writer, write_excel_dict=False, **kwargs
         )
 
         available_fields = self.get_available_fields()
-        available_fields.append_col_fill(None, header=get_option("column.to_merge"))
+        available_fields.append_col_fill(None, header=self.to_merge_column_name)
 
         excel_writer.write_simple_dataset(available_fields)
 
@@ -295,7 +297,7 @@ class MergeableAnchoredList(AnchoredList):
         if dset.tags:
             if MergeableAnchoredList.tag_mergeable in dset.tags:
                 suffixes = ["linked"]
-            elif MergeableAnchoredList.tag_duplicates in dset.tags:
+            elif Dataset.tag_duplicates in dset.tags:
                 suffixes = ["DUPS"]
         return strtools.add_suffixes_with_base(dset.name, suffixes, max_length=-1, delimiter="_")
 
@@ -306,11 +308,11 @@ class MergeableAnchoredList(AnchoredList):
         secondary_excel_dict = excel_dict["secondary"]
 
         available_fields = excel_file.parse_dataset_fields(
-            sheet_name=get_option("excel.sheet_name.available_fields")
+            sheet_name=MergeableAnchoredList.available_fields_sheetname
         )
 
-        selected_fields = available_fields.filter(get_option("column.to_merge"))
-        selected_fields.title = get_option("excel.sheet_name.selected_fields")
+        selected_fields = available_fields.filter(MergeableAnchoredList.to_merge_column_name)
+        selected_fields.title = MergeableAnchoredList.selected_fields_sheetname
 
         _primary = None
         _secondary = BasicList()

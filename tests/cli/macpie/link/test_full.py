@@ -63,7 +63,7 @@ def test_full_no_merge(cli_link_full_no_merge):
 
 @pytest.mark.slow
 def test_full_no_link_id(tmp_path):
-    # macpie link -g closest tests/cli/link/full_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
+    # macpie link -g closest tests/cli/macpie/link/full_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
     runner = CliRunner()
 

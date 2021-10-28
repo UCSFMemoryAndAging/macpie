@@ -6,7 +6,6 @@ import re
 
 import openpyxl as pyxl
 import pandas as pd
-from macpie.tools.tablib import DictLikeDataset
 import tablib as tl
 
 import macpie as mp
@@ -350,15 +349,14 @@ class MACPieExcelReader(pd.io.excel._openpyxl.OpenpyxlReader):
 
     def parse_excel_dict(self, sheet_name, headers=True):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
-        # TODO: use pd.read_excel
-        df = openpyxltools.ws_to_df(ws)
+        df = openpyxltools.to_df(ws)
         df = df.applymap(json.loads)
-        dld = DictLikeDataset.from_df(df)
+        dld = tablibtools.DictLikeDataset.from_df(df)
         return dld.to_dict()
 
     def parse_tablib_dataset(self, sheet_name, headers=True):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
-        return openpyxltools.ws_to_tablib_dataset(ws)
+        return openpyxltools.to_tablib_dataset(ws)
 
     def parse_simple_dataset(self, sheet_name, headers=True):
         tlset = self.parse_tablib_dataset(sheet_name, headers)
@@ -427,7 +425,7 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
 
     def handle_multiindex(self, sheet_name):
         ws = self.book[sheet_name]
-        if openpyxltools.ws_is_row_empty(ws, row_index=3, delete_if_empty=True):
+        if openpyxltools.is_row_empty(ws, row_index=3, delete_if_empty=True):
             # Special case to handle pandas and openpyxl bugs when writing
             # dataframes with multiindex.
             # https://stackoverflow.com/questions/54682506/openpyxl-in-python-delete-rows-function-breaks-the-merged-cell
@@ -438,16 +436,29 @@ class MACPieExcelWriter(pd.io.excel._OpenpyxlWriter):
             # might as well give it an informative name
             ws["A2"].value = get_option("excel.row_index_header")
 
+    def highlight_duplicates(self, sheet_name, column_name):
+        ws = self.book[sheet_name]
+        rows_to_highlight = openpyxltools.iter_rows_with_column_value(ws, column_name, True)
+        for row in rows_to_highlight:
+            openpyxltools.highlight_row(ws, row)
+
     def save(self):
         for ws in self.book.worksheets:
-            if ws.title.startswith("_"):
-                openpyxltools.ws_autoadjust_colwidth(ws)
-            if ws.title.endswith(get_option("dataset.tag.duplicates")) or ws.title.endswith(
-                get_option("sheet.suffix.duplicates")
-            ):
-                openpyxltools.ws_highlight_rows_with_col(
-                    ws, get_option("column.system.duplicates")
-                )
+            if ws.title.startswith("_mp"):
+                openpyxltools.autoadjust_column_widths(ws)
+
+        try:
+            sheetnames = list(self.book.sheetnames)
+            dset_sheet_index = sheetnames.index(DATASETS_SHEET_NAME) + 1
+            sheetname_to_move_to = next(
+                sheetname
+                for sheetname in sheetnames[dset_sheet_index:]
+                if sheetname.startswith("_mp")
+            )
+            lltools.move_item_to(sheetnames, DATASETS_SHEET_NAME, sheetname_to_move_to)
+            self.book._sheets = [self.book[sheetname] for sheetname in sheetnames]
+        except (ValueError, StopIteration) as e:
+            pass
 
         super().save()
 

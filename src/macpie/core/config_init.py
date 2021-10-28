@@ -29,18 +29,6 @@ cf.register_option("dataset.date_col_name", "DCDate", "", validator=pandas_cf.is
 
 cf.register_option("dataset.id2_col_name", "PIDN", "", validator=pandas_cf.is_str)
 
-cf.register_option("dataset.tag.anchor", "anchor", "", validator=pandas_cf.is_str)
-
-cf.register_option("dataset.tag.duplicates", "duplicates", "", validator=pandas_cf.is_str)
-
-cf.register_option("dataset.tag.mergeable", "mergeable", "", validator=pandas_cf.is_str)
-
-cf.register_option("dataset.tag.merged", "merged", "", validator=pandas_cf.is_str)
-
-cf.register_option("dataset.tag.not_merged", "not_merged", "", validator=pandas_cf.is_str)
-
-cf.register_option("dataset.tag.secondary", "secondary", "", validator=pandas_cf.is_str)
-
 
 def set_system_columns_cb(key):
     cf.reset_option("column.system.abs_diff_days")
@@ -81,38 +69,9 @@ cf.register_option(
     validator=pandas_cf.is_str,
 )
 
-cf.register_option("column.dataset", "Dataset", "", validator=pandas_cf.is_str)
-
-cf.register_option("column.field", "Field", "", validator=pandas_cf.is_str)
-
-cf.register_option("column.link_id", "link_id", "", validator=pandas_cf.is_str)
-
-cf.register_option("column.to_merge", "Merge?", "", validator=pandas_cf.is_str)
-
 cf.register_option("excel.row_index_header", "Original_Order", "", validator=pandas_cf.is_str)
 
-cf.register_option(
-    "excel.sheet_name.available_fields", "_available_fields", "", validator=pandas_cf.is_str
-)
-
-cf.register_option(
-    "excel.sheet_name.client_system_info", "_sys_info", "", validator=pandas_cf.is_str
-)
-
-cf.register_option("excel.sheet_name.command_info", "_cmd_info", "", validator=pandas_cf.is_str)
-
-cf.register_option(
-    "excel.sheet_name.dsets_history", "_dsets_history", "", validator=pandas_cf.is_str
-)
-
 cf.register_option("excel.sheet_name.default", "_mp_sheet", "", validator=pandas_cf.is_str)
-
-
-cf.register_option(
-    "excel.sheet_name.selected_fields", "_selected_fields", "", validator=pandas_cf.is_str
-)
-
-cf.register_option("sheet.suffix.duplicates", "_DUPS", "", validator=pandas_cf.is_str)
 
 cf.register_option(
     "operators.binary.column_suffixes", ("_x", "_y"), "", validator=cf.is_tuple_of_two

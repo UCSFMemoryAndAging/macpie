@@ -23,6 +23,9 @@ class Dataset(pd.DataFrame):
         "_display_name_generator",
     ]
 
+    #: Tag that denotes this Dataset has duplicates
+    tag_duplicates = "duplicates"
+
     def __init__(
         self,
         data=None,
@@ -472,7 +475,9 @@ class Dataset(pd.DataFrame):
         dset.drop_sys_cols()
         return dset
 
-    def to_excel(self, excel_writer, write_excel_dict=True, **kwargs) -> None:
+    def to_excel(
+        self, excel_writer, write_excel_dict=True, highlight_duplicates=True, **kwargs
+    ) -> None:
         """Write :class:`Dataset` to an Excel sheet.
 
         :param excel_writer: File path or existing ExcelWriter.
@@ -495,10 +500,16 @@ class Dataset(pd.DataFrame):
                 index = kwargs.pop("index", False)
 
             sheet_name = kwargs.pop("sheet_name", self.get_excel_sheetname())
+
             super().to_excel(excel_writer, sheet_name=sheet_name, index=index, **kwargs)
 
             if isinstance(self.columns, pd.MultiIndex):
                 excel_writer.handle_multiindex(sheet_name)
+
+            if highlight_duplicates:
+                dups_col_name = get_option("column.system.duplicates")
+                if dups_col_name in self.columns:
+                    excel_writer.highlight_duplicates(sheet_name, dups_col_name)
 
             if write_excel_dict:
                 excel_writer.write_excel_dict(self.to_excel_dict())

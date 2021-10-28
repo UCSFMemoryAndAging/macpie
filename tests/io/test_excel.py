@@ -62,11 +62,11 @@ def test_multiple_datasets(tmp_path):
 
     assert mi_dset.equals(basic_list_from_file)
 
-    basic_list_from_file = mp.read_excel(tmp_path / "basic_list.xlsx", sheet_name=[0, 2])
+    basic_list_from_file = mp.read_excel(tmp_path / "basic_list.xlsx", sheet_name=[0, 1])
 
     assert dset.equals(basic_list_from_file[0])
 
-    assert mi_dset.equals(basic_list_from_file[2])
+    assert mi_dset.equals(basic_list_from_file[1])
 
     basic_list_from_file = mp.read_excel(
         tmp_path / "basic_list.xlsx", sheet_name=[0, "mi_test_name"]

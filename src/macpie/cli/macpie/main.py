@@ -42,7 +42,7 @@ class Invoker:
         return self.args[k]
 
     def get_command_info(self):
-        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.command_info"))
+        info = tablibtools.DictLikeDataset(title="_mp_command_info")
         info.append(("command_name", self.command_name))
         info.append_separator("Arguments")
         info.append_dict(self.args)
@@ -51,7 +51,7 @@ class Invoker:
         return info
 
     def get_client_system_info(self):
-        info = tablibtools.DictLikeDataset(title=get_option("excel.sheet_name.client_system_info"))
+        info = tablibtools.DictLikeDataset(title="_mp_system_info")
         info.append(("python_version", platform.python_version()))
         info.append(("platform", platform.platform()))
         info.append(("computer_network_name", platform.node()))
