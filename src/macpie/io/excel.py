@@ -103,8 +103,9 @@ def read_excel(
 
 class MACPieExcelFile(pd.io.excel._base.ExcelFile):
     def __init__(self, path_or_buffer, storage_options=None):
+        self._engines["openpyxl"] = MACPieExcelReader
+
         super().__init__(path_or_buffer, engine="openpyxl", storage_options=storage_options)
-        self._reader = MACPieExcelReader(self._io, storage_options=storage_options)
 
         self._dataset_dicts = self.get_dataset_dicts()
         self._mi_dataset_dicts = self.get_mi_dataset_dicts()
