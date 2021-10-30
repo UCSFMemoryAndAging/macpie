@@ -30,14 +30,31 @@ mi_dset = mp.Dataset(
 basic_list = mp.BasicList([dset, mi_dset])
 
 
-def test_single_dataset(tmp_path):
+def test_dfs(tmp_path):
+    df.to_excel(tmp_path / "df1.xlsx", engine="openpyxl")
 
+    df_from_file = pd.read_excel(tmp_path / "df1.xlsx", index_col=0, engine="openpyxl")
+
+    assert df.equals(df_from_file)
+
+    mi_df.to_excel(tmp_path / "mi_df.xlsx", engine="openpyxl")
+
+    mi_df_from_file = pd.read_excel(
+        tmp_path / "mi_df.xlsx", index_col=0, header=[0, 1], engine="openpyxl"
+    )
+
+    assert mi_df.equals(mi_df_from_file)
+
+
+def test_single_dataset(tmp_path):
     dset.to_excel(tmp_path / "dset.xlsx")
 
     dset_from_file = mp.read_excel(tmp_path / "dset.xlsx")
 
     assert dset.equals(dset_from_file)
 
+
+def test_mi_dataset(tmp_path):
     mi_dset.to_excel(tmp_path / "mi_dset.xlsx")
 
     mi_dset_from_file = mp.read_excel(tmp_path / "mi_dset.xlsx")
@@ -46,7 +63,6 @@ def test_single_dataset(tmp_path):
 
 
 def test_multiple_datasets(tmp_path):
-
     with mp.MACPieExcelWriter(tmp_path / "basic_list.xlsx") as writer:
         basic_list.to_excel(writer)
 

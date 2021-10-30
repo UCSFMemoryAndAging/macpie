@@ -54,6 +54,7 @@ def register_option(
     ------
     ValueError if `validator` is specified and `defval` is not a valid value.
     """
+
     key = key.lower()
 
     if key in _registered_options:

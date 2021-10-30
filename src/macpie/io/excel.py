@@ -183,8 +183,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
         collection_class_name = self._collection_dict["class_name"]
         collection_class = getattr(mp.collections, collection_class_name)
-        with self as reader:
-            return collection_class.from_excel_dict(reader, self._collection_dict)
+        return collection_class.from_excel_dict(self, self._collection_dict)
 
     def parse(
         self,
@@ -244,7 +243,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
                 index_to_sheetname[sheet_name] = sheet.title
                 sheet_name = sheet.title
 
-            if sheet_name in self._mi_dataset_dicts:
+            if self._mi_dataset_dicts and sheet_name in self._mi_dataset_dicts:
                 return self.parse_multiindex_dataset(sheet_name)
 
         sheetname_to_index = {v: k for k, v in index_to_sheetname.items()}
