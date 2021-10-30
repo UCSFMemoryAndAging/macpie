@@ -24,9 +24,7 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
 @pytest.mark.slow
-def test_keepone(cli_keepone_big, tmp_path):
-    cli_keepone_big_copy = Path(copy(cli_keepone_big, tmp_path))
-
+def test_keepone(cli_keepone_big):
     G = ExecutableGraph()
 
     prim_filepath = data_dir / "instr1_primaryall.csv"
@@ -50,7 +48,7 @@ def test_keepone(cli_keepone_big, tmp_path):
 
     result = nodes_with_operations[0]["operation_result"]
 
-    expected_result = file_to_dataframe(cli_keepone_big_copy)
+    expected_result = file_to_dataframe(cli_keepone_big)
 
     assert_dfs_equal(
         result, expected_result, cols_ignore_pat=cols_ignore_pat, output_dir=output_dir

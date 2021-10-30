@@ -25,10 +25,8 @@ def test_display_name_generator():
     dset.display_name == "renee"
 
 
-def test_read_file(cli_link_small_with_merge, tmp_path):
-    cli_link_small_with_merge_copy = Path(copy(cli_link_small_with_merge, tmp_path))
-
-    with MACPieExcelFile(cli_link_small_with_merge_copy) as reader:
+def test_read_file(cli_link_small_with_merge):
+    with MACPieExcelFile(cli_link_small_with_merge) as reader:
         mal = mp.read_excel(reader, as_collection=True)
     # mal = mp.read_excel(cli_link_small_with_merge_copy, as_collection=True)
 
@@ -40,10 +38,8 @@ def test_read_file(cli_link_small_with_merge, tmp_path):
     assert mal_dict["primary"]["id_col_name"] == "InstrID"
 
 
-def test_dups(cli_link_small_with_dups, tmp_path):
-    cli_link_small_with_dups_copy = Path(copy(cli_link_small_with_dups, tmp_path))
-
-    mal = mp.read_excel(cli_link_small_with_dups_copy, as_collection=True)
+def test_dups(cli_link_small_with_dups):
+    mal = mp.read_excel(cli_link_small_with_dups, as_collection=True)
 
     dups = mal.get_duplicates()
 

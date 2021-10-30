@@ -50,13 +50,11 @@ def create_available_fields(filepath):
 
 
 def test_small_with_merge(cli_link_small_with_merge, tmp_path):
-    cli_link_small_with_merge_copy = Path(copy(cli_link_small_with_merge, tmp_path))
-    run(cli_link_small_with_merge_copy, tmp_path)
+    run(cli_link_small_with_merge, tmp_path)
 
 
 def test_small_no_merge(cli_link_small_no_merge, tmp_path):
-    cli_link_small_no_merge_copy = Path(copy(cli_link_small_no_merge, tmp_path))
-    run(cli_link_small_no_merge_copy, tmp_path)
+    run(cli_link_small_no_merge, tmp_path)
 
 
 def run(filepath, tmp_path):

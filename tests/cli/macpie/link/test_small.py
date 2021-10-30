@@ -19,9 +19,7 @@ cols_ignore = []
 cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
-def test_small_with_merge(cli_link_small_with_merge, tmp_path):
-    cli_link_small_with_merge_copy = Path(copy(cli_link_small_with_merge, tmp_path))
-
+def test_small_with_merge(cli_link_small_with_merge):
     with MACPieExcelFile(current_dir / "small_with_merge_expected_result.xlsx") as reader:
         expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
@@ -29,7 +27,7 @@ def test_small_with_merge(cli_link_small_with_merge, tmp_path):
     if output_dir is not None:
         copy(cli_link_small_with_merge, current_dir)
 
-    with MACPieExcelFile(cli_link_small_with_merge_copy) as reader:
+    with MACPieExcelFile(cli_link_small_with_merge) as reader:
         results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
 
     assert_dfs_equal(
@@ -41,8 +39,7 @@ def test_small_with_merge(cli_link_small_with_merge, tmp_path):
     )
 
 
-def test_small_no_merge(cli_link_small_no_merge, tmp_path):
-    cli_link_small_no_merge_copy = copy(cli_link_small_no_merge, tmp_path)
+def test_small_no_merge(cli_link_small_no_merge):
     expected_dict = pd.read_excel(
         current_dir / "small.xlsx", sheet_name=["LINK_INSTR1", "INSTR2_linked", "INSTR3_linked"]
     )
@@ -56,7 +53,7 @@ def test_small_no_merge(cli_link_small_no_merge, tmp_path):
         copy(cli_link_small_no_merge, current_dir)
 
     results_dict = pd.read_excel(
-        cli_link_small_no_merge_copy,
+        cli_link_small_no_merge,
         sheet_name=["small_anchor", "instr2_all_linked", "instr3_all_linked"],
     )
 
