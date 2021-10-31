@@ -1,9 +1,11 @@
+import pathlib
+
 import click
 
 from macpie import BasicList, Dataset, MACPieExcelWriter, pathtools
 from macpie._config import get_option
 
-from macpie.cli.core import allowed_path, ClickPath
+from macpie.cli.core import allowed_path
 
 
 @click.command()
@@ -13,7 +15,11 @@ from macpie.cli.core import allowed_path, ClickPath
     default="all",
     type=click.Choice(["all", "earliest", "latest"], case_sensitive=False),
 )
-@click.argument("primary", nargs=-1, type=ClickPath(exists=True, file_okay=True, dir_okay=True))
+@click.argument(
+    "primary",
+    nargs=-1,
+    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
+)
 @click.pass_context
 def keepone(ctx, keep, primary):
     invoker = ctx.obj

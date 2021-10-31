@@ -1,9 +1,11 @@
+import pathlib
+
 import click
 
 from macpie import Dataset, MACPieExcelWriter, MergeableAnchoredList, pathtools
 from macpie._config import get_option
 
-from macpie.cli.core import allowed_path, ClickPath
+from macpie.cli.core import allowed_path
 
 NEW_ID_COL_NAME = "link_id"
 
@@ -48,8 +50,16 @@ NEW_ID_COL_NAME = "link_id"
 )
 @click.option("--merge-results/--no-merge-results", default=True)
 @click.option("--keep-original/--no-keep-original", default=False)
-@click.argument("primary", nargs=1, type=ClickPath(exists=True, file_okay=True, dir_okay=True))
-@click.argument("secondary", nargs=-1, type=ClickPath(exists=True, file_okay=True, dir_okay=True))
+@click.argument(
+    "primary",
+    nargs=1,
+    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
+)
+@click.argument(
+    "secondary",
+    nargs=-1,
+    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
+)
 @click.pass_context
 def link(
     ctx,

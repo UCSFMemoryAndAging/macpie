@@ -40,6 +40,7 @@ Examples:
 
 > macpie masker --random-seed 12345 --output-id-maps tests/util/masker/masker_test.xlsx
 """
+import pathlib
 
 import click
 import pandas as pd
@@ -47,7 +48,7 @@ import pandas as pd
 import macpie as mp
 from macpie.util import IdMapCols, Masker
 
-from macpie.cli.core import allowed_path, show_parameter_source, ClickPath
+from macpie.cli.core import allowed_path, show_parameter_source
 
 # Note that pseudo-random number generation always produces the same output
 # given the same seed. So if the same seed and ID ranges are used, you should
@@ -180,7 +181,11 @@ def masker_params(func):
 
 @click.command()
 @masker_params
-@click.argument("input-path", nargs=-1, type=ClickPath(exists=True, file_okay=True, dir_okay=True))
+@click.argument(
+    "input-path",
+    nargs=-1,
+    type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
+)
 @click.pass_context
 def masker(
     ctx,

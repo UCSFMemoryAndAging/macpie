@@ -1,13 +1,17 @@
+import pathlib
+
 import click
 
 from macpie import read_excel, MACPieExcelWriter
 
-from macpie.cli.core import ClickPath
-
 
 @click.command()
 @click.option("--keep-original/--no-keep-original", default=True)
-@click.argument("primary", nargs=1, type=ClickPath(exists=True, file_okay=True, dir_okay=False))
+@click.argument(
+    "primary",
+    nargs=1,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=pathlib.Path),
+)
 @click.pass_context
 def merge(ctx, keep_original, primary):
     invoker = ctx.obj
