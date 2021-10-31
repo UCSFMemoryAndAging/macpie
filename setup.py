@@ -1,13 +1,7 @@
-import re
-
 from setuptools import setup
-
-with open("src/macpie/__init__.py", encoding="utf8") as f:
-    version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 setup(
     name="macpie",
-    version=version,
     install_requires=[
         "click >= 8.0.3",
         "mysql-connector-python >= 8.0.26",
