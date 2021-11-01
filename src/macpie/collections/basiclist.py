@@ -63,16 +63,15 @@ class BasicList(UserList, BaseCollection):
     def to_excel_dict(self):
         """Convert the :class:`BasicList` to a dictionary."""
         excel_dict = {"class_name": self.__class__.__name__}
-        excel_dict.update({dset.get_excel_sheetname(): dset.to_excel_dict() for dset in self.data})
+        excel_dict.update({"dsets": [dset.to_excel_dict() for dset in self.data]})
+        # excel_dict.update({dset.get_excel_sheetname(): dset.to_excel_dict() for dset in self.data})
         return excel_dict
 
     @staticmethod
     def excel_dict_dsets(excel_dict):
-        return [
-            value
-            for value in excel_dict.values()
-            if type(value) is dict and value["class_name"] == "Dataset"
-        ]
+        if excel_dict["class_name"] == "BasicList" and "dsets" in excel_dict:
+            return excel_dict["dsets"]
+        return {}
 
     @staticmethod
     def excel_dict_filter_tags(excel_dict, tags):
@@ -95,9 +94,16 @@ class BasicList(UserList, BaseCollection):
     @classmethod
     def from_excel_dict(cls, excel_file: MACPieExcelFile, excel_dict):
         instance = cls()
+        excel_dict_dsets = BasicList.excel_dict_dsets(excel_dict)
+        for dset_excel_dict in excel_dict_dsets:
+            dset = excel_file.parse(sheet_name=dset_excel_dict["excel_sheetname"])
+            instance.append(dset)
+        return instance
+        """
         for value in excel_dict.values():
             if type(value) is dict and value["class_name"] == "Dataset":
                 dset_excel_dict = value
                 dset = excel_file.parse(sheet_name=dset_excel_dict["excel_sheetname"])
                 instance.append(dset)
         return instance
+        """

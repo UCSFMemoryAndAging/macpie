@@ -26,9 +26,7 @@ def test_display_name_generator():
 
 
 def test_read_file(cli_link_small_with_merge):
-    with MACPieExcelFile(cli_link_small_with_merge) as reader:
-        mal = mp.read_excel(reader, as_collection=True)
-    # mal = mp.read_excel(cli_link_small_with_merge_copy, as_collection=True)
+    mal = mp.read_excel(cli_link_small_with_merge, as_collection=True)
 
     assert type(mal) is MergeableAnchoredList
 
