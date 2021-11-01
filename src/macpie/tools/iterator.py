@@ -137,3 +137,10 @@ def overlay(bottom, top, predicate=None, constrain_to_top=False, fillvalue=None)
             yield top_elem
         else:
             yield bottom_elem
+
+
+def remove_duplicates(iterable, preserve_order=False):
+    if preserve_order:
+        return (key for key in dict.fromkeys(iterable))
+    else:
+        return (item for item in set(iterable))

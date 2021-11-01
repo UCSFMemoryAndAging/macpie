@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Callable, List, Tuple
 
 from . import datetime as datetimetools
+from . import iterator as itertools
 
 
 def create_dir_with_datetime(
@@ -81,7 +82,8 @@ def validate_paths(
         else:
             to_validate.append(p.resolve())
 
-    for p in set(to_validate):
+    to_validate = itertools.remove_duplicates(to_validate, preserve_order=True)
+    for p in to_validate:
         if p.stem.startswith(".") and ignore_dot:
             continue
         if p.stem.startswith("~") and ignore_tilde:
