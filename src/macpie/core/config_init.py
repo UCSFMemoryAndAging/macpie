@@ -13,11 +13,10 @@ import pandas._config.config as pandas_cf
 
 import macpie._config.config as cf
 
-
 # set pandas options
-# from pandas import options  # noqa: E402
-# options.io.excel.xlsx.writer = "xlsxwriter"
-# thought xlsxwriter would be faster than openpyxl, but it's not
+from pandas import options
+
+options.io.excel.xlsx.writer = "xlsxwriter"
 
 
 # set macpie options

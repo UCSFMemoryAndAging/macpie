@@ -31,17 +31,15 @@ basic_list = mp.BasicList([dset, mi_dset])
 
 
 def test_dfs(tmp_path):
-    df.to_excel(tmp_path / "df1.xlsx", engine="openpyxl")
+    df.to_excel(tmp_path / "df1.xlsx")
 
-    df_from_file = pd.read_excel(tmp_path / "df1.xlsx", index_col=0, engine="openpyxl")
+    df_from_file = pd.read_excel(tmp_path / "df1.xlsx", index_col=0)
 
     assert df.equals(df_from_file)
 
-    mi_df.to_excel(tmp_path / "mi_df.xlsx", engine="openpyxl")
+    mi_df.to_excel(tmp_path / "mi_df.xlsx")
 
-    mi_df_from_file = pd.read_excel(
-        tmp_path / "mi_df.xlsx", index_col=0, header=[0, 1], engine="openpyxl"
-    )
+    mi_df_from_file = pd.read_excel(tmp_path / "mi_df.xlsx", index_col=0, header=[0, 1])
 
     assert mi_df.equals(mi_df_from_file)
 

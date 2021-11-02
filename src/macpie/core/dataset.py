@@ -488,9 +488,7 @@ class Dataset(pd.DataFrame):
         if isinstance(excel_writer, MACPieExcelWriter):
             need_save = False
         else:
-            excel_writer = MACPieExcelWriter(
-                excel_writer, engine="openpyxl", storage_options=kwargs.get("storage_options")
-            )
+            excel_writer = MACPieExcelWriter(excel_writer, **kwargs)
             need_save = True
 
         try:

@@ -366,7 +366,7 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
     def __new__(cls, *args, **kwargs):
-        engine = kwargs.pop("engine", "openpyxl")
+        engine = kwargs.pop("engine", "xlsxwriter")
         concrete_cls = pd.io.excel._util.get_writer(engine)
         return super(MACPieExcelWriter, cls).__new__(concrete_cls, *args, **kwargs)
 
@@ -375,15 +375,15 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
         pass
 
     @abc.abstractmethod
-    def write_tablib_dataset(self, tlset: tl.Dataset):
-        pass
-
-    @abc.abstractmethod
-    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
+    def write_tablib_dataset(self, tlset: tl.Dataset, freeze_panes=True):
         pass
 
     @abc.abstractmethod
     def handle_multiindex(self, sheet_name):
+        # Special case to handle pandas bug when writing dataframes with multiindex.
+        # https://github.com/pandas-dev/pandas/issues/27772
+        # Since we are forced to keep the index column due to bug,
+        # might as well give it an informative name
         pass
 
     @abc.abstractmethod
@@ -391,8 +391,29 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
         pass
 
     @abc.abstractmethod
-    def reorder_sheets(self):
+    def finalize_sheet_order(self):
         pass
+
+    @abc.abstractmethod
+    def sheet_names(self):
+        pass
+
+    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
+        self.write_tablib_dataset(simple_dataset.tlset)
+
+    def finalized_sheet_order(self, sheetnames):
+        try:
+            dset_sheet_index = sheetnames.index(DATASETS_SHEET_NAME) + 1
+            sheetname_to_move_to = next(
+                sheetname
+                for sheetname in sheetnames[dset_sheet_index:]
+                if sheetname.startswith("_mp")
+            )
+            lltools.move_item_to(sheetnames, DATASETS_SHEET_NAME, sheetname_to_move_to)
+        except (ValueError, StopIteration) as e:
+            pass
+
+        return sheetnames
 
     def _get_sheet_name(self, sheet_name):
         if not sheet_name:

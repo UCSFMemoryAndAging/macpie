@@ -10,7 +10,7 @@ from . import listlike as lltools
 YELLOW = "00FFFF00"
 
 
-def autoadjust_column_widths(ws):
+def autofit_column_width(ws):
     """Autoadjust the column widths of a Worksheet
 
     :param ws: :class:`openpyxl.worksheet.worksheet.Worksheet` to adjust

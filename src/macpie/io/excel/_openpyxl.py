@@ -51,6 +51,9 @@ class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlRead
 
 
 class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
+    def sheet_names(self):
+        return list(self.book.sheetnames)
+
     def write_excel_dict(self, excel_dict: dict):
         if excel_dict["class_name"] == "Dataset":
             sheet_name = DATASETS_SHEET_NAME
@@ -70,7 +73,7 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
         for row in dld.data:
             ws.append([json.dumps(cell) for cell in row])
 
-    def write_tablib_dataset(self, tlset: tl.Dataset):
+    def write_tablib_dataset(self, tlset: tl.Dataset, freeze_panes=True):
         ws = self.book.create_sheet()
         ws.title = (
             safe_xlsx_sheet_title(tlset.title, "-")
@@ -81,9 +84,6 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
         from tablib.formats._xlsx import XLSXFormat
 
         XLSXFormat.dset_sheet(tlset, ws)
-
-    def write_simple_dataset(self, simple_dataset: tablibtools.SimpleDataset):
-        self.write_tablib_dataset(simple_dataset.tlset)
 
     def handle_multiindex(self, sheet_name):
         ws = self.book[sheet_name]
@@ -104,25 +104,17 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
         for row in rows_to_highlight:
             openpyxltools.highlight_row(ws, row)
 
-    def reorder_sheets(self):
-        try:
-            sheetnames = list(self.book.sheetnames)
-            dset_sheet_index = sheetnames.index(DATASETS_SHEET_NAME) + 1
-            sheetname_to_move_to = next(
-                sheetname
-                for sheetname in sheetnames[dset_sheet_index:]
-                if sheetname.startswith("_mp")
-            )
-            lltools.move_item_to(sheetnames, DATASETS_SHEET_NAME, sheetname_to_move_to)
-            self.book._sheets = [self.book[sheetname] for sheetname in sheetnames]
-        except (ValueError, StopIteration) as e:
-            pass
-
-    def save(self):
+    def autofit_column_width(self):
         for ws in self.book.worksheets:
             if ws.title.startswith("_mp"):
-                openpyxltools.autoadjust_column_widths(ws)
+                openpyxltools.autofit_column_width(ws)
 
-        self.reorder_sheets()
+    def finalize_sheet_order(self):
+        new_sheet_order = self.finalized_sheet_order(self.sheet_names())
+        self.book._sheets = [self.book[sheetname] for sheetname in new_sheet_order]
+
+    def save(self):
+        self.autofit_column_width()
+        self.finalize_sheet_order()
 
         super().save()

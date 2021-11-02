@@ -7,6 +7,7 @@ from ._base import (
     COLLECTION_SHEET_NAME,
 )
 from ._openpyxl import _MACPieOpenpyxlWriter
+from ._xlsxwriter import _MACPieXlsxWriter
 
 __all__ = [
     "MACPieExcelFile",
@@ -20,3 +21,5 @@ __all__ = [
 import pandas
 
 pandas.io.excel.register_writer(_MACPieOpenpyxlWriter)
+
+pandas.io.excel.register_writer(_MACPieXlsxWriter)

@@ -248,8 +248,8 @@ def mask_file(masker, input_filepath, output_dir):
             click.echo(err)
 
     elif input_filepath.suffix == ".xlsx":
-        writer = pd.ExcelWriter(output_filepath, engine="openpyxl")
-        sheets_dict = pd.read_excel(input_filepath, sheet_name=None, engine="openpyxl")
+        writer = pd.ExcelWriter(output_filepath)
+        sheets_dict = pd.read_excel(input_filepath, sheet_name=None)
         for name, sheet in sheets_dict.items():
             click.echo(f"\tProcessing worksheet: {name}")
             try:

@@ -45,7 +45,7 @@ def create_available_fields(filepath):
     del wb[MergeableAnchoredList.available_fields_sheetname]
     wb.save(filepath)
 
-    with MACPieExcelWriter(filepath, mode="a") as writer:
+    with MACPieExcelWriter(filepath, mode="a", engine="openpyxl") as writer:
         available_fields.to_excel(writer)
 
 

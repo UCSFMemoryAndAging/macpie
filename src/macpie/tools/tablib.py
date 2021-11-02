@@ -214,5 +214,5 @@ def read_excel(filepath, sheet_name: str = None, headers=True):
 
     wb = pyxl.load_workbook(filepath, read_only=True, data_only=True)
     ws = wb.active if sheet_name is None else wb[sheet_name]
-    tlset = openpyxltools.ws_to_tablib_dataset(ws)
+    tlset = openpyxltools.to_tablib_dataset(ws)
     return tlset
