@@ -2,7 +2,7 @@ import os
 
 import click
 
-from macpie.cli.core import show_parameter_source
+from macpie.cli.common import show_parameter_source
 
 from .createtable import createtable
 from .masktable import masktable

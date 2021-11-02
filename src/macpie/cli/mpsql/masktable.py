@@ -6,7 +6,7 @@ import pandas as pd
 from macpie import pathtools
 from macpie.util import IdMapCols, Masker
 
-from macpie.cli.core import show_parameter_source
+from macpie.cli.common import show_parameter_source
 from macpie.cli.macpie.masker import masker_params
 
 from .dbconnections import mysql_connector_connection, sqlalchemy_connection

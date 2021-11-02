@@ -5,7 +5,7 @@ import click
 from macpie import BasicList, Dataset, MACPieExcelWriter, pathtools
 from macpie._config import get_option
 
-from macpie.cli.core import allowed_path
+from macpie.cli.common import allowed_path
 
 
 @click.command()

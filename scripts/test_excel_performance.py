@@ -1,10 +1,12 @@
+"""
+python -m scripts.test_excel_performance
+"""
+
 import io
 import pathlib
 import pkgutil
 import tempfile
-import timeit
 from timeit import default_timer as timer
-
 
 import pandas as pd
 
@@ -41,7 +43,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
     dset = mp.Dataset(data=df)
     start = timer()
-    dset.to_excel(tmpdirname / "dset.xlsx")
+    dset.to_excel(tmpdirname / "dset_openpyxl.xlsx")
     end = timer()
     print(f"dset openpyxl: {end - start} sec")
 

@@ -5,7 +5,7 @@ import click
 from macpie import Dataset, MACPieExcelWriter, MergeableAnchoredList, pathtools
 from macpie._config import get_option
 
-from macpie.cli.core import allowed_path
+from macpie.cli.common import allowed_path
 
 NEW_ID_COL_NAME = "link_id"
 

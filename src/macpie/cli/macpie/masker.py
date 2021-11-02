@@ -48,7 +48,7 @@ import pandas as pd
 import macpie as mp
 from macpie.util import IdMapCols, Masker
 
-from macpie.cli.core import allowed_path, show_parameter_source
+from macpie.cli.common import allowed_path, show_parameter_source
 
 # Note that pseudo-random number generation always produces the same output
 # given the same seed. So if the same seed and ID ranges are used, you should

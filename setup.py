@@ -8,6 +8,7 @@ setup(
         "openpyxl >= 3.0",
         "pandas >= 1.2",
         "tablib >= 3.0",
+        "XlsxWriter >= 3.0",
     ],
     extras_require={"dotenv": ["python-dotenv"]},
 )
