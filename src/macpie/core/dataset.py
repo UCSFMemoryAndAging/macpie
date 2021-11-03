@@ -476,37 +476,73 @@ class Dataset(pd.DataFrame):
         return dset
 
     def to_excel(
-        self, excel_writer, write_excel_dict=True, highlight_duplicates=True, **kwargs
+        self,
+        excel_writer,
+        sheet_name=None,
+        na_rep="",
+        float_format=None,
+        columns=None,
+        header=True,
+        index=True,
+        index_label=None,
+        startrow=0,
+        startcol=0,
+        engine=None,
+        merge_cells=True,
+        encoding=None,
+        inf_rep="inf",
+        verbose=True,
+        freeze_panes=None,
+        storage_options=None,
+        write_excel_dict=True,
+        highlight_duplicates=True,
     ) -> None:
         """Write :class:`Dataset` to an Excel sheet.
 
         :param excel_writer: File path or existing ExcelWriter.
         :param kwargs:
         """
-        engine = kwargs.pop("engine", "mp_xlsxwriter")
 
-        from macpie import MACPieExcelWriter
+        from macpie.io.excel import MACPieExcelWriter
+        from macpie.io.formats.excel import MACPieExcelFormatter
 
         if isinstance(excel_writer, MACPieExcelWriter):
             need_save = False
         else:
-            excel_writer = MACPieExcelWriter(excel_writer, engine=engine, **kwargs)
+            excel_writer = MACPieExcelWriter(
+                excel_writer,
+                engine=engine,
+                storage_options=storage_options,
+            )
             need_save = True
 
         try:
+            dset = (
+                self if isinstance(self, pd.core.dtypes.generic.ABCDataFrame) else self.to_frame()
+            )
             if isinstance(self.index, pd.MultiIndex) or isinstance(self.columns, pd.MultiIndex):
-                index = kwargs.pop("index", True)
+                index = True
             else:
-                index = kwargs.pop("index", False)
+                index = False
+            sheet_name = self.get_excel_sheetname() if sheet_name is None else sheet_name
 
-            sheet_name = kwargs.pop("sheet_name", self.get_excel_sheetname())
-
-            super().to_excel(
+            formatter = MACPieExcelFormatter(
+                dset,
+                na_rep=na_rep,
+                cols=columns,
+                header=header,
+                float_format=float_format,
+                index=index,
+                index_label=index_label,
+                merge_cells=merge_cells,
+                inf_rep=inf_rep,
+            )
+            formatter.write(
                 excel_writer,
                 sheet_name=sheet_name,
-                index=index,
-                engine=excel_writer.mp_to_pd_engines.get(engine, "xlsxwriter"),
-                **kwargs,
+                startrow=startrow,
+                startcol=startcol,
+                freeze_panes=freeze_panes,
             )
 
             if isinstance(self.columns, pd.MultiIndex):
@@ -519,7 +555,6 @@ class Dataset(pd.DataFrame):
 
             if write_excel_dict:
                 excel_writer.write_excel_dict(self.to_excel_dict())
-
         finally:
             # make sure to close opened file handles
             if need_save:

@@ -365,11 +365,10 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
-
-    mp_to_pd_engines = {"mp_openpyxl": "openpyxl", "mp_xlsxwriter": "xlsxwriter"}
-
     def __new__(cls, *args, **kwargs):
-        engine = kwargs.pop("engine", "mp_xlsxwriter")
+        engine = kwargs.pop("engine", None)
+        if engine is None:
+            engine = "mp_xlsxwriter"
         concrete_cls = pd.io.excel._util.get_writer(engine)
         return super(MACPieExcelWriter, cls).__new__(concrete_cls, *args, **kwargs)
 
