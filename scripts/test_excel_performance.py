@@ -33,13 +33,13 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
     dset = mp.Dataset(data=df_orig.copy())
     start = timer()
-    dset.to_excel(tmpdirname / "dset_xlsxwriter.xlsx", engine="xlsxwriter")
+    dset.to_excel(tmpdirname / "dset_xlsxwriter.xlsx", engine="mp_xlsxwriter")
     end = timer()
     print(f"dset xlsxwriter: {end - start} sec")
 
     dset = mp.Dataset(data=df_orig.copy())
     start = timer()
-    dset.to_excel(tmpdirname / "dset_openpyxl.xlsx", engine="openpyxl")
+    dset.to_excel(tmpdirname / "dset_openpyxl.xlsx", engine="mp_openpyxl")
     end = timer()
     print(f"dset openpyxl: {end - start} sec")
 

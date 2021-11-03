@@ -109,7 +109,7 @@ def link(
 
     collection = cmd.execute()
 
-    with MACPieExcelWriter(invoker.results_file, engine="xlsxwriter") as writer:
+    with MACPieExcelWriter(invoker.results_file) as writer:
         collection.to_excel(writer, merge=invoker.get_opt("merge_results"))
         if invoker.get_opt("verbose"):
             collection.get_dataset_history_info().to_excel(writer)

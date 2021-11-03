@@ -15,6 +15,8 @@ from ._base import (
 
 
 class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
+    engine = "mp_xlsxwriter"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -107,7 +109,7 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
 
     def post_processing(self):
         if self.mi_sheets or self.highlight_duplicates:
-            with MACPieExcelWriter(self.__fspath__(), mode="a", engine="openpyxl") as writer:
+            with MACPieExcelWriter(self.__fspath__(), mode="r+", engine="mp_openpyxl") as writer:
                 for mi_sheet in self.mi_sheets:
                     writer.handle_multiindex(mi_sheet)
                 for sheet_name, column_name in self.dup_sheets.items():

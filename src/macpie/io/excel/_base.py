@@ -100,9 +100,9 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
     def __init__(self, path_or_buffer, storage_options=None):
         from ._openpyxl import MACPieOpenpyxlReader
 
-        self._engines["openpyxl"] = MACPieOpenpyxlReader
+        self._engines["mp_openpyxl"] = MACPieOpenpyxlReader
 
-        super().__init__(path_or_buffer, engine="openpyxl", storage_options=storage_options)
+        super().__init__(path_or_buffer, engine="mp_openpyxl", storage_options=storage_options)
 
         self._dataset_dicts = self.get_dataset_dicts()
         self._mi_dataset_dicts = self.get_mi_dataset_dicts()
@@ -365,8 +365,11 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
+
+    mp_to_pd_engines = {"mp_openpyxl": "openpyxl", "mp_xlsxwriter": "xlsxwriter"}
+
     def __new__(cls, *args, **kwargs):
-        engine = kwargs.pop("engine", "xlsxwriter")
+        engine = kwargs.pop("engine", "mp_xlsxwriter")
         concrete_cls = pd.io.excel._util.get_writer(engine)
         return super(MACPieExcelWriter, cls).__new__(concrete_cls, *args, **kwargs)
 

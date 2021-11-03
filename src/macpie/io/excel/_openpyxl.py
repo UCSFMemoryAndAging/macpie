@@ -51,6 +51,8 @@ class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlRead
 
 
 class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
+    engine = "mp_openpyxl"
+
     def sheet_names(self):
         return list(self.book.sheetnames)
 

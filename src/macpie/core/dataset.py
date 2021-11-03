@@ -483,12 +483,14 @@ class Dataset(pd.DataFrame):
         :param excel_writer: File path or existing ExcelWriter.
         :param kwargs:
         """
+        engine = kwargs.pop("engine", "mp_xlsxwriter")
+
         from macpie import MACPieExcelWriter
 
         if isinstance(excel_writer, MACPieExcelWriter):
             need_save = False
         else:
-            excel_writer = MACPieExcelWriter(excel_writer, **kwargs)
+            excel_writer = MACPieExcelWriter(excel_writer, engine=engine, **kwargs)
             need_save = True
 
         try:
@@ -499,7 +501,13 @@ class Dataset(pd.DataFrame):
 
             sheet_name = kwargs.pop("sheet_name", self.get_excel_sheetname())
 
-            super().to_excel(excel_writer, sheet_name=sheet_name, index=index, **kwargs)
+            super().to_excel(
+                excel_writer,
+                sheet_name=sheet_name,
+                index=index,
+                engine=excel_writer.mp_to_pd_engines.get(engine, "xlsxwriter"),
+                **kwargs,
+            )
 
             if isinstance(self.columns, pd.MultiIndex):
                 excel_writer.handle_multiindex(sheet_name)
