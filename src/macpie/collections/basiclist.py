@@ -64,7 +64,6 @@ class BasicList(UserList, BaseCollection):
         """Convert the :class:`BasicList` to a dictionary."""
         excel_dict = {"class_name": self.__class__.__name__}
         excel_dict.update({"dsets": [dset.to_excel_dict() for dset in self.data]})
-        # excel_dict.update({dset.get_excel_sheetname(): dset.to_excel_dict() for dset in self.data})
         return excel_dict
 
     @staticmethod

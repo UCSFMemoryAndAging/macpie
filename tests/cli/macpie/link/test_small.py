@@ -4,7 +4,7 @@ from shutil import copy
 from click.testing import CliRunner
 import pandas as pd
 
-from macpie import MACPieExcelFile, MergeableAnchoredList
+from macpie import MergeableAnchoredList
 from macpie._config import get_option, reset_option, set_option
 from macpie.cli.macpie.main import main
 from macpie.testing import assert_dfs_equal
@@ -20,15 +20,23 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 
 
 def test_small_with_merge(cli_link_small_with_merge):
-    with MACPieExcelFile(current_dir / "small_with_merge_expected_result.xlsx") as reader:
-        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    expected_result = pd.read_excel(
+        current_dir / "small_with_merge_expected_result.xlsx",
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        index_col=None,
+        header=[0, 1],
+    )
 
     # copy file to current dir if you want to debug more
     if output_dir is not None:
         copy(cli_link_small_with_merge, current_dir)
 
-    with MACPieExcelFile(cli_link_small_with_merge) as reader:
-        results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    results = pd.read_excel(
+        cli_link_small_with_merge,
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        index_col=None,
+        header=[0, 1],
+    )
 
     assert_dfs_equal(
         results,
@@ -97,8 +105,12 @@ def test_small_no_merge(cli_link_small_no_merge):
 def test_small_no_link_id(tmp_path):
     # macpie link -g closest tests/cli/macpie/link/small_no_link_id.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv  # noqa: E501
 
-    with MACPieExcelFile(current_dir / "small_no_link_id_expected_result.xlsx") as reader:
-        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    expected_result = pd.read_excel(
+        current_dir / "small_no_link_id_expected_result.xlsx",
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        index_col=None,
+        header=[0, 1],
+    )
 
     runner = CliRunner()
 
@@ -133,8 +145,12 @@ def test_small_no_link_id(tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        with MACPieExcelFile(results_path) as reader:
-            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        results = pd.read_excel(
+            results_path,
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            index_col=None,
+            header=[0, 1],
+        )
 
         assert_dfs_equal(
             results,
@@ -177,15 +193,23 @@ def test_small_link_suffixes(tmp_path):
         # get the results file
         results_path = next(Path(".").glob("**/result*xlsx")).resolve()
 
-        with MACPieExcelFile(current_dir / "small_link_suffixes_expected_result.xlsx") as reader:
-            expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        expected_result = pd.read_excel(
+            current_dir / "small_link_suffixes_expected_result.xlsx",
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            index_col=None,
+            header=[0, 1],
+        )
 
         # copy file to current dir if you want to debug more
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        with MACPieExcelFile(results_path) as reader:
-            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        results = pd.read_excel(
+            results_path,
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            index_col=None,
+            header=[0, 1],
+        )
 
         assert_dfs_equal(
             results,

@@ -252,7 +252,8 @@ class Dataset(pd.DataFrame):
     # Dataset Display Name Methods
     # -------------------------------------------------------------------------
 
-    def get_excel_sheetname(self):
+    @property
+    def excel_sheetname(self):
         """Generates a valid Excel sheet name by truncating
         :attr:`display_name` to 30 characters. The maximum allowed by Excel is 31,
         but leaving one character for use by library (i.e. prepending an '_').
@@ -429,7 +430,7 @@ class Dataset(pd.DataFrame):
             "id2_col_name": self._id2_col_name,
             "name": self.name,
             "display_name": self.display_name,
-            "excel_sheetname": self.get_excel_sheetname(),
+            "excel_sheetname": self.excel_sheetname,
             "tags": self.tags,
             "row_count": self.row_count,
             "col_count": self.col_count,
@@ -483,7 +484,7 @@ class Dataset(pd.DataFrame):
         float_format=None,
         columns=None,
         header=True,
-        index=True,
+        index=False,
         index_label=None,
         startrow=0,
         startcol=0,
@@ -520,12 +521,7 @@ class Dataset(pd.DataFrame):
             dset = (
                 self if isinstance(self, pd.core.dtypes.generic.ABCDataFrame) else self.to_frame()
             )
-            if isinstance(self.index, pd.MultiIndex) or isinstance(self.columns, pd.MultiIndex):
-                index = True
-            else:
-                index = False
-            sheet_name = self.get_excel_sheetname() if sheet_name is None else sheet_name
-
+            sheet_name = self.excel_sheetname if sheet_name is None else sheet_name
             formatter = MACPieExcelFormatter(
                 dset,
                 na_rep=na_rep,
@@ -545,16 +541,54 @@ class Dataset(pd.DataFrame):
                 freeze_panes=freeze_panes,
             )
 
-            if isinstance(self.columns, pd.MultiIndex):
-                excel_writer.handle_multiindex(sheet_name)
-
             if highlight_duplicates:
                 dups_col_name = get_option("column.system.duplicates")
                 if dups_col_name in self.columns:
                     excel_writer.highlight_duplicates(sheet_name, dups_col_name)
 
             if write_excel_dict:
-                excel_writer.write_excel_dict(self.to_excel_dict())
+                to_excel_kwargs = {
+                    "sheet_name": sheet_name,
+                    "na_rep": na_rep,
+                    "float_format": float_format,
+                    "columns": columns,
+                    "header": header,
+                    "index": index,
+                    "index_label": index_label,
+                    "startrow": startrow,
+                    "startcol": startcol,
+                    "engine": engine,
+                    "merge_cells": merge_cells,
+                    "encoding": encoding,
+                    "inf_rep": inf_rep,
+                    "verbose": verbose,
+                    "freeze_panes": freeze_panes,
+                    "storage_options": storage_options,
+                    "write_excel_dict": write_excel_dict,
+                    "highlight_duplicates": highlight_duplicates,
+                }
+
+                if not header:
+                    header_col = None
+                elif self.columns.nlevels > 1:
+                    header_col = list(range(0, self.columns.nlevels))
+                else:
+                    header_col = 0
+
+                if not index:
+                    index_col = None
+                elif self.index.nlevels > 1:
+                    index_col = list(range(0, self.index.nlevels))
+                else:
+                    index_col = 0
+
+                # ensure successful write/read round-trip
+                read_excel_kwargs = {"header": header_col, "index_col": index_col}
+
+                excel_dict = self.to_excel_dict()
+                excel_dict["to_excel_kwargs"] = to_excel_kwargs
+                excel_dict["read_excel_kwargs"] = read_excel_kwargs
+                excel_writer.write_excel_dict(excel_dict)
         finally:
             # make sure to close opened file handles
             if need_save:

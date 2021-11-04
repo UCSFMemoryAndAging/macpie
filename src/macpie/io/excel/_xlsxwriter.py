@@ -21,7 +21,6 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
         super().__init__(*args, **kwargs)
 
         # track for post-processing
-        self.mi_sheets = []
         self.dup_sheets = {}
 
         self.format_bold = self.book.add_format({"bold": True})
@@ -93,9 +92,6 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
                     else:
                         ws.write(i, j, col)
 
-    def handle_multiindex(self, sheet_name):
-        self.mi_sheets.append(sheet_name)
-
     def highlight_duplicates(self, sheet_name, column_name):
         self.dup_sheets[sheet_name] = column_name
 
@@ -110,11 +106,9 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
     def post_processing(self):
         if self.mi_sheets or self.highlight_duplicates:
             with MACPieExcelWriter(self.__fspath__(), mode="r+", engine="mp_openpyxl") as writer:
-                for mi_sheet in self.mi_sheets:
-                    writer.handle_multiindex(mi_sheet)
                 for sheet_name, column_name in self.dup_sheets.items():
                     writer.highlight_duplicates(sheet_name, column_name)
 
     def close(self):
         super().close()
-        self.post_processing()
+        # self.post_processing()

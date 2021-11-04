@@ -93,6 +93,7 @@ def read_excel(
         # make sure to close opened file handles
         if should_close:
             io.close()
+
     return data
 
 
@@ -105,56 +106,52 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         super().__init__(path_or_buffer, engine="mp_openpyxl", storage_options=storage_options)
 
         self._dataset_dicts = self.get_dataset_dicts()
-        self._mi_dataset_dicts = self.get_mi_dataset_dicts()
         self._collection_dict = self.get_collection_dict()
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
             f"io={self._io!r}, "
-            f"datasets={self.get_dataset_names()!r}, "
-            f"collection_class={self.get_collection_class_name()!r})"
+            f"datasets={self.dataset_sheetnames!r}, "
+            f"collection_class={self.collection_classname!r})"
         )
+
+    @property
+    def dataset_sheetnames(self):
+        return list(self._dataset_dicts.keys())
+
+    @property
+    def collection_classname(self):
+        if self._collection_dict is None:
+            return None
+        return self._collection_dict["class_name"]
 
     def get_dataset_dicts(self):
         if DATASETS_SHEET_NAME not in self.sys_sheet_names:
             return None
             # raise ValueError(f"Cannot read Excel file without a '{DATASETS_SHEET_NAME}' sheet")
 
-        dataset_dicts = self._reader.parse_excel_dict(DATASETS_SHEET_NAME)
+        dataset_dicts = self._reader.parse_excel_dict_sheet(DATASETS_SHEET_NAME)
+
+        for excel_dict in dataset_dicts.values():
+            excel_dict["id_col_name"] = lltools.make_tuple_if_list_like(
+                excel_dict.get("id_col_name")
+            )
+            excel_dict["date_col_name"] = lltools.make_tuple_if_list_like(
+                excel_dict.get("date_col_name")
+            )
+            excel_dict["id2_col_name"] = lltools.make_tuple_if_list_like(
+                excel_dict.get("id2_col_name")
+            )
+
         return dataset_dicts
 
     def get_collection_dict(self):
         if COLLECTION_SHEET_NAME not in self.sys_sheet_names:
             return None
 
-        collection_dict = self._reader.parse_excel_dict(COLLECTION_SHEET_NAME)
+        collection_dict = self._reader.parse_excel_dict_sheet(COLLECTION_SHEET_NAME)
         return collection_dict
-
-    def get_mi_dataset_dicts(self):
-        if self._dataset_dicts is None:
-            return None
-
-        mi_datasets = {}
-        for dset_sheetname, dset_excel_dict in self._dataset_dicts.items():
-            if lltools.is_list_like(dset_excel_dict.get("id_col_name")):
-                # indicates multiindex columns
-                mi_datasets[dset_sheetname] = dset_excel_dict
-        return mi_datasets
-
-    def get_dataset_names(self):
-        return list(self._dataset_dicts.keys())
-
-    def get_collection_class_name(self):
-        if self._collection_dict is None:
-            return None
-        return self._collection_dict["class_name"]
-
-    def parse_multiindex_df(self, sheet_name):
-        return self._reader.parse_multiindex_df(sheet_name)
-
-    def parse_multiindex_dataset(self, sheet_name):
-        return self._reader.parse_multiindex_dataset(sheet_name, self._dataset_dicts[sheet_name])
 
     def parse_simple_dataset(self, sheet_name):
         tlset = self._reader.parse_tablib_dataset(sheet_name)
@@ -215,105 +212,75 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         DataFrame or dict of DataFrames
             DataFrame from the passed in Excel file.
         """
-        from macpie import Dataset
 
-        mi_datasets_to_parse = []
-        index_to_sheetname = {}
-
-        if sheet_name is None:
-            sheet_name = list(self._dataset_dicts.keys())
+        ret_dict = False
 
         if isinstance(sheet_name, list):
-            for asheetname in list(sheet_name):
-                if isinstance(asheetname, int):
-                    sheetname_from_index = self._reader.get_sheetname_by_index(asheetname)
-                    index_to_sheetname[asheetname] = sheetname_from_index
-                    if sheetname_from_index in self._mi_dataset_dicts:
-                        sheet_name.remove(asheetname)
-                        mi_datasets_to_parse.append(sheetname_from_index)
-                else:
-                    if asheetname in self._mi_dataset_dicts:
-                        sheet_name.remove(asheetname)
-                        mi_datasets_to_parse.append(asheetname)
+            sheets = sheet_name
+            ret_dict = True
+        elif sheet_name is None:
+            sheets = self.dataset_sheetnames
+            ret_dict = True
         else:
-            if isinstance(sheet_name, int):
-                sheet = self._reader.get_sheet_by_index(sheet_name)
-                index_to_sheetname[sheet_name] = sheet.title
-                sheet_name = sheet.title
+            sheets = [sheet_name]
 
-            if self._mi_dataset_dicts and sheet_name in self._mi_dataset_dicts:
-                return self.parse_multiindex_dataset(sheet_name)
+        output = {}
 
-        sheetname_to_index = {v: k for k, v in index_to_sheetname.items()}
+        for asheetname in sheets:
+            if isinstance(asheetname, str):
+                sheetname = asheetname
+            else:
+                sheetname = self._reader.get_sheetname_by_index(asheetname)
 
-        dfs_ret_val = self._reader.parse(
-            sheet_name=sheet_name,
-            header=header,
-            names=names,
-            index_col=index_col,
-            usecols=usecols,
-            squeeze=squeeze,
-            converters=converters,
-            true_values=true_values,
-            false_values=false_values,
-            skiprows=skiprows,
-            nrows=nrows,
-            na_values=na_values,
-            parse_dates=parse_dates,
-            date_parser=date_parser,
-            thousands=thousands,
-            comment=comment,
-            skipfooter=skipfooter,
-            convert_float=convert_float,
-            mangle_dupe_cols=mangle_dupe_cols,
-            **kwds,
-        )
+            excel_dict = self._dataset_dicts.get(sheetname)
 
-        if type(dfs_ret_val) is dict:
-            ret_val = {}
+            if excel_dict is not None:
+                read_excel_kwargs = excel_dict.get("read_excel_kwargs")
+            else:
+                read_excel_kwargs = {}
 
-            for sheet_name in dfs_ret_val:
-                df = dfs_ret_val[sheet_name]
-
-                if isinstance(sheet_name, int):
-                    sheet_name = index_to_sheetname[sheet_name]
-
-                if sheet_name in self.sheet_names:
-                    excel_dict = self._dataset_dicts.get(sheet_name)
-                    dset = Dataset.from_excel_dict(excel_dict, df)
-
-                    if sheet_name in sheetname_to_index:
-                        ret_val[sheetname_to_index[sheet_name]] = dset
-                    else:
-                        ret_val[sheet_name] = dset
-
-            for mi_dataset in mi_datasets_to_parse:
-                dset = self._reader.parse_multiindex_dataset(
-                    mi_dataset, self._dataset_dicts[mi_dataset]
-                )
-
-                if mi_dataset in sheetname_to_index:
-                    ret_val[sheetname_to_index[mi_dataset]] = dset
-                else:
-                    ret_val[mi_dataset] = dset
-
-            return ret_val
-        else:
-            excel_dict = self._dataset_dicts.get(sheet_name)
-            if excel_dict is None:
-                raise ValueError(
-                    f"No dataset info for sheet '{sheet_name}' found "
-                    f"in '{DATASETS_SHEET_NAME}' sheet."
-                )
-
-            return Dataset(
-                data=dfs_ret_val,
-                id_col_name=excel_dict.get("id_col_name"),
-                date_col_name=excel_dict.get("date_col_name"),
-                id2_col_name=excel_dict.get("id2_col_name"),
-                name=excel_dict.get("name"),
-                tags=excel_dict.get("tags"),
+            df = self._reader.parse(
+                sheet_name=sheetname,
+                header=read_excel_kwargs.get("header", header),
+                names=read_excel_kwargs.get("names", names),
+                index_col=read_excel_kwargs.get("index_col", index_col),
+                usecols=read_excel_kwargs.get("usecols", usecols),
+                squeeze=read_excel_kwargs.get("squeeze", squeeze),
+                converters=read_excel_kwargs.get("converters", converters),
+                true_values=read_excel_kwargs.get("true_values", true_values),
+                false_values=read_excel_kwargs.get("false_values", false_values),
+                skiprows=read_excel_kwargs.get("skiprows", skiprows),
+                nrows=read_excel_kwargs.get("nrows", nrows),
+                na_values=read_excel_kwargs.get("na_values", na_values),
+                parse_dates=read_excel_kwargs.get("parse_dates", parse_dates),
+                date_parser=read_excel_kwargs.get("date_parser", date_parser),
+                thousands=read_excel_kwargs.get("thousands", thousands),
+                comment=read_excel_kwargs.get("comment", comment),
+                skipfooter=read_excel_kwargs.get("skipfooter", skipfooter),
+                convert_float=read_excel_kwargs.get("convert_float", convert_float),
+                mangle_dupe_cols=read_excel_kwargs.get("mangle_dupe_cols", mangle_dupe_cols),
+                **kwds,
             )
+
+            if excel_dict is not None:
+                from macpie import Dataset
+
+                dset = Dataset(
+                    data=df,
+                    id_col_name=excel_dict.get("id_col_name"),
+                    date_col_name=excel_dict.get("date_col_name"),
+                    id2_col_name=excel_dict.get("id2_col_name"),
+                    name=excel_dict.get("name"),
+                    tags=excel_dict.get("tags"),
+                )
+                output[asheetname] = dset
+            else:
+                output[asheetname] = df
+
+        if ret_dict:
+            return output
+        else:
+            return output[asheetname]
 
     @property
     def sheet_names(self):
@@ -345,7 +312,8 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
         return pyxl.load_workbook(in_mem_file, read_only=True, data_only=True, keep_links=False)
 
-    def parse_excel_dict(self, sheet_name, headers=True):
+    @abc.abstractmethod
+    def parse_excel_dict_sheet(self, sheet_name):
         pass
 
     def parse_tablib_dataset(self, sheet_name, headers=True):
@@ -355,12 +323,6 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
         pass
 
     def parse_dictlike_dataset(self, sheet_name, headers=True):
-        pass
-
-    def parse_multiindex_df(self, sheet_name):
-        pass
-
-    def parse_multiindex_dataset(self, sheet_name, excel_dict):
         pass
 
 
@@ -378,14 +340,6 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
 
     @abc.abstractmethod
     def write_tablib_dataset(self, tlset: tl.Dataset, freeze_panes=True):
-        pass
-
-    @abc.abstractmethod
-    def handle_multiindex(self, sheet_name):
-        # Special case to handle pandas bug when writing dataframes with multiindex.
-        # https://github.com/pandas-dev/pandas/issues/27772
-        # Since we are forced to keep the index column due to bug,
-        # might as well give it an informative name
         pass
 
     @abc.abstractmethod

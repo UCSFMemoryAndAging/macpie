@@ -2,9 +2,10 @@ from pathlib import Path
 from shutil import copy
 
 from click.testing import CliRunner
+import pandas as pd
 import pytest
 
-from macpie import MACPieExcelFile, MergeableAnchoredList
+from macpie import MergeableAnchoredList
 from macpie._config import get_option
 from macpie.cli.macpie.main import main
 from macpie.testing import assert_dfs_equal
@@ -24,8 +25,12 @@ cols_ignore_pat = "^" + get_option("column.system.prefix")
 def test_merge_again(tmp_path):
     # macpie merge tests/cli/macpie/merge/merge_again/full_merged_once.xlsx
 
-    with MACPieExcelFile(current_dir / "expected_results.xlsx") as reader:
-        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    expected_result = pd.read_excel(
+        current_dir / "expected_results.xlsx",
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        header=[0, 1],
+        index_col=None,
+    )
 
     runner = CliRunner()
 
@@ -46,8 +51,12 @@ def test_merge_again(tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        with MACPieExcelFile(results_path) as reader:
-            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        results = pd.read_excel(
+            results_path,
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            header=[0, 1],
+            index_col=None,
+        )
 
         assert_dfs_equal(
             results,

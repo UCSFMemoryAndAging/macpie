@@ -3,8 +3,9 @@ from shutil import copy
 
 from click.testing import CliRunner
 import openpyxl as pyxl
+import pandas as pd
 
-from macpie import DatasetFields, MACPieExcelFile, MACPieExcelWriter, MergeableAnchoredList
+from macpie import DatasetFields, MACPieExcelWriter, MergeableAnchoredList
 from macpie._config import get_option
 from macpie.testing import assert_dfs_equal
 
@@ -58,8 +59,12 @@ def test_small_no_merge(cli_link_small_no_merge, tmp_path):
 
 
 def run(filepath, tmp_path):
-    with MACPieExcelFile(current_dir / "small_expected_results.xlsx") as reader:
-        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    expected_result = pd.read_excel(
+        current_dir / "small_expected_results.xlsx",
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        header=[0, 1],
+        index_col=None,
+    )
 
     create_available_fields(filepath)
 
@@ -77,8 +82,12 @@ def run(filepath, tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        with MACPieExcelFile(results_path) as reader:
-            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        results = pd.read_excel(
+            results_path,
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            header=[0, 1],
+            index_col=None,
+        )
 
         assert_dfs_equal(
             results,

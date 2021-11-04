@@ -3,10 +3,10 @@ from shutil import copy
 
 from click.testing import CliRunner
 import openpyxl as pyxl
+import pandas as pd
 import pytest
 
-from macpie import DatasetFields, MACPieExcelFile, MACPieExcelWriter, MergeableAnchoredList
-from macpie._config import get_option
+from macpie import DatasetFields, MACPieExcelWriter, MergeableAnchoredList
 from macpie.io.excel import (
     DATASETS_SHEET_NAME,
     COLLECTION_SHEET_NAME,
@@ -54,8 +54,12 @@ def create_available_fields(filepath):
 def test_full_no_merge(cli_link_full_no_merge, tmp_path):
     cli_link_full_no_merge_copy = Path(copy(cli_link_full_no_merge, tmp_path))
 
-    with MACPieExcelFile(current_dir / "full_expected_results.xlsx") as reader:
-        expected_result = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+    expected_result = pd.read_excel(
+        current_dir / "full_expected_results.xlsx",
+        sheet_name=MergeableAnchoredList.merged_dsetname,
+        header=[0, 1],
+        index_col=None,
+    )
 
     create_available_fields(cli_link_full_no_merge_copy)
 
@@ -87,7 +91,11 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path):
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)
 
-        with MACPieExcelFile(results_path) as reader:
-            results = reader.parse_multiindex_df(MergeableAnchoredList.merged_dsetname)
+        results = pd.read_excel(
+            results_path,
+            sheet_name=MergeableAnchoredList.merged_dsetname,
+            header=[0, 1],
+            index_col=None,
+        )
 
         assert_dfs_equal(results, expected_result, output_dir=output_dir)
