@@ -90,7 +90,7 @@ def iter_rows_with_column_value(ws, column: str, value):
 
 def to_df(ws, num_header: int = 1, num_idx: int = 0):
     """Converts an Excel worksheet to a :class:`pandas.DataFrame`.
-    Better to use :func:`pandas.read_excel` as it takes care of a lot
+    Better to use :func:`pandas.read_excel` as it takes care of
     more nuances.
 
     :param num_header: number of header rows
@@ -102,6 +102,7 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
         return pd.DataFrame(data, columns=cols)
 
     data = ws.values
+    max_col_index = ws.max_column
 
     if num_header == 1:
         cols = next(data)[num_idx:]
@@ -112,20 +113,27 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
         zipped = zip(*col_tuples)
         cols = pd.MultiIndex.from_tuples(list(zipped))
     else:
-        cols = None
+        # mimick pd.DataFrame constructor for when columns=None,
+        # making room for Index/MultiIndex names
+        cols = pd.RangeIndex(start=num_idx, stop=max_col_index)
 
     data = list(data)
 
-    if num_idx > 0:
-        if num_idx == 1:
-            idx = [r[0] for r in data]
-        else:
-            tuples = [r[:num_idx] for r in data]
-            idx = pd.MultiIndex.from_tuples(tuples)
-        data = (itertools.islice(r, num_idx, None) for r in data)
-        df = pd.DataFrame(data, index=idx, columns=cols)
+    if num_idx == 1:
+        idx = pd.Index([r[0] for r in data])
+        if num_header == 0:
+            idx.name = 0
+    elif num_idx > 1:
+        tuples = [r[:num_idx] for r in data]
+        idx = pd.MultiIndex.from_tuples(tuples)
+        if num_header == 0:
+            idx.names = list(range(0, num_idx))
     else:
-        df = pd.DataFrame(data, columns=cols)
+        idx = None
+
+    data = (itertools.islice(r, num_idx, None) for r in data)
+
+    df = pd.DataFrame(data, index=idx, columns=cols)
 
     return df
 
