@@ -438,15 +438,11 @@ class Dataset(pd.DataFrame):
 
     @classmethod
     def from_excel_dict(cls, excel_dict, df):
-        id_col_name = lltools.make_tuple_if_list_like(excel_dict.get("id_col_name"))
-        date_col_name = lltools.make_tuple_if_list_like(excel_dict.get("date_col_name"))
-        id2_col_name = lltools.make_tuple_if_list_like(excel_dict.get("id2_col_name"))
-
         return Dataset(
             data=df,
-            id_col_name=id_col_name,
-            date_col_name=date_col_name,
-            id2_col_name=id2_col_name,
+            id_col_name=excel_dict.get("id_col_name"),
+            date_col_name=excel_dict.get("date_col_name"),
+            id2_col_name=excel_dict.get("id2_col_name"),
             name=excel_dict.get("name"),
             tags=excel_dict.get("tags"),
         )

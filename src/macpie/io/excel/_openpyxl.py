@@ -16,6 +16,9 @@ from ._base import (
 
 
 class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlReader):
+    def get_sheetname_by_index(self, index):
+        return self.get_sheet_by_index(index).title
+
     def parse_excel_dict_sheet(self, sheet_name):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
         df = openpyxltools.to_df(ws)
@@ -23,17 +26,9 @@ class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlRead
         dld = tablibtools.DictLikeDataset.from_df(df)
         return dld.to_dict()
 
-    def parse_tablib_dataset(self, sheet_name, headers=True):
+    def parse_tablib_dataset(self, sheet_name):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
         return openpyxltools.to_tablib_dataset(ws)
-
-    def parse_simple_dataset(self, sheet_name, headers=True):
-        tlset = self.parse_tablib_dataset(sheet_name, headers)
-        return tablibtools.SimpleDataset.from_tlset(tlset)
-
-    def parse_dictlike_dataset(self, sheet_name, headers=True):
-        tlset = self.parse_tablib_dataset(sheet_name, headers)
-        return tablibtools.DictLikeDataset.from_tlset(tlset)
 
 
 class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):

@@ -153,16 +153,17 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         collection_dict = self._reader.parse_excel_dict_sheet(COLLECTION_SHEET_NAME)
         return collection_dict
 
+    def parse_tablib_dataset(self, sheet_name):
+        return self._reader.parse_tablib_dataset(sheet_name)
+
     def parse_simple_dataset(self, sheet_name):
-        tlset = self._reader.parse_tablib_dataset(sheet_name)
-        return tablibtools.SimpleDataset.from_tlset(tlset)
+        return self._reader.parse_simple_dataset(sheet_name)
 
     def parse_dictlike_dataset(self, sheet_name):
-        tlset = self._reader.parse_tablib_dataset(sheet_name)
-        return tablibtools.DictLikeDataset.from_tlset(tlset)
+        return self._reader.parse_dictlike_dataset(sheet_name)
 
     def parse_dataset_fields(self, sheet_name):
-        sdset = self._reader.parse_simple_dataset(sheet_name)
+        sdset = self.parse_simple_dataset(sheet_name)
         dataset_fields = mp.DatasetFields()
         sdset.df.apply(
             lambda x: dataset_fields.append_series(x, with_tags=True, tag_value="x"),
@@ -233,7 +234,6 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
                 sheetname = self._reader.get_sheetname_by_index(asheetname)
 
             excel_dict = self._dataset_dicts.get(sheetname)
-
             if excel_dict is not None:
                 read_excel_kwargs = excel_dict.get("read_excel_kwargs")
             else:
@@ -263,17 +263,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             )
 
             if excel_dict is not None:
-                from macpie import Dataset
-
-                dset = Dataset(
-                    data=df,
-                    id_col_name=excel_dict.get("id_col_name"),
-                    date_col_name=excel_dict.get("date_col_name"),
-                    id2_col_name=excel_dict.get("id2_col_name"),
-                    name=excel_dict.get("name"),
-                    tags=excel_dict.get("tags"),
-                )
-                output[asheetname] = dset
+                output[asheetname] = mp.Dataset.from_excel_dict(excel_dict, df)
             else:
                 output[asheetname] = df
 
@@ -296,8 +286,25 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
 
 class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
+    @abc.abstractmethod
     def get_sheetname_by_index(self, index):
-        return self.get_sheet_by_index(index).title
+        pass
+
+    @abc.abstractmethod
+    def parse_excel_dict_sheet(self, sheet_name):
+        pass
+
+    @abc.abstractmethod
+    def parse_tablib_dataset(self, sheet_name, headers=True):
+        pass
+
+    def parse_simple_dataset(self, sheet_name):
+        tlset = self.parse_tablib_dataset(sheet_name)
+        return tablibtools.SimpleDataset.from_tlset(tlset)
+
+    def parse_dictlike_dataset(self, sheet_name):
+        tlset = self.parse_tablib_dataset(sheet_name)
+        return tablibtools.DictLikeDataset.from_tlset(tlset)
 
     def load_workbook(self, filepath_or_buffer):
         # Closes an xlsx file in read-only mode
@@ -311,19 +318,6 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
             in_mem_file = io.BytesIO(f.read())
 
         return pyxl.load_workbook(in_mem_file, read_only=True, data_only=True, keep_links=False)
-
-    @abc.abstractmethod
-    def parse_excel_dict_sheet(self, sheet_name):
-        pass
-
-    def parse_tablib_dataset(self, sheet_name, headers=True):
-        pass
-
-    def parse_simple_dataset(self, sheet_name, headers=True):
-        pass
-
-    def parse_dictlike_dataset(self, sheet_name, headers=True):
-        pass
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):

@@ -104,11 +104,11 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
         super().save()
 
     def post_processing(self):
-        if self.mi_sheets or self.highlight_duplicates:
+        if self.highlight_duplicates:
             with MACPieExcelWriter(self.__fspath__(), mode="r+", engine="mp_openpyxl") as writer:
                 for sheet_name, column_name in self.dup_sheets.items():
                     writer.highlight_duplicates(sheet_name, column_name)
 
     def close(self):
         super().close()
-        # self.post_processing()
+        self.post_processing()
