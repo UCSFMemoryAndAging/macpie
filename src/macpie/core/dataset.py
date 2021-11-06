@@ -5,7 +5,7 @@ import pandas as pd
 
 from macpie import lltools, strtools
 from macpie._config import get_option
-from macpie.io.excel import safe_xlsx_sheet_title
+from macpie.io.excel import MACPieExcelWriter, safe_xlsx_sheet_title
 from macpie.pandas.general import get_col_name, to_datetime
 from macpie.util.decorators import TrackHistory
 
@@ -499,8 +499,6 @@ class Dataset(pd.DataFrame):
         :param excel_writer: File path or existing ExcelWriter.
         :param kwargs:
         """
-
-        from macpie.io.excel import MACPieExcelWriter
         from macpie.io.formats.excel import MACPieExcelFormatter
 
         if isinstance(excel_writer, MACPieExcelWriter):

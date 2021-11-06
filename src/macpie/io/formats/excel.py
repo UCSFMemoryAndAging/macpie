@@ -2,8 +2,7 @@
 Utilities for conversion to writer-agnostic Excel representation.
 """
 
-import functools
-from typing import Callable, Iterable
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
