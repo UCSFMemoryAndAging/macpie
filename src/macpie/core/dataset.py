@@ -534,9 +534,8 @@ class Dataset(pd.DataFrame):
             if highlight_duplicates:
                 dups_col_name = get_option("column.system.duplicates")
                 if dups_col_name in self.columns:
-                    formatter.highlight_row(
-                        col=dups_col_name,
-                        predicate=bool,
+                    formatter.highlight_row_by_column_predicate(
+                        column=dups_col_name, predicate=bool
                     )
 
             if sheet_name is None:

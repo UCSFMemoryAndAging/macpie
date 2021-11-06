@@ -3,41 +3,37 @@ Utilities for conversion to writer-agnostic Excel representation.
 """
 
 import functools
-from typing import Iterable
+from typing import Callable, Iterable
 
 import numpy as np
+import pandas as pd
 import pandas.core.common as com
 from pandas import Index, MultiIndex
-from pandas.io.formats.excel import ExcelCell, ExcelFormatter
+from pandas.io.formats.excel import CSSToExcelConverter, ExcelCell, ExcelFormatter
 from pandas.io.formats.format import get_level_lengths
 from pandas.io.formats.printing import pprint_thing
-
-from ._color_data import NAMED_COLORS
-
-
-def highlight_row_style(color=NAMED_COLORS["yellow"]):
-    return {"fill": {"bgColor": color, "patternType": "solid"}}
-
-
-def highlight_row_by_col_predicate(s, col, predicate=None, color=NAMED_COLORS["yellow"]):
-    if predicate is None:
-        predicate = bool
-
-    if predicate(s[col]):
-        return highlight_row_style(color=color)
-    return None
 
 
 class MACPieExcelFormatter(ExcelFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # defines a function that takes a row (pd.Series) and returns a style
+        # see highlight_row_by_column_predicate for an example
         self.row_styler = None
 
-    def highlight_row(self, col, predicate):
-        self.row_styler = functools.partial(
-            highlight_row_by_col_predicate, col=col, predicate=predicate
-        )
+    def highlight_row_by_column_predicate(self, column, predicate, color="yellow"):
+        style_converter = CSSToExcelConverter()
+        css = f"background-color: {color}"
+        xlstyle = style_converter(css)
+
+        def f(s: pd.Series):
+            col_val = s[column]
+            if predicate(col_val):
+                return xlstyle
+            return None
+
+        self.row_styler = f
 
     def _format_header_mi(self) -> Iterable[ExcelCell]:
         """Currently, as of pandas 1.3.4, still cannot write to Excel
@@ -176,7 +172,9 @@ class MACPieExcelFormatter(ExcelFormatter):
         if self.row_styler:
             for rowidx in range(len(self.df.index)):
                 series = self.df.iloc[rowidx]
-                yield from self._generate_row_with_styler(series, rowidx, coloffset)
+                xlstyle = self.row_styler(series)
+                for i, val in enumerate(series):
+                    yield ExcelCell(self.rowcounter + rowidx, i + coloffset, val, xlstyle)
         else:
             yield from super()._generate_body(coloffset)
 
@@ -198,11 +196,6 @@ class MACPieExcelFormatter(ExcelFormatter):
                     css = ";".join([a + ":" + str(v) for (a, v) in styles[rowidx, i]])
                     xlstyle = self.style_converter(css)
                 yield ExcelCell(self.rowcounter + rowidx, i + coloffset, val, xlstyle)
-
-    def _generate_row_with_styler(self, series, rowoffset, coloffset) -> Iterable[ExcelCell]:
-        xlstyle = self.row_styler(series)
-        for i, val in enumerate(series):
-            yield ExcelCell(self.rowcounter + rowoffset, i + coloffset, val, xlstyle)
 
     def write(self, writer, sheet_name=None, startrow=0, startcol=0, freeze_panes=None):
         num_rows, num_cols = self.df.shape
