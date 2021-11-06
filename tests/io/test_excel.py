@@ -75,7 +75,7 @@ def test_1_1_permutations(tmp_path):
     assert_frame_equal(dset_1_1, dset_1_1_parsed)
 
 
-def test_2_2_permutatoins(tmp_path):
+def test_2_2_permutations(tmp_path):
     df_2_2 = pd.DataFrame(data, columns=mi_columns, index=mi_index)
 
     dset_2_2 = mp.Dataset(df_2_2)
@@ -83,6 +83,7 @@ def test_2_2_permutatoins(tmp_path):
     dset_2_2.to_excel(tmp_path / "dset_2_2.xlsx", header=True, index=True)
     dset_2_2.to_excel(tmp_path / "dset_2_0.xlsx", header=True, index=False)
     dset_2_2.to_excel(tmp_path / "dset_0_2.xlsx", header=False, index=True)
+    dset_2_2.to_excel(tmp_path / "dset_0_0.xlsx", header=False, index=False)
 
     # 2_2: test 2 header 2 index
     dset_2_2_parsed = mp.read_excel(tmp_path / "dset_2_2.xlsx")
@@ -94,10 +95,53 @@ def test_2_2_permutatoins(tmp_path):
     assert_frame_equal(dset_2_2, dset_2_2_parsed)
 
     # 0_2: test 0 header 2 index
-    # TODO: this doesn't even work in pandas
     dset_2_2_parsed = mp.read_excel(tmp_path / "dset_0_2.xlsx")
-    # print(dset_2_2)
-    # print(dset_2_2_parsed)
+    dset_2_2_parsed.index.names = mi_index.names
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
+
+    # 0_0: test 0 header 0 index
+    dset_2_2_parsed = mp.read_excel(tmp_path / "dset_0_0.xlsx")
+    dset_2_2_parsed.index = mi_index
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
+
+    # test legacy format of merge_cells=False
+    dset_2_2.to_excel(
+        tmp_path / "dset_2_2_no_merge.xlsx", merge_cells=False, header=True, index=True
+    )
+    dset_2_2.to_excel(
+        tmp_path / "dset_2_0_no_merge.xlsx", merge_cells=False, header=True, index=False
+    )
+    dset_2_2.to_excel(
+        tmp_path / "dset_0_2_no_merge.xlsx", merge_cells=False, header=False, index=True
+    )
+    dset_2_2.to_excel(
+        tmp_path / "dset_0_0_no_merge.xlsx", merge_cells=False, header=False, index=False
+    )
+
+    # 2_2: test 2 header 2 index
+    dset_2_2_parsed = mp.read_excel(tmp_path / "dset_2_2_no_merge.xlsx")
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
+
+    # 2_0: test 2 header 0 index
+    dset_2_2_parsed = mp.read_excel(tmp_path / "dset_2_0_no_merge.xlsx")
+    dset_2_2_parsed.index = mi_index
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
+
+    # 0_2: test 0 header 2 index
+    dset_2_2_parsed = mp.read_excel(tmp_path / "dset_0_2_no_merge.xlsx")
+    dset_2_2_parsed.index.names = mi_index.names
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
+
+    # 0_0: test 0 header 0 index
+    dset_2_2_parsed = mp.read_excel(tmp_path / "dset_0_0_no_merge.xlsx")
+    dset_2_2_parsed.index = mi_index
+    dset_2_2_parsed.columns = mi_columns
+    assert_frame_equal(dset_2_2, dset_2_2_parsed)
 
 
 def test_1_2(tmp_path):

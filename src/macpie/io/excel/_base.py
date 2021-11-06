@@ -325,6 +325,7 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
         engine = kwargs.pop("engine", None)
         if engine is None:
             engine = "mp_xlsxwriter"
+
         concrete_cls = pd.io.excel._util.get_writer(engine)
         return super(MACPieExcelWriter, cls).__new__(concrete_cls, *args, **kwargs)
 

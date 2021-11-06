@@ -514,10 +514,11 @@ class Dataset(pd.DataFrame):
             need_save = True
 
         try:
-            dset = (
-                self if isinstance(self, pd.core.dtypes.generic.ABCDataFrame) else self.to_frame()
-            )
-            sheet_name = self.excel_sheetname if sheet_name is None else sheet_name
+            if isinstance(self, pd.core.dtypes.generic.ABCDataFrame):
+                dset = self
+            else:
+                dset = self.to_frame()
+
             formatter = MACPieExcelFormatter(
                 dset,
                 na_rep=na_rep,
@@ -529,6 +530,18 @@ class Dataset(pd.DataFrame):
                 merge_cells=merge_cells,
                 inf_rep=inf_rep,
             )
+
+            if highlight_duplicates:
+                dups_col_name = get_option("column.system.duplicates")
+                if dups_col_name in self.columns:
+                    formatter.highlight_row(
+                        col=dups_col_name,
+                        predicate=bool,
+                    )
+
+            if sheet_name is None:
+                sheet_name = self.excel_sheetname
+
             formatter.write(
                 excel_writer,
                 sheet_name=sheet_name,
@@ -536,11 +549,6 @@ class Dataset(pd.DataFrame):
                 startcol=startcol,
                 freeze_panes=freeze_panes,
             )
-
-            if highlight_duplicates:
-                dups_col_name = get_option("column.system.duplicates")
-                if dups_col_name in self.columns:
-                    excel_writer.highlight_duplicates(sheet_name, dups_col_name)
 
             if write_excel_dict:
                 to_excel_kwargs = {
@@ -566,7 +574,9 @@ class Dataset(pd.DataFrame):
 
                 if not header:
                     header_col = None
-                elif self.columns.nlevels > 1:
+                elif self.columns.nlevels > 1 and merge_cells:
+                    # if merge_cells is False, MultiIndex header will be in
+                    # legacy format, whiich is one row with dots to indicate levels.
                     header_col = list(range(0, self.columns.nlevels))
                 else:
                     header_col = 0

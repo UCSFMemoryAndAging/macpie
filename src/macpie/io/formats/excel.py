@@ -2,17 +2,50 @@
 Utilities for conversion to writer-agnostic Excel representation.
 """
 
+import functools
 from typing import Iterable
 
-from pandas import MultiIndex
-
+import numpy as np
+import pandas.core.common as com
+from pandas import Index, MultiIndex
 from pandas.io.formats.excel import ExcelCell, ExcelFormatter
 from pandas.io.formats.format import get_level_lengths
 from pandas.io.formats.printing import pprint_thing
 
+from ._color_data import NAMED_COLORS
+
+
+def highlight_row_style(color=NAMED_COLORS["yellow"]):
+    return {"fill": {"bgColor": color, "patternType": "solid"}}
+
+
+def highlight_row_by_col_predicate(s, col, predicate=None, color=NAMED_COLORS["yellow"]):
+    if predicate is None:
+        predicate = bool
+
+    if predicate(s[col]):
+        return highlight_row_style(color=color)
+    return None
+
 
 class MACPieExcelFormatter(ExcelFormatter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.row_styler = None
+
+    def highlight_row(self, col, predicate):
+        self.row_styler = functools.partial(
+            highlight_row_by_col_predicate, col=col, predicate=predicate
+        )
+
     def _format_header_mi(self) -> Iterable[ExcelCell]:
+        """Currently, as of pandas 1.3.4, still cannot write to Excel
+        with MultiIndex columns and no index ('index'=False).
+        Added a few hacks to make it work until hopefully it gets
+        implemented soon.
+        TODO: Implement a better solution.
+        """
         if not (self._has_aliases or self.header):
             return
 
@@ -22,23 +55,25 @@ class MACPieExcelFormatter(ExcelFormatter):
         coloffset = 0
         lnum = 0
 
-        if self.columns.nlevels > 1 and not self.index:
-            # kludgey fix for: https://github.com/pandas-dev/pandas/issues/27772
-            # All other code in this method should be same as parent
-            coloffset -= 1
-
         if self.index and isinstance(self.df.index, MultiIndex):
             coloffset = len(self.df.index[0]) - 1
 
+        if not self.index:
+            # hack 1/2
+            coloffset = coloffset - 1
+
         if self.merge_cells:
             # Format multi-index as a merged cells.
-            for lnum, name in enumerate(columns.names):
-                yield ExcelCell(
-                    row=lnum,
-                    col=coloffset,
-                    val=name,
-                    style=self.header_style,
-                )
+            if self.index:
+                # hack 2/2
+                # if not self.index, skip this to avoid negative col index
+                for lnum, name in enumerate(columns.names):
+                    yield ExcelCell(
+                        row=lnum,
+                        col=coloffset,
+                        val=name,
+                        style=self.header_style,
+                    )
 
             for lnum, (spans, levels, level_codes) in enumerate(
                 zip(level_lengths, columns.levels, columns.codes)
@@ -62,12 +97,112 @@ class MACPieExcelFormatter(ExcelFormatter):
 
         self.rowcounter = lnum
 
-    def _format_regular_rows(self) -> Iterable[ExcelCell]:
-        # kludgey fix for: https://github.com/pandas-dev/pandas/issues/27772
-        if self.columns.nlevels > 1 and self.index:
-            self.rowcounter -= 1
+    def _format_hierarchical_rows(self) -> Iterable[ExcelCell]:
+        """Kludgey fix for: https://github.com/pandas-dev/pandas/issues/27772
+        Code is verbatim from parent EXCEPT for the 'pass' line and the following
+        commented out line
+        """
+        if self._has_aliases or self.header:
+            self.rowcounter += 1
 
-        yield from super()._format_regular_rows()
+        gcolidx = 0
+
+        if self.index:
+            index_labels = self.df.index.names
+            # check for aliases
+            if self.index_label and isinstance(self.index_label, (list, tuple, np.ndarray, Index)):
+                index_labels = self.index_label
+
+            # MultiIndex columns require an extra row
+            # with index names (blank if None) for
+            # unambiguous round-trip, unless not merging,
+            # in which case the names all go on one row Issue #11328
+            if isinstance(self.columns, MultiIndex) and self.merge_cells:
+                pass
+                # self.rowcounter += 1
+
+            # if index labels are not empty go ahead and dump
+            if com.any_not_none(*index_labels) and self.header is not False:
+
+                for cidx, name in enumerate(index_labels):
+                    yield ExcelCell(self.rowcounter - 1, cidx, name, self.header_style)
+
+            if self.merge_cells:
+                # Format hierarchical rows as merged cells.
+                level_strs = self.df.index.format(sparsify=True, adjoin=False, names=False)
+                level_lengths = get_level_lengths(level_strs)
+
+                for spans, levels, level_codes in zip(
+                    level_lengths, self.df.index.levels, self.df.index.codes
+                ):
+
+                    values = levels.take(
+                        level_codes,
+                        allow_fill=levels._can_hold_na,
+                        fill_value=levels._na_value,
+                    )
+
+                    for i, span_val in spans.items():
+                        spans_multiple_cells = span_val > 1
+                        yield ExcelCell(
+                            row=self.rowcounter + i,
+                            col=gcolidx,
+                            val=values[i],
+                            style=self.header_style,
+                            mergestart=(
+                                self.rowcounter + i + span_val - 1
+                                if spans_multiple_cells
+                                else None
+                            ),
+                            mergeend=gcolidx if spans_multiple_cells else None,
+                        )
+                    gcolidx += 1
+
+            else:
+                # Format hierarchical rows with non-merged values.
+                for indexcolvals in zip(*self.df.index):
+                    for idx, indexcolval in enumerate(indexcolvals):
+                        yield ExcelCell(
+                            row=self.rowcounter + idx,
+                            col=gcolidx,
+                            val=indexcolval,
+                            style=self.header_style,
+                        )
+                    gcolidx += 1
+
+        yield from self._generate_body(gcolidx)
+
+    def _generate_body(self, coloffset: int) -> Iterable[ExcelCell]:
+        if self.row_styler:
+            for rowidx in range(len(self.df.index)):
+                series = self.df.iloc[rowidx]
+                yield from self._generate_row_with_styler(series, rowidx, coloffset)
+        else:
+            yield from super()._generate_body(coloffset)
+
+    def _generate_body_rowwise(self, coloffset: int) -> Iterable[ExcelCell]:
+        # useful if you want to generate the body row-wise, instead of
+        # the default, which is column-wise
+        if self.styler is None:
+            styles = None
+        else:
+            styles = self.styler._compute().ctx
+            if not styles:
+                styles = None
+        xlstyle = None
+
+        for rowidx in range(len(self.df.index)):
+            series = self.df.iloc[rowidx]
+            for i, val in enumerate(series):
+                if styles is not None:
+                    css = ";".join([a + ":" + str(v) for (a, v) in styles[rowidx, i]])
+                    xlstyle = self.style_converter(css)
+                yield ExcelCell(self.rowcounter + rowidx, i + coloffset, val, xlstyle)
+
+    def _generate_row_with_styler(self, series, rowoffset, coloffset) -> Iterable[ExcelCell]:
+        xlstyle = self.row_styler(series)
+        for i, val in enumerate(series):
+            yield ExcelCell(self.rowcounter + rowoffset, i + coloffset, val, xlstyle)
 
     def write(self, writer, sheet_name=None, startrow=0, startcol=0, freeze_panes=None):
         num_rows, num_cols = self.df.shape

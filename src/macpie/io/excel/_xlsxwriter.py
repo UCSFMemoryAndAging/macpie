@@ -93,7 +93,7 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
                         ws.write(i, j, col)
 
     def highlight_duplicates(self, sheet_name, column_name):
-        self.dup_sheets[sheet_name] = column_name
+        raise NotImplementedError
 
     def finalize_sheet_order(self):
         new_sheet_order = self.finalized_sheet_order(self.sheet_names())
@@ -102,13 +102,3 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
     def save(self):
         self.finalize_sheet_order()
         super().save()
-
-    def post_processing(self):
-        if self.highlight_duplicates:
-            with MACPieExcelWriter(self.__fspath__(), mode="r+", engine="mp_openpyxl") as writer:
-                for sheet_name, column_name in self.dup_sheets.items():
-                    writer.highlight_duplicates(sheet_name, column_name)
-
-    def close(self):
-        super().close()
-        self.post_processing()

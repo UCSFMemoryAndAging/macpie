@@ -4,7 +4,7 @@ import pandas as pd
 import tablib as tl
 
 from macpie._config import get_option
-from macpie import lltools, openpyxltools, tablibtools
+from macpie import openpyxltools, tablibtools
 
 from ._base import (
     DATASETS_SHEET_NAME,
@@ -34,6 +34,7 @@ class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlRead
 class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
     engine = "mp_openpyxl"
 
+    @property
     def sheet_names(self):
         return list(self.book.sheetnames)
 
@@ -80,7 +81,7 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
                 openpyxltools.autofit_column_width(ws)
 
     def finalize_sheet_order(self):
-        new_sheet_order = self.finalized_sheet_order(self.sheet_names())
+        new_sheet_order = self.finalized_sheet_order(self.sheet_names)
         self.book._sheets = [self.book[sheetname] for sheetname in new_sheet_order]
 
     def save(self):

@@ -4,8 +4,6 @@ import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
-from . import listlike as lltools
-
 
 YELLOW = "00FFFF00"
 
