@@ -15,7 +15,7 @@ from ._base import (
 )
 
 
-class MACPieOpenpyxlReader(MACPieExcelReader, pd.io.excel._openpyxl.OpenpyxlReader):
+class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelReader):
     def get_sheetname_by_index(self, index):
         return self.get_sheet_by_index(index).title
 
@@ -75,17 +75,17 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
         for row in rows_to_highlight:
             openpyxltools.highlight_row(ws, row)
 
-    def autofit_column_width(self):
-        for ws in self.book.worksheets:
-            if ws.title.startswith("_mp"):
-                openpyxltools.autofit_column_width(ws)
-
     def finalize_sheet_order(self):
         new_sheet_order = self.finalized_sheet_order(self.sheet_names)
         self.book._sheets = [self.book[sheetname] for sheetname in new_sheet_order]
 
+    def _autofit_column_width(self):
+        for ws in self.book.worksheets:
+            if ws.title.startswith("_mp"):
+                openpyxltools.autofit_column_width(ws)
+
     def save(self):
-        self.autofit_column_width()
+        self._autofit_column_width()
         self.finalize_sheet_order()
 
         super().save()

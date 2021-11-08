@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 import tablib as tl
+import xlsxwriter
 
 from macpie._config import get_option
 from macpie import tablibtools
@@ -14,14 +15,35 @@ from ._base import (
 )
 
 
-class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
+class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
     engine = "mp_xlsxwriter"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        path,
+        engine=None,
+        date_format=None,
+        datetime_format=None,
+        mode: str = "w",
+        storage_options=None,
+        if_sheet_exists=None,
+        engine_kwargs=None,
+        **kwargs,
+    ):
+        super().__init__(
+            path,
+            engine=engine,
+            date_format=date_format,
+            datetime_format=datetime_format,
+            mode=mode,
+            storage_options=storage_options,
+            if_sheet_exists=if_sheet_exists,
+            engine_kwargs=engine_kwargs,
+        )
 
-        # track for post-processing
-        self.dup_sheets = {}
+        engine_kwargs = pd.io.excel._util.combine_kwargs(engine_kwargs, kwargs)
+
+        self.book = MACPieXlsxWriterWorkbook(self.handles.handle, **engine_kwargs)
 
         self.format_bold = self.book.add_format({"bold": True})
         self.format_text_wrap = self.book.add_format({"text_wrap": True})
@@ -41,7 +63,7 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
         ws = self.book.get_worksheet_by_name(sheet_name)
 
         if ws is None:
-            ws = self.book.add_worksheet(sheet_name)
+            ws = self.book.add_worksheet(sheet_name, autofit_columns=True)
             ws.write_row("A1", dld.headers, self.format_bold)
 
         row_index = ws.dim_rowmax + 1
@@ -56,7 +78,7 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
             else (get_option("excel.sheet_name.default"))
         )
 
-        ws = self.book.add_worksheet(sheet_name)
+        ws = self.book.add_worksheet(sheet_name, autofit_columns=True)
 
         _package = tlset._package(dicts=False)
 
@@ -101,4 +123,73 @@ class _MACPieXlsxWriter(MACPieExcelWriter, pd.io.excel._XlsxWriter):
 
     def save(self):
         self.finalize_sheet_order()
+
         super().save()
+
+
+class MACPieXlsxWriterWorkbook(xlsxwriter.workbook.Workbook):
+    def add_worksheet(self, name=None, worksheet_class=None, autofit_columns=False):
+        if autofit_columns:
+            worksheet = super().add_worksheet(
+                name, worksheet_class=XlsxWriterAutofitColumnsWorksheet
+            )
+        else:
+            worksheet = super().add_worksheet(name, worksheet_class=worksheet_class)
+
+        return worksheet
+
+    def close(self):
+        for worksheet in self.worksheets():
+            if type(worksheet) is XlsxWriterAutofitColumnsWorksheet:
+                # Apply stored column widths. This will override any other
+                # set_column() values that may have been applied.
+                worksheet.set_autofit_column_width()
+
+        return super().close()
+
+
+class XlsxWriterAutofitColumnsWorksheet(xlsxwriter.worksheet.Worksheet):
+    """Simulates AutoFit columns in Excel."""
+
+    def __init__(self):
+        super().__init__()
+
+        # Store column widths
+        self.max_column_widths = {}
+
+    def set_autofit_column_width(self):
+        for column, width in self.max_column_widths.items():
+            self.set_column(column, column, width)
+
+    def _write_string(self, row, col, string, cell_format=None):
+        # Overridden method to store the maximum string width
+        # seen in each column.
+
+        # Check that row and col are valid and store max and min values.
+        if self._check_dimensions(row, col):
+            return -1
+
+        # Set the min width for the cell. In some cases this might be the
+        # default width of 8.43. In this case we use 0 and adjust for all
+        # string widths.
+        min_width = 0
+
+        # Check if it the string is the largest we have seen for this column.
+        string_width = XlsxWriterAutofitColumnsWorksheet.excel_string_width(string)
+        if string_width > min_width:
+            max_width = self.max_column_widths.get(col, min_width)
+            if string_width > max_width:
+                self.max_column_widths[col] = string_width
+
+        return super()._write_string(row, col, string, cell_format)
+
+    @staticmethod
+    def excel_string_width(str):
+        """Calculate the length of the string in Excel character units."""
+
+        string_width = len(str)
+
+        if string_width == 0:
+            return 0
+        else:
+            return string_width * 1.1
