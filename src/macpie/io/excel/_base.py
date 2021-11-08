@@ -322,12 +322,15 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
     def __new__(cls, *args, **kwargs):
-        engine = kwargs.pop("engine", None)
-        if engine is None:
-            engine = "mp_xlsxwriter"
+        # only switch class if generic(MACPieExcelWriter)
+        if cls is MACPieExcelWriter:
+            engine = kwargs.pop("engine", None)
+            if engine is None:
+                engine = "mp_xlsxwriter"
 
-        concrete_cls = pd.io.excel._util.get_writer(engine)
-        return super(MACPieExcelWriter, cls).__new__(concrete_cls, *args, **kwargs)
+            cls = pd.io.excel._util.get_writer(engine)
+
+        return object.__new__(cls)
 
     @abc.abstractmethod
     def write_excel_dict(self, excel_dict: dict):
