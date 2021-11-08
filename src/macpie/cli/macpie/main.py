@@ -1,3 +1,4 @@
+import abc
 import collections
 import json
 import platform
@@ -8,27 +9,14 @@ import click
 from macpie import __version__, pathtools, tablibtools, MACPieJSONEncoder
 from macpie._config import get_option
 
-from .keepone import keepone
-from .link import link
-from .masker import masker
-from .merge import merge
 
-
-class Invoker:
-    def __init__(self, command_name, opts, args, output_dir: Path = Path(".")):
+class CommandMeta:
+    def __init__(self, command_name, output_dir: Path = Path(".")):
         self.command_name = command_name
-        self.opts = opts
-        self.args = args
-
         self.output_dir = output_dir
-        self.results_dir = pathtools.create_dir_with_datetime(
-            dir_name_prefix="results_", where=self.output_dir
-        )
-        self.results_file = self.results_dir / (self.results_dir.stem + ".xlsx")
 
-        self.post_messages = [
-            f"\nLook for results in the following directory: {self.results_dir.resolve()}"
-        ]
+        self.opts = collections.OrderedDict()
+        self.args = collections.OrderedDict()
 
     def add_opt(self, k, v):
         self.opts[k] = v
@@ -62,12 +50,44 @@ class Invoker:
         info.append(("macpie_version", __version__))
         return info
 
-    def add_post_message(self, msg):
-        self.post_messages.append(msg)
+
+class _BaseCommand(abc.ABC):
+    def __init__(self, command_meta):
+        self.command_meta = command_meta
+
+        self.results_dir = None
+        self.results_file = None
+
+        self.post_messages = []
+
+    @abc.abstractmethod
+    def execute(self):
+        pass
+
+    @abc.abstractmethod
+    def output_results(self):
+        pass
+
+    def run_all(self):
+        self.execute()
+        self.prepare_output()
+        self.output_results()
+        self.print_post_messages()
+
+    def prepare_output(self):
+        self.results_dir = pathtools.create_dir_with_datetime(
+            dir_name_prefix="results_", where=self.command_meta.output_dir
+        )
+        self.results_file = self.results_dir / (self.results_dir.stem + ".xlsx")
 
     def print_post_messages(self):
-        for msg in self.post_messages:
-            click.echo(msg)
+        if self.command_meta.get_opt("verbose") is True:
+            click.echo("\nCOMMAND SUMMARY:\n")
+            self.command_meta.get_command_info().print()
+            click.echo("\nSYSTEM INFO:\n")
+            self.command_meta.get_client_system_info().print()
+
+        click.echo(f"\nLook for results in the following directory: {self.results_dir.resolve()}")
 
 
 @click.group()
@@ -82,27 +102,19 @@ class Invoker:
 @click.version_option(__version__)
 @click.pass_context
 def main(ctx, verbose, id_col, date_col, id2_col):
-    command_name = ctx.info_name
-    opts = collections.OrderedDict()
-    args = collections.OrderedDict()
+    command_meta = CommandMeta(ctx.info_name)
+    command_meta.add_opt("verbose", verbose)
+    command_meta.add_opt("id_col", id_col)
+    command_meta.add_opt("date_col", date_col)
+    command_meta.add_opt("id2_col", id2_col)
 
-    opts["verbose"] = verbose
-    opts["id_col"] = id_col
-    opts["date_col"] = date_col
-    opts["id2_col"] = id2_col
+    ctx.obj = command_meta
 
-    invoker = Invoker(command_name, opts, args)
-    ctx.obj = invoker
 
-    @ctx.call_on_close
-    def on_close():
-        if verbose:
-            click.echo("\nCOMMAND SUMMARY:\n")
-            invoker.get_command_info().print()
-            click.echo("\nSYSTEM INFO:\n")
-            invoker.get_client_system_info().print()
-        invoker.print_post_messages()
-
+from .keepone import keepone
+from .link import link
+from .masker import masker
+from .merge import merge
 
 main.add_command(keepone)
 main.add_command(link)

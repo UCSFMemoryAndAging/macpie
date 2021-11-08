@@ -4,6 +4,8 @@ import click
 
 from macpie import read_excel, MACPieExcelWriter
 
+from .main import _BaseCommand
+
 
 @click.command()
 @click.option("--keep-original/--no-keep-original", default=True)
@@ -14,35 +16,29 @@ from macpie import read_excel, MACPieExcelWriter
 )
 @click.pass_context
 def merge(ctx, keep_original, primary):
-    invoker = ctx.obj
-    invoker.command_name = ctx.info_name
-    invoker.add_opt("keep_original", keep_original)
-    invoker.add_arg("primary", primary)
+    command_meta = ctx.obj
+    command_meta.command_name = ctx.info_name
+    command_meta.add_opt("keep_original", keep_original)
+    command_meta.add_arg("primary", primary)
 
-    cmd = _MergeCommand(
-        invoker.get_opt("verbose"),
-        invoker.get_opt("id_col"),
-        invoker.get_opt("date_col"),
-        invoker.get_opt("id2_col"),
-        invoker.get_opt("keep_original"),
-        invoker.get_arg("primary"),
-    )
-
-    collection = cmd.execute()
-
-    with MACPieExcelWriter(invoker.results_file) as writer:
-        collection.to_excel(writer, merge=True)
+    cmd = _MergeCommand(command_meta)
+    cmd.run_all()
 
 
-class _MergeCommand:
-    def __init__(self, verbose, id_col, date_col, id2_col, keep_original, primary) -> None:
-        self.verbose = verbose
-        self.id_col = id_col
-        self.date_col = date_col
-        self.id2_col = id2_col
-        self.keep_original = keep_original
-        self.primary = primary
+class _MergeCommand(_BaseCommand):
+    def __init__(self, command_meta) -> None:
+        super().__init__(command_meta)
+
+        self.verbose = command_meta.get_opt("verbose")
+        self.id_col = command_meta.get_opt("id_col")
+        self.date_col = command_meta.get_opt("date_col")
+        self.id2_col = command_meta.get_opt("id2_col")
+        self.keep_original = command_meta.get_opt("keep_original")
+        self.primary = command_meta.get_arg("primary")
 
     def execute(self):
-        collection = read_excel(self.primary, as_collection=True)
-        return collection
+        self.results = read_excel(self.primary, as_collection=True)
+
+    def output_results(self):
+        with MACPieExcelWriter(self.results_file) as writer:
+            self.results.to_excel(writer, merge=True)

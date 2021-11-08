@@ -46,6 +46,7 @@ import click
 import pandas as pd
 
 import macpie as mp
+from macpie import pathtools
 from macpie.util import IdMapCols, Masker
 
 from macpie.cli.common import allowed_path, show_parameter_source
@@ -200,7 +201,8 @@ def masker(
     cols_to_drop,
     output_id_maps,
 ):
-    invoker = ctx.obj
+    command_meta = ctx.obj
+    results_dir = pathtools.create_dir_with_datetime(dir_name_prefix="results_")
 
     valid_filepaths, invalid_filepaths = mp.pathtools.validate_paths(input_path, allowed_path)
 
@@ -227,13 +229,13 @@ def masker(
 
     for file_path in valid_filepaths:
         click.echo(f"\nProcessing file: {file_path.resolve()}")
-        mask_file(masker, file_path, invoker.results_dir)
+        mask_file(masker, file_path, results_dir)
 
     if output_id_maps:
         if id_cols:
-            id_map.to_csv_file(invoker.results_dir / "id_map.csv")
+            id_map.to_csv_file(results_dir / "id_map.csv")
         if id2_cols:
-            id2_map.to_csv_file(invoker.results_dir / "id2_map.csv")
+            id2_map.to_csv_file(results_dir / "id2_map.csv")
 
 
 def mask_file(masker, input_filepath, output_dir):

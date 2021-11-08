@@ -4,8 +4,9 @@ import click
 
 from macpie import Dataset, MACPieExcelWriter, MergeableAnchoredList, pathtools
 from macpie._config import get_option
-
 from macpie.cli.common import allowed_path
+
+from .main import _BaseCommand
 
 NEW_ID_COL_NAME = "link_id"
 
@@ -75,46 +76,22 @@ def link(
     primary,
     secondary,
 ):
-    invoker = ctx.obj
-    invoker.command_name = ctx.info_name
-    invoker.add_opt("primary_keep", primary_keep)
-    invoker.add_opt("secondary_get", secondary_get)
-    invoker.add_opt("secondary_days", secondary_days)
-    invoker.add_opt("secondary_when", secondary_when)
-    invoker.add_opt("secondary_id_col", secondary_id_col)
-    invoker.add_opt("secondary_date_col", secondary_date_col)
-    invoker.add_opt("secondary_id2_col", secondary_id2_col)
-    invoker.add_opt("merge_results", merge_results)
-    invoker.add_opt("keep_original", keep_original)
-    invoker.add_arg("primary", primary)
-    invoker.add_arg("secondary", secondary)
+    command_meta = ctx.obj
+    command_meta.command_name = ctx.info_name
+    command_meta.add_opt("primary_keep", primary_keep)
+    command_meta.add_opt("secondary_get", secondary_get)
+    command_meta.add_opt("secondary_days", secondary_days)
+    command_meta.add_opt("secondary_when", secondary_when)
+    command_meta.add_opt("secondary_id_col", secondary_id_col)
+    command_meta.add_opt("secondary_date_col", secondary_date_col)
+    command_meta.add_opt("secondary_id2_col", secondary_id2_col)
+    command_meta.add_opt("merge_results", merge_results)
+    command_meta.add_opt("keep_original", keep_original)
+    command_meta.add_arg("primary", primary)
+    command_meta.add_arg("secondary", secondary)
 
-    cmd = _LinkCommand(
-        invoker.get_opt("verbose"),
-        invoker.get_opt("id_col"),
-        invoker.get_opt("date_col"),
-        invoker.get_opt("id2_col"),
-        invoker.get_opt("primary_keep"),
-        invoker.get_opt("secondary_get"),
-        invoker.get_opt("secondary_days"),
-        invoker.get_opt("secondary_when"),
-        invoker.get_opt("secondary_id_col"),
-        invoker.get_opt("secondary_date_col"),
-        invoker.get_opt("secondary_id2_col"),
-        invoker.get_opt("merge_results"),
-        invoker.get_opt("keep_original"),
-        invoker.get_arg("primary"),
-        invoker.get_arg("secondary"),
-    )
-
-    collection = cmd.execute()
-
-    with MACPieExcelWriter(invoker.results_file) as writer:
-        collection.to_excel(writer, merge=invoker.get_opt("merge_results"))
-        if invoker.get_opt("verbose"):
-            collection.get_dataset_history_info().to_excel(writer)
-        invoker.get_command_info().to_excel(writer)
-        invoker.get_client_system_info().to_excel(writer)
+    cmd = _LinkCommand(command_meta)
+    cmd.run_all()
 
     msg = (
         "\nNOTE: If you want to merge/filter fields from the linked data in the "
@@ -128,49 +105,32 @@ def link(
         "where FILE is the file you just saved.\n"
         "\t5. A new results file will be created containing the merged results\n"
     )
+    click.echo(msg)
 
-    invoker.add_post_message(msg)
 
+class _LinkCommand(_BaseCommand):
+    def __init__(self, command_meta) -> None:
+        super().__init__(command_meta)
 
-class _LinkCommand:
-    def __init__(
-        self,
-        verbose,
-        id_col,
-        date_col,
-        id2_col,
-        primary_keep,
-        secondary_get,
-        secondary_days,
-        secondary_when,
-        secondary_id_col,
-        secondary_date_col,
-        secondary_id2_col,
-        merge_results,
-        keep_original,
-        primary,
-        secondary,
-    ) -> None:
-        self.verbose = verbose
-        self.id_col = id_col
-        self.date_col = date_col
-        self.id2_col = id2_col
-        self.primary_keep = primary_keep
-        self.secondary_get = secondary_get
-        self.secondary_days = secondary_days
-        self.secondary_when = secondary_when
-        self.secondary_id_col = secondary_id_col
-        self.secondary_date_col = secondary_date_col
-        self.secondary_id2_col = secondary_id2_col
-        self.merge_results = merge_results
-        self.keep_original = keep_original
-        self.primary = primary
-        self.secondary = secondary
+        self.verbose = command_meta.get_opt("verbose")
+        self.id_col = command_meta.get_opt("id_col")
+        self.date_col = command_meta.get_opt("date_col")
+        self.id2_col = command_meta.get_opt("id2_col")
+        self.primary_keep = command_meta.get_opt("primary_keep")
+        self.secondary_get = command_meta.get_opt("secondary_get")
+        self.secondary_days = command_meta.get_opt("secondary_days")
+        self.secondary_when = command_meta.get_opt("secondary_when")
+        self.secondary_id_col = command_meta.get_opt("secondary_id_col")
+        self.secondary_date_col = command_meta.get_opt("secondary_date_col")
+        self.secondary_id2_col = command_meta.get_opt("secondary_id2_col")
+        self.merge_results = command_meta.get_opt("merge_results")
+        self.keep_original = command_meta.get_opt("keep_original")
+        self.primary = command_meta.get_arg("primary")
+        self.secondary = command_meta.get_arg("secondary")
 
         self._validate()
 
     def execute(self):
-
         prim_dset = Dataset.from_file(
             self.primary,
             id_col_name=None,
@@ -218,7 +178,15 @@ class _LinkCommand:
                     click.echo(e)
                     raise (e)
 
-        return collection
+        self.collection = collection
+
+    def output_results(self):
+        with MACPieExcelWriter(self.results_file) as writer:
+            self.collection.to_excel(writer, merge=self.command_meta.get_opt("merge_results"))
+            if self.command_meta.get_opt("verbose") is True:
+                self.collection.get_dataset_history_info().to_excel(writer)
+            self.command_meta.get_command_info().to_excel(writer)
+            self.command_meta.get_client_system_info().to_excel(writer)
 
     def _validate(self):
         if not allowed_path(self.primary):

@@ -4,8 +4,9 @@ import click
 
 from macpie import BasicList, Dataset, MACPieExcelWriter, pathtools
 from macpie._config import get_option
-
 from macpie.cli.common import allowed_path
+
+from .main import _BaseCommand
 
 
 @click.command()
@@ -22,36 +23,25 @@ from macpie.cli.common import allowed_path
 )
 @click.pass_context
 def keepone(ctx, keep, primary):
-    invoker = ctx.obj
-    invoker.command_name = ctx.info_name
-    invoker.add_opt("keep", keep)
-    invoker.add_arg("primary", primary)
+    command_meta = ctx.obj
+    command_meta.command_name = ctx.info_name
+    command_meta.add_opt("keep", keep)
+    command_meta.add_arg("primary", primary)
 
-    cmd = _KeepOneCommand(
-        invoker.get_opt("verbose"),
-        invoker.get_opt("id_col"),
-        invoker.get_opt("date_col"),
-        invoker.get_opt("id2_col"),
-        invoker.get_opt("keep"),
-        invoker.get_arg("primary"),
-    )
-
-    collection = cmd.execute()
-
-    with MACPieExcelWriter(invoker.results_file) as writer:
-        collection.to_excel(writer)
-        invoker.get_command_info().to_excel(writer)
-        invoker.get_client_system_info().to_excel(writer)
+    cmd = _KeepOneCommand(command_meta)
+    cmd.run_all()
 
 
-class _KeepOneCommand:
-    def __init__(self, verbose, id_col, date_col, id2_col, keep, primary) -> None:
-        self.verbose = verbose
-        self.id_col = id_col
-        self.date_col = date_col
-        self.id2_col = id2_col
-        self.keep = keep
-        self.primary = primary
+class _KeepOneCommand(_BaseCommand):
+    def __init__(self, command_meta) -> None:
+        super().__init__(command_meta)
+
+        self.verbose = command_meta.get_opt("verbose")
+        self.id_col = command_meta.get_opt("id_col")
+        self.date_col = command_meta.get_opt("date_col")
+        self.id2_col = command_meta.get_opt("id2_col")
+        self.keep = command_meta.get_opt("keep")
+        self.primary = command_meta.get_arg("primary")
 
         self._validate()
 
@@ -74,7 +64,13 @@ class _KeepOneCommand:
 
             collection.append(dset)
 
-        return collection
+        self.results = collection
+
+    def output_results(self):
+        with MACPieExcelWriter(self.results_file) as writer:
+            self.results.to_excel(writer)
+            self.command_meta.get_command_info().to_excel(writer)
+            self.command_meta.get_client_system_info().to_excel(writer)
 
     def _validate(self):
         primary_valid, primary_invalid = pathtools.validate_paths(self.primary, allowed_path)
