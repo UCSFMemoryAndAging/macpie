@@ -326,7 +326,11 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
         if cls is MACPieExcelWriter:
             engine = kwargs.pop("engine", None)
             if engine is None:
-                engine = "mp_xlsxwriter"
+                engine = get_option("excel.writer.engine")
+            if engine not in ("mp_xlsxwriter", "mp_openpyxl"):
+                raise ValueError(
+                    f"Invalid engine: '{engine}''. Only 'mp_xlsxwriter' or 'mp_openpyxl' supported."
+                )
 
             cls = pd.io.excel._util.get_writer(engine)
 

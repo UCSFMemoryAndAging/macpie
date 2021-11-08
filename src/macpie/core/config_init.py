@@ -68,6 +68,8 @@ cf.register_option(
     validator=pandas_cf.is_str,
 )
 
+cf.register_option("excel.writer.engine", "mp_xlsxwriter", "", validator=pandas_cf.is_str)
+
 cf.register_option("excel.row_index_header", "Original_Order", "", validator=pandas_cf.is_str)
 
 cf.register_option("excel.sheet_name.default", "_mp_sheet", "", validator=pandas_cf.is_str)
