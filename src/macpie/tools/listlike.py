@@ -73,9 +73,9 @@ def is_list_like(obj, allow_sets: bool = True):
     :param obj: object to check
     """
     if allow_sets:
-        return isinstance(obj, (tuple, list))
-    else:
         return isinstance(obj, (set, tuple, list))
+    else:
+        return isinstance(obj, (tuple, list))
 
 
 def list_like_str_equal(a, b, case_sensitive=True):
@@ -150,7 +150,7 @@ def move_item_to(l, item, item_to_move_to, offset=0):
 
     if item_idx < item_to_move_to_idx:
         l.insert(item_to_move_to_idx - 1, l.pop(item_idx))
-    elif item_idx >= item_to_move_to_idx:
+    else:
         l.insert(item_to_move_to_idx, l.pop(item_idx))
 
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import openpyxl as pyxl
 import pandas as pd
-from pandas._testing.asserters import assert_frame_equal
+from pandas._testing import assert_frame_equal
 
 from macpie import openpyxltools
 
