@@ -7,4 +7,5 @@ from . import path as pathtools
 from . import shell as shelltools
 from . import string as strtools
 from . import tablib as tablibtools
+from . import xlsxwriter as xlsxwritertools
 from . import validator as validatortools

@@ -67,7 +67,7 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
 
         from tablib.formats._xlsx import XLSXFormat
 
-        XLSXFormat.dset_sheet(tlset, ws)
+        XLSXFormat.dset_sheet(tlset, ws, freeze_panes=freeze_panes)
 
     def highlight_duplicates(self, sheet_name, column_name):
         ws = self.book[sheet_name]
