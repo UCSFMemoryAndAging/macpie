@@ -4,7 +4,7 @@ import click
 
 from macpie import read_excel, MACPieExcelWriter
 
-from .main import _BaseCommand
+from ._common import _BaseCommand
 
 
 @click.command()

@@ -6,7 +6,7 @@ from macpie import BasicList, Dataset, MACPieExcelWriter, pathtools
 from macpie._config import get_option
 from macpie.cli.common import allowed_path
 
-from .main import _BaseCommand
+from ._common import _BaseCommand
 
 
 @click.command()
@@ -14,7 +14,10 @@ from .main import _BaseCommand
     "-k",
     "--keep",
     default="all",
-    type=click.Choice(["all", "earliest", "latest"], case_sensitive=False),
+    type=click.Choice(
+        ["all", "earliest", "latest"],
+        case_sensitive=False,
+    ),
 )
 @click.argument(
     "primary",
@@ -23,6 +26,15 @@ from .main import _BaseCommand
 )
 @click.pass_context
 def keepone(ctx, keep, primary):
+    """
+    This command groups rows that have the same :option:`--id2-col` value, and allows you to keep
+    only the earliest or latest row in each group as determined by the :option:`--date-col` values
+    (discarding the other rows in the group).
+
+    primary : pathlib.Path
+        a file path
+
+    """
     command_meta = ctx.obj
     command_meta.command_name = ctx.info_name
     command_meta.add_opt("keep", keep)

@@ -6,7 +6,7 @@ from macpie import Dataset, MACPieExcelWriter, MergeableAnchoredList, pathtools
 from macpie._config import get_option
 from macpie.cli.common import allowed_path
 
-from .main import _BaseCommand
+from ._common import _BaseCommand
 
 NEW_ID_COL_NAME = "link_id"
 
@@ -76,6 +76,10 @@ def link(
     primary,
     secondary,
 ):
+    """
+    Link command
+
+    """
     command_meta = ctx.obj
     command_meta.command_name = ctx.info_name
     command_meta.add_opt("primary_keep", primary_keep)
