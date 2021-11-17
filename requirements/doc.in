@@ -1,9 +1,15 @@
+# optional
+matplotlib
+networkx
+python-dotenv
+
+# documentation
+ipython
+myst_parser
+nbsphinx
 numpydoc
 pydata-sphinx-theme
 sphinx
-ipython
-sphinx_gallery
-myst_parser
-nbsphinx
-sphinx_toggleprompt
 sphinx-click
+sphinx_gallery
+sphinx_toggleprompt

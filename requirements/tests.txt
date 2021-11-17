@@ -6,25 +6,55 @@
 #
 attrs==21.2.0
     # via pytest
-importlib-metadata==4.8.1
+backports.entry-points-selectable==1.1.1
+    # via virtualenv
+coverage==6.1.2
+    # via -r requirements/tests.in
+distlib==0.3.3
+    # via virtualenv
+filelock==3.4.0
+    # via
+    #   tox
+    #   virtualenv
+importlib-metadata==4.8.2
     # via
     #   pluggy
     #   pytest
+    #   tox
+    #   virtualenv
 iniconfig==1.1.1
     # via pytest
-packaging==21.0
-    # via pytest
+packaging==21.2
+    # via
+    #   pytest
+    #   tox
+platformdirs==2.4.0
+    # via virtualenv
 pluggy==1.0.0
-    # via pytest
-py==1.10.0
-    # via pytest
-pyparsing==3.0.3
+    # via
+    #   pytest
+    #   tox
+py==1.11.0
+    # via
+    #   pytest
+    #   tox
+pyparsing==2.4.7
     # via packaging
 pytest==6.2.5
     # via -r requirements/tests.in
+six==1.16.0
+    # via
+    #   tox
+    #   virtualenv
 toml==0.10.2
-    # via pytest
-typing-extensions==3.10.0.2
+    # via
+    #   pytest
+    #   tox
+tox==3.24.4
+    # via -r requirements/tests.in
+typing-extensions==4.0.0
     # via importlib-metadata
+virtualenv==20.10.0
+    # via tox
 zipp==3.6.0
     # via importlib-metadata

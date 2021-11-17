@@ -1,7 +1,3 @@
 -r doc.in
 -r tests.in
-matplotlib
-networkx
 pip-tools
-python-dotenv
-tox
