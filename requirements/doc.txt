@@ -32,13 +32,14 @@ decorator==5.1.0
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-docutils==0.17.1
+docutils==0.16
     # via
     #   myst-parser
     #   nbsphinx
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-click
+    #   sphinx-tabs
 entrypoints==0.3
     # via
     #   jupyter-client
@@ -146,6 +147,7 @@ pygments==2.10.0
     #   jupyterlab-pygments
     #   nbconvert
     #   sphinx
+    #   sphinx-tabs
 pyparsing==2.4.7
     # via
     #   matplotlib
@@ -185,10 +187,13 @@ sphinx==4.3.0
     #   pydata-sphinx-theme
     #   sphinx-click
     #   sphinx-gallery
+    #   sphinx-tabs
     #   sphinx-toggleprompt
 sphinx-click==3.0.2
     # via -r requirements/doc.in
 sphinx-gallery==0.10.1
+    # via -r requirements/doc.in
+sphinx-tabs==3.2.0
     # via -r requirements/doc.in
 sphinx-toggleprompt==0.0.5
     # via -r requirements/doc.in
