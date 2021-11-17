@@ -1,5 +1,4 @@
 import collections
-import itertools
 
 
 def duplicate_indices(iterable):
@@ -96,15 +95,22 @@ def overlay(bottom, top, predicate=None, constrain_to_top=False, fillvalue=None)
         >>> list(result)
         [1, 2, 3, 4, 5, 6, 7]
 
-    :param bottom: if predicate is true for an element, overlay corresponding element
-                   from top (i.e. replace the element with the one from top)
-    :param top: iterable to copy values from
-    :param predicate: Boolean-valued function to test each element of bottom,
-                      overlaying parallel values from top if true. If 'None' (default),
-                      do not overlay any values from top.
-    :param constrain_to_top: constrain values to top. if true and top is shorter than bottom, truncate bottom
-    to match length of top; if top is longer than bottom, fill extra elements with fillvalue
-    :param fillvalue:
+    Parameters
+    ----------
+    bottom : iterable
+        if predicate is true for an element, overlay corresponding element
+        from top (i.e. replace the element with the one from top)
+    top : iterable
+        iterable to copy values from
+    predicate : Boolean-valued function
+        to test each element of bottom,
+        overlaying parallel values from top if true. If 'None' (default),
+        do not overlay any values from top.
+    constrain_to_top : bool, optional, default: False
+        constrain values to top. if true and top is shorter than bottom, truncate bottom
+        to match length of top; if top is longer than bottom, fill extra elements with fillvalue
+    fillvalue : optional, default: None
+        value to fill extra items with
 
     """
     if predicate is None:

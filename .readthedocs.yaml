@@ -1,7 +1,8 @@
 version: 2
 python:
+  version: 3
   install:
-    - requirements: requirements/docs.txt
+    - requirements: requirements/doc.txt
     - method: pip
       path: .
 sphinx:

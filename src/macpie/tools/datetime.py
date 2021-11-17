@@ -1,3 +1,7 @@
+"""
+Utility functions related to dates and times.
+"""
+
 import datetime
 
 

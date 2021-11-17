@@ -225,9 +225,13 @@ class IdMap:
     """Essentially a dict that maps IDs (ints) to instaces of _MaskedData,
     a namedtuple containing the following data used for masking:
 
-        masked_id - a replacement ID
-        day_shift - a random number between 365 and 730 used to shift
-                    date values backwards by
+    Parameters
+    ----------
+    masked_id :
+        a replacement ID
+    day_shift :
+        a random number between 365 and 730 used to shift
+        date values backwards by
     """
 
     def __init__(self, id_map=None):

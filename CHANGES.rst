@@ -9,16 +9,19 @@
    Security - in case of vulnerabilities.
 
 
+Release notes
+=============
+
 0.4 (2021-XX-XX)
 ----------------
 
 Added
 ~~~~~
-- :ref:`masker <command-masker>` command for masking data
-- :ref:`Utilities <api-utilities>` classes for masking data
+- :doc:`Utilities <api_docs/api_reference/util>` classes for masking data
 
   - :class:`util.Masker`
-  - :class:`util.Mapper`
+  - :class:`util.IdMap`
+  - :class:`util.IdMapCols`
 
 Changed
 ~~~~~~~
@@ -35,25 +38,22 @@ Other
 Added
 ~~~~~
 - Core :class:`Dataset` class
-- :ref:`Collections <api-collections-classes>` classes
+- :class:`DatasetFields` class
+- :doc:`Collections <api_docs/api_reference/collections>` classes
   
   - :class:`BasicList`
   - :class:`AnchoredList`
   - :class:`MergeableAnchoredList`
-  - :class:`BasicGraph`
-  - :class:`ExecutableGraph`
 
-- :ref:`Tools <api-tools>`
+- :doc:`Tools <api_docs/api_reference/tools>`
 
-  - :ref:`Tablib <api-tools-tablib>`
+  - :ref:`tablibtools <api-tools-tablibtools>`
 
-- :ref:`Utilities <api-utilities>`
+- :doc:`Utilities <api_docs/api_reference/util>`
 
-  - :class:`util.DatasetFields`
-  - :class:`util.Info`
   - :class:`util.TrackHistory`
 
-- :ref:`Options <api-options>` system
+- :doc:`Options <api_docs/api_reference/options>` system
 
 Changed
 ~~~~~~~
@@ -62,11 +62,6 @@ Changed
 Other
 ~~~~~
 - Drop support for Python 3.6
-- Bumped pandas 1.1.5 -> 1.2.3
-- Bumped pytest 6.2.1 -> 6.2.2
-- Bumped openpyxl 3.0.5 -> 3.0.6
-- Bumped sphinx 3.4.0 -> 3.5.2
-- Bumped tox 3.20.1 -> 3.23.0
 
 
 0.2 (2020-12-23)

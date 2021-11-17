@@ -1,0 +1,4 @@
+``mpsql`` command
+=================
+
+.. program:: mpsql

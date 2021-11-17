@@ -1,0 +1,9 @@
+numpydoc
+pydata-sphinx-theme
+sphinx
+ipython
+sphinx_gallery
+myst_parser
+nbsphinx
+sphinx_toggleprompt
+sphinx-click

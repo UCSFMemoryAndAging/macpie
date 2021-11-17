@@ -1,0 +1,275 @@
+﻿macpie.Dataset
+==============
+
+.. currentmodule:: macpie
+
+.. autoclass:: Dataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dataset.__init__
+      ~Dataset.abs
+      ~Dataset.add
+      ~Dataset.add_prefix
+      ~Dataset.add_suffix
+      ~Dataset.add_tag
+      ~Dataset.agg
+      ~Dataset.aggregate
+      ~Dataset.align
+      ~Dataset.all
+      ~Dataset.any
+      ~Dataset.append
+      ~Dataset.apply
+      ~Dataset.applymap
+      ~Dataset.asfreq
+      ~Dataset.asof
+      ~Dataset.assign
+      ~Dataset.astype
+      ~Dataset.at_time
+      ~Dataset.backfill
+      ~Dataset.between_time
+      ~Dataset.bfill
+      ~Dataset.bool
+      ~Dataset.boxplot
+      ~Dataset.clear_tags
+      ~Dataset.clip
+      ~Dataset.combine
+      ~Dataset.combine_first
+      ~Dataset.compare
+      ~Dataset.convert_dtypes
+      ~Dataset.copy
+      ~Dataset.corr
+      ~Dataset.corrwith
+      ~Dataset.count
+      ~Dataset.cov
+      ~Dataset.create_id_col
+      ~Dataset.cross_section
+      ~Dataset.cummax
+      ~Dataset.cummin
+      ~Dataset.cumprod
+      ~Dataset.cumsum
+      ~Dataset.date_proximity
+      ~Dataset.default_display_name_generator
+      ~Dataset.describe
+      ~Dataset.diff
+      ~Dataset.div
+      ~Dataset.divide
+      ~Dataset.dot
+      ~Dataset.drop
+      ~Dataset.drop_duplicates
+      ~Dataset.drop_sys_cols
+      ~Dataset.droplevel
+      ~Dataset.dropna
+      ~Dataset.duplicated
+      ~Dataset.eq
+      ~Dataset.equals
+      ~Dataset.eval
+      ~Dataset.ewm
+      ~Dataset.excel_dict_has_tags
+      ~Dataset.expanding
+      ~Dataset.explode
+      ~Dataset.ffill
+      ~Dataset.fillna
+      ~Dataset.filter
+      ~Dataset.first
+      ~Dataset.first_valid_index
+      ~Dataset.floordiv
+      ~Dataset.from_dict
+      ~Dataset.from_excel_dict
+      ~Dataset.from_file
+      ~Dataset.from_records
+      ~Dataset.ge
+      ~Dataset.get
+      ~Dataset.group_by_keep_one
+      ~Dataset.groupby
+      ~Dataset.gt
+      ~Dataset.has_tag
+      ~Dataset.head
+      ~Dataset.hist
+      ~Dataset.idxmax
+      ~Dataset.idxmin
+      ~Dataset.infer_objects
+      ~Dataset.info
+      ~Dataset.insert
+      ~Dataset.interpolate
+      ~Dataset.isin
+      ~Dataset.isna
+      ~Dataset.isnull
+      ~Dataset.items
+      ~Dataset.iteritems
+      ~Dataset.iterrows
+      ~Dataset.itertuples
+      ~Dataset.join
+      ~Dataset.keep_cols
+      ~Dataset.keep_fields
+      ~Dataset.keys
+      ~Dataset.kurt
+      ~Dataset.kurtosis
+      ~Dataset.last
+      ~Dataset.last_valid_index
+      ~Dataset.le
+      ~Dataset.lookup
+      ~Dataset.lt
+      ~Dataset.mad
+      ~Dataset.mask
+      ~Dataset.max
+      ~Dataset.mean
+      ~Dataset.median
+      ~Dataset.melt
+      ~Dataset.memory_usage
+      ~Dataset.merge
+      ~Dataset.min
+      ~Dataset.mod
+      ~Dataset.mode
+      ~Dataset.mul
+      ~Dataset.multiply
+      ~Dataset.ne
+      ~Dataset.nlargest
+      ~Dataset.notna
+      ~Dataset.notnull
+      ~Dataset.nsmallest
+      ~Dataset.nunique
+      ~Dataset.pad
+      ~Dataset.pct_change
+      ~Dataset.pipe
+      ~Dataset.pivot
+      ~Dataset.pivot_table
+      ~Dataset.pop
+      ~Dataset.pow
+      ~Dataset.prepend_level
+      ~Dataset.prod
+      ~Dataset.product
+      ~Dataset.quantile
+      ~Dataset.query
+      ~Dataset.radd
+      ~Dataset.rank
+      ~Dataset.rdiv
+      ~Dataset.reindex
+      ~Dataset.reindex_like
+      ~Dataset.rename
+      ~Dataset.rename_axis
+      ~Dataset.rename_col
+      ~Dataset.reorder_levels
+      ~Dataset.replace
+      ~Dataset.replace_tag
+      ~Dataset.resample
+      ~Dataset.reset_index
+      ~Dataset.rfloordiv
+      ~Dataset.rmod
+      ~Dataset.rmul
+      ~Dataset.rolling
+      ~Dataset.round
+      ~Dataset.rpow
+      ~Dataset.rsub
+      ~Dataset.rtruediv
+      ~Dataset.sample
+      ~Dataset.select_dtypes
+      ~Dataset.sem
+      ~Dataset.set_axis
+      ~Dataset.set_flags
+      ~Dataset.set_index
+      ~Dataset.shift
+      ~Dataset.skew
+      ~Dataset.slice_shift
+      ~Dataset.sort_by_id2
+      ~Dataset.sort_index
+      ~Dataset.sort_values
+      ~Dataset.squeeze
+      ~Dataset.stack
+      ~Dataset.std
+      ~Dataset.sub
+      ~Dataset.subtract
+      ~Dataset.sum
+      ~Dataset.swapaxes
+      ~Dataset.swaplevel
+      ~Dataset.tail
+      ~Dataset.take
+      ~Dataset.to_clipboard
+      ~Dataset.to_csv
+      ~Dataset.to_dict
+      ~Dataset.to_excel
+      ~Dataset.to_excel_dict
+      ~Dataset.to_feather
+      ~Dataset.to_gbq
+      ~Dataset.to_hdf
+      ~Dataset.to_html
+      ~Dataset.to_json
+      ~Dataset.to_latex
+      ~Dataset.to_markdown
+      ~Dataset.to_numpy
+      ~Dataset.to_parquet
+      ~Dataset.to_period
+      ~Dataset.to_pickle
+      ~Dataset.to_records
+      ~Dataset.to_sql
+      ~Dataset.to_stata
+      ~Dataset.to_string
+      ~Dataset.to_timestamp
+      ~Dataset.to_xarray
+      ~Dataset.to_xml
+      ~Dataset.transform
+      ~Dataset.transpose
+      ~Dataset.truediv
+      ~Dataset.truncate
+      ~Dataset.tshift
+      ~Dataset.tz_convert
+      ~Dataset.tz_localize
+      ~Dataset.unstack
+      ~Dataset.update
+      ~Dataset.value_counts
+      ~Dataset.var
+      ~Dataset.where
+      ~Dataset.xs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dataset.T
+      ~Dataset.all_fields
+      ~Dataset.at
+      ~Dataset.attrs
+      ~Dataset.axes
+      ~Dataset.col_count
+      ~Dataset.columns
+      ~Dataset.date_col_name
+      ~Dataset.display_name
+      ~Dataset.display_name_generator
+      ~Dataset.dtypes
+      ~Dataset.empty
+      ~Dataset.excel_sheetname
+      ~Dataset.flags
+      ~Dataset.history
+      ~Dataset.iat
+      ~Dataset.id2_col_name
+      ~Dataset.id_col_name
+      ~Dataset.iloc
+      ~Dataset.index
+      ~Dataset.key_cols
+      ~Dataset.key_fields
+      ~Dataset.loc
+      ~Dataset.name
+      ~Dataset.ndim
+      ~Dataset.non_key_cols
+      ~Dataset.non_key_fields
+      ~Dataset.row_count
+      ~Dataset.shape
+      ~Dataset.size
+      ~Dataset.style
+      ~Dataset.sys_cols
+      ~Dataset.sys_fields
+      ~Dataset.tag_duplicates
+      ~Dataset.tags
+      ~Dataset.values
+   
+   
