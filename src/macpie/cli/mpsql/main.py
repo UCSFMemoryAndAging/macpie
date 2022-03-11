@@ -4,6 +4,7 @@ import click
 
 from macpie.cli.common import show_parameter_source
 
+from .createproc import createproc
 from .createtable import createtable
 from .masktable import masktable
 
@@ -67,5 +68,6 @@ def main(ctx, host, port, user, password, database):
     }
 
 
+main.add_command(createproc)
 main.add_command(createtable)
 main.add_command(masktable)

@@ -23,6 +23,23 @@ def execute_multiline_query(cnx, query, echo=True):
     cnx.commit()
 
 
+def show_create_procedure(cnx, procname):
+    cur = cnx.cursor()
+    cur.execute(f"SHOW CREATE PROCEDURE {procname}")
+    result = cur.fetchall()
+    result = result[0]
+    (
+        procname,
+        sql_mode,
+        proc_code,
+        character_set_client,
+        collation_connection,
+        database_collation,
+    ) = result
+
+    return proc_code
+
+
 def show_create_table(cnx, tablename):
     cur = cnx.cursor()
     cur.execute(f"SHOW CREATE TABLE {tablename}")
