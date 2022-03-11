@@ -11,6 +11,7 @@ from .general import (
     flatten_multiindex,
     get_col_name,
     get_col_names,
+    get_cols_by_prefixes,
     insert,
     is_date_col,
     mark_duplicates_by_cols,

@@ -84,3 +84,10 @@ def str_equals(a: str, b: str, case_sensitive=True):
         return str(a) == str(b)
     else:
         return str(a).casefold() == str(b).casefold()
+
+
+def str_startswith(s: str, prefix: str, case_sensitive=True):
+    if case_sensitive:
+        return s.startswith(prefix)
+    else:
+        return s.lower().startswith(prefix.lower())

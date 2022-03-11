@@ -11,41 +11,60 @@ def test_filter_get_index():
     assert result == (3, 2)
 
 
-def test_filter_get_meta():
+def test_filter_get_message():
     seq = [1, "asdf", 3, None, "a", 5]
-    result = itertools.filter_get_meta(
-        [lambda x: x is None or pd.isnull(x), lambda x: not isinstance(x, int)],
+
+    def blank_id(x):
+        return x is None or pd.isnull(x)
+
+    def invalid_num(x):
+        return not isinstance(x, int)
+
+    result = itertools.filter_get_message(
+        [blank_id, invalid_num],
         seq,
-        meta=["Blank ID", "Invalid ID"],
         only_first=True,
     )
     assert list(result) == [
-        (None, 3, "Blank ID"),
-        ("asdf", 1, "Invalid ID"),
-        ("a", 4, "Invalid ID"),
+        (3, None, "blank_id"),
+        (1, "asdf", "invalid_num"),
+        (4, "a", "invalid_num"),
     ]
 
-    seq = [1, "asdf", 3, None, "a", 5]
-    result = itertools.filter_get_meta(
-        [lambda x: x is None or pd.isnull(x), lambda x: not isinstance(x, int)],
+    result = itertools.filter_get_message(
+        [(blank_id, "BLANK"), (invalid_num, "INVALID")],
         seq,
-        meta=["Blank ID", "Invalid ID"],
+        only_first=True,
+    )
+    assert list(result) == [
+        (3, None, "BLANK"),
+        (1, "asdf", "INVALID"),
+        (4, "a", "INVALID"),
+    ]
+
+    result = itertools.filter_get_message(
+        [blank_id, invalid_num],
+        seq,
         only_first=False,
     )
     assert list(result) == [
-        (None, 3, "Blank ID"),
-        ("asdf", 1, "Invalid ID"),
-        (None, 3, "Invalid ID"),
-        ("a", 4, "Invalid ID"),
+        (3, None, "blank_id"),
+        (1, "asdf", "invalid_num"),
+        (3, None, "invalid_num"),
+        (4, "a", "invalid_num"),
     ]
 
-    seq = [1, "asdf", 3, None, "a", 5]
-    result = itertools.filter_get_meta(
-        [lambda x: x is None or pd.isnull(x), lambda x: not isinstance(x, int)],
+    result = itertools.filter_get_message(
+        [(blank_id, "BLANK"), (invalid_num, "INVALID")],
         seq,
-        meta=None,
         only_first=False,
     )
+    assert list(result) == [
+        (3, None, "BLANK"),
+        (1, "asdf", "INVALID"),
+        (3, None, "INVALID"),
+        (4, "a", "INVALID"),
+    ]
 
 
 def test_overlay_no_predicate():

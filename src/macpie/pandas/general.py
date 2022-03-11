@@ -1,3 +1,4 @@
+from collections import defaultdict
 import dateutil
 from typing import List
 
@@ -5,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from macpie._config import get_option
-from macpie import lltools, strtools
+from macpie import itertools, lltools, strtools
 
 
 def add_diff_days(
@@ -261,6 +262,88 @@ def get_col_names(df: pd.DataFrame, col_names: List[str], strict=True):
                 df_col = None
         df_col_names.append(df_col)
     return df_col_names
+
+
+def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
+    """Get columns that start with the prefixes.
+
+    Parameters
+    ----------
+    df : DataFrame
+    prefixes: str, or list of strs
+        Column labels that start with the prefixes will be returned.
+    one_match_only: bool, optional
+        If True, raise error if a prefix matches more than one column.
+
+    Returns
+    -------
+    dictionary
+        A dict that maps each prefix to list of columns (Series)
+        that start with that prefix.
+
+    Examples
+    --------
+    >>> df = pd.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
+    >>> df
+        col1  col2
+    0     1     3
+    1     2     4
+    >>> df.mac.get_cols_by_prefixes("col1")
+    defaultdict(
+        <class 'list'>,
+        {
+            'col1': [0    1
+                     1    2
+                     Name: col1, dtype: int64]
+        }
+    )
+
+    >>> df.mac.get_cols_by_prefixes(["col1","col2"])
+    defaultdict(
+        <class 'list'>,
+        {
+            'col2': [0    3
+                     1    4
+                     Name: col2, dtype: int64],
+            'col1': [0    1
+                     1    2
+                     Name: col1, dtype: int64]
+        }
+    )
+
+    If you want to allow more than one match for prefixes,
+    set `one_match_only`=`False`.
+
+    >>> df.mac.get_cols_by_prefixes("col",one_match_only=False)
+    defaultdict(
+        <class 'list'>,
+        {
+            'col': [0    1
+                    1    2
+                    Name: col1, dtype: int64,
+                    0    3
+                    1    4
+                    Name: col2, dtype: int64]
+        }
+    )
+    """
+    results = defaultdict(list)
+
+    prefixes = set(lltools.maybe_make_list(prefixes))
+    for prefix in prefixes:
+        matched_cols = list(
+            filter(lambda df_col: df_col.lower().startswith(prefix.lower()), df.columns)
+        )
+
+        if one_match_only and len(matched_cols) > 1:
+            raise KeyError(f"Multiple columns start with prefix: {matched_cols}")
+
+        for matched_col in matched_cols:
+            results[prefix].append(df[matched_col])
+
+    results.default_factory = None
+
+    return results
 
 
 def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):

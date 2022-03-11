@@ -37,7 +37,7 @@ class SimpleDataset:
                 f"{self.__class__.__name__}("
                 f"title={self._tlset.title!r}, "
                 f"headers={self._tlset.headers!r}, "
-                f"row_count={self._tlset.length!r}, "
+                f"col_count={self._tlset.length!r}, "
                 f"row_count={self._tlset.height!r})"
             )
         except AttributeError:

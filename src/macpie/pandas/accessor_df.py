@@ -79,6 +79,10 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.get_col_names`"""
         return general.get_col_names(self._df, col_names, strict)
 
+    def get_cols_by_prefixes(self, prefixes: List[str], one_match_only=True):
+        """see :meth:`macpie.pandas.get_cols_by_prefixes`"""
+        return general.get_cols_by_prefixes(self._df, prefixes, one_match_only)
+
     def insert(self, col_name, col_value, allow_duplicates=False):
         """see :meth:`macpie.pandas.insert`"""
         return general.insert(self._df, col_name, col_value, allow_duplicates)

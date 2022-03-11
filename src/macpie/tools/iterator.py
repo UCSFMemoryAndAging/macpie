@@ -40,10 +40,10 @@ def filter_get_index(predicate, iterable):
             yield item, i
 
 
-def filter_get_meta(predicates, iterable, meta=None, only_first=False):
+def filter_get_message(predicates, iterable, only_first=False):
     """Make an iterator from items of ``iterable`` for which one or more
     ``predicates`` returns true, along with the index of that item and
-    optional meta information.
+    optional message information.
 
     Returns an iterator of tuples of length 3, where the first value is the
     item that returned true, second value is the index of that item, and the
@@ -51,7 +51,7 @@ def filter_get_meta(predicates, iterable, meta=None, only_first=False):
     otherwise it is the predicate function itself.
 
         >>> seq = [1, "asdf", 3, None, "a", 5]
-        >>> valid_values = filter_get_meta(lambda x: isinstance(x, int), seq)
+        >>> valid_values = filter_get_message(lambda x: isinstance(x, int), seq)
         >>> next(nums)
         (3, 2)
 
@@ -65,19 +65,26 @@ def filter_get_meta(predicates, iterable, meta=None, only_first=False):
     :param only_first: Boolean indicating whether to constrain results to
                        the first predicate that returns true. Each item only matches predicate once
     """
-    if meta is None:
-        meta = [p.__name__ for p in predicates]
-    else:
-        meta = overlay(meta, predicates, constrain_to_top=True)
 
-    iterator = zip(predicates, meta)
     already_filtered = []
-    for predicate, meta_value in iterator:
+    for predicate in predicates:
+        if callable(predicate):
+            message = predicate.__name__
+        else:
+            try:
+                predicate, message = predicate
+            except TypeError:
+                raise TypeError(
+                    '"Predicate" should either be a callable or a length-2 sequence '
+                    "where the first element is the predicate and the second element "
+                    "is the message."
+                )
+
         for item, i in filter_get_index(predicate, iterable):
             if only_first and i in already_filtered:
                 continue
             else:
-                yield item, i, meta_value
+                yield i, item, message
                 if only_first:
                     already_filtered.append(i)
 

@@ -212,6 +212,42 @@ def test_get_col_name():
         df.mac.get_col_name(None)
 
 
+def test_get_cols_by_prefixes():
+    d = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df = pd.DataFrame(data=d)
+
+    result = df.mac.get_cols_by_prefixes("col1")
+    assert result["col1"][0].equals(df["col1"])
+
+    result = df.mac.get_cols_by_prefixes(["col1"])
+    assert result["col1"][0].equals(df["col1"])
+
+    result = df.mac.get_cols_by_prefixes(["col1", "col2"])
+    assert len(result) == 2
+    assert result["col1"][0].equals(df["col1"])
+    assert result["col2"][0].equals(df["col2"])
+
+    with pytest.raises(KeyError):
+        result = df.mac.get_cols_by_prefixes("col")
+
+    result = df.mac.get_cols_by_prefixes("col", one_match_only=False)
+    assert len(result) == 1
+    assert len(result["col"]) == 4
+    assert result["col"][0].equals(df["col1"])
+    assert result["col"][3].equals(df["col6"])
+
+    # modifying original dataframe should not affect the result
+    df["col6"] = df["col6"].replace(["11"], 18)
+    assert not result["col"][3].equals(df["col6"])
+
+
 def test_to_datetime():
     d1 = {
         "col1": ["a", "b", "c"],
