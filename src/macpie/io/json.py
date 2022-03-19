@@ -1,14 +1,10 @@
 import datetime
-import dateutil
 import decimal
 import json
 from pathlib import Path
 
 
 class MACPieJSONEncoder(json.JSONEncoder):
-    DATE_FORMAT = "%Y-%m-%d"
-    TIME_FORMAT = "%H:%M:%S"
-
     def default(self, obj):
         if hasattr(obj, "to_json_dict"):
             return obj.to_json_dict()
@@ -19,11 +15,11 @@ class MACPieJSONEncoder(json.JSONEncoder):
         if isinstance(obj, datetime.datetime):
             return {
                 "_type": "datetime",
-                "value": obj.strftime("%s %s" % (self.DATE_FORMAT, self.TIME_FORMAT)),
+                "value": obj.isoformat(),
             }
 
         if isinstance(obj, datetime.date):
-            return {"_type": "date", "value": obj.strftime("%s" % (self.DATE_FORMAT))}
+            return {"_type": "date", "value": obj.isoformat()}
 
         if isinstance(obj, decimal.Decimal):
             return str(obj)
@@ -43,7 +39,10 @@ class MACPieJSONDecoder(json.JSONDecoder):
             return obj
 
         type = obj["_type"]
-        if type == "datetime" or type == "date":
-            return dateutil.parser.parse(obj["value"])
+        if type == "datetime":
+            return datetime.datetime.fromisoformat(obj["value"])
+
+        if type == "date":
+            return datetime.date.fromisoformat(obj["value"])
 
         return obj
