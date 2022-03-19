@@ -154,12 +154,55 @@ def move_item_to(l, item, item_to_move_to, offset=0):
         l.insert(item_to_move_to_idx, l.pop(item_idx))
 
 
-def remove_trailers(iterable, predicate=None):
+def rtrim_seq(seq, predicate=None):
     """
-    Remove trailing elements from list as long as predicate is true.
-    Return an iterator over the new list.
+    Remove trailing elements from sequence as long as predicate is true.
+    Return an iterator over the new sequence.
+
+        >>> lst = [1, 2, 3, None, None]
+        >>> trimmed = rtrim_seq(lst)
+        >>> list(trimmed)
+        [1, 2, 3]
+
+    :param seq: an object acceptable to the built-in reversed function
+
     """
     if predicate is None:
         predicate = lambda x: x is None
 
-    return reversed(tuple(itertools.dropwhile(predicate, reversed(iterable))))
+    return reversed(tuple(itertools.dropwhile(predicate, reversed(seq))))
+
+
+def rtrim_seq_longest(*seqs, predicate=None, fillvalue=None):
+    """
+    Remove trailing elements from each sequence as long as predicate is true.
+    If the resulting sequences are of uneven length, missing values are filled
+    in with fillvalue.
+
+        >>> lst1 = [1, 2, 3, None, None]
+        >>> lst2 = [1, 2, None, None]
+        >>> trimmed = rtrim_seq_longest(lst1, lst2)
+        >>> list(trimmed[0])
+        [1, 2, 3]
+        >>> list(trimmed[1])
+        [1, 2, None]
+
+    :param seq: an object acceptable to the built-in reversed function
+    """
+
+    if predicate is None:
+        predicate = lambda x: x is None
+
+    reversed_results = []
+    max_len = 0
+    for seq in seqs:
+        seq = tuple(itertools.dropwhile(predicate, reversed(seq)))
+        max_len = max(max_len, len(seq))
+        reversed_results.append(seq)
+
+    results = []
+    for seq in reversed_results:
+        seq = itertools.chain(reversed(seq), itertools.repeat(fillvalue, max_len - len(seq)))
+        results.append(seq)
+
+    return results
