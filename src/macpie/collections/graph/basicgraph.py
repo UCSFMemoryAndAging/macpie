@@ -1,9 +1,16 @@
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+
+    _has_matplotlib = True
+except ImportError:
+    _has_matplotlib = False
+
+
 import networkx as nx
 
 from macpie import Dataset, strtools
 
-from .base import BaseCollection
+from ..base import BaseCollection
 
 
 class BasicGraph(BaseCollection):
@@ -115,6 +122,9 @@ class BasicGraph(BaseCollection):
         """Print a graph representation of the graph using the
         ``matplotlib`` library.
         """
+        if not _has_matplotlib:
+            raise ImportError("matplotlib is required for this")
+
         pos = nx.shell_layout(self.g)
         # pos = nx.spring_layout(self.g)
 

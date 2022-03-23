@@ -1,13 +1,12 @@
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
-from shutil import copy
 
 import pytest
 
 from macpie._config import get_option
 from macpie.core.dataset import LavaDataset
-from macpie.collections.executablegraph import ExecutableGraph
+from macpie.collections.graph import ExecutableGraph
 from macpie.pandas import file_to_dataframe
 from macpie.pandas.operators.date_proximity import date_proximity
 from macpie.pandas.operators.group_by_keep_one import group_by_keep_one

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from macpie.pandas import group_by_keep_one
 from macpie.core.dataset import LavaDataset
-from macpie.collections.executablegraph import ExecutableGraph
+from macpie.collections.graph import ExecutableGraph
 
 data_dir = Path("tests/data/").resolve()
 current_dir = Path(__file__).parent.absolute()
