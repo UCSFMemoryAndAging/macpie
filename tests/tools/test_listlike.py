@@ -141,30 +141,30 @@ def test_list_like_str_equal():
     lltools.list_like_str_equal(("abc", "def"), ("ABC", "def", "g"), case_sensitive=False) is False
 
 
-def test_rtrim_seq():
+def test_rtrim():
     l1 = [1, 2, 3, None, None]
-    l1_result = lltools.rtrim_seq(l1)
+    l1_result = lltools.rtrim(l1)
     assert list(l1_result) == [1, 2, 3]
 
     l2 = [1, 2, 3, None, None]
-    l2_result = lltools.rtrim_seq(l1, lambda x: x == 3)
+    l2_result = lltools.rtrim(l1, lambda x: x == 3)
     assert list(l2_result) == l2
 
     l3 = [1, 2, 3]
-    l3_result = lltools.rtrim_seq(l3)
+    l3_result = lltools.rtrim(l3)
     assert list(l3_result) == l3
 
     l4 = [1, 2, 3, 4, 4]
-    l4_result = lltools.rtrim_seq(l4, lambda x: x == 4)
+    l4_result = lltools.rtrim(l4, lambda x: x == 4)
     assert list(l4_result) == [1, 2, 3]
 
 
-def test_rtrim_seq_longest():
+def test_rtrim_longest():
 
     l1 = [1, 2, 3, None, None, None]
     l2 = [1, 2, 3, None]
 
-    result = lltools.rtrim_seq_longest(l1, l2)
+    result = lltools.rtrim_longest(l1, l2)
     assert len(result) == 2
     assert list(result[0]) == [1, 2, 3]
     assert list(result[1]) == [1, 2, 3]
@@ -172,6 +172,6 @@ def test_rtrim_seq_longest():
     l1 = [1, 2, 3, None, None, None]
     l2 = [1, 2, None]
 
-    result = lltools.rtrim_seq_longest(l1, l2)
+    result = lltools.rtrim_longest(l1, l2)
     assert list(result[0]) == [1, 2, 3]
     assert list(result[1]) == [1, 2, None]

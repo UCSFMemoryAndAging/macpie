@@ -154,7 +154,7 @@ def move_item_to(l, item, item_to_move_to, offset=0):
         l.insert(item_to_move_to_idx, l.pop(item_idx))
 
 
-def rtrim_seq(seq, predicate=None):
+def rtrim(seq, predicate=None):
     """
     Remove trailing elements from sequence as long as predicate is true.
     Return an iterator over the new sequence.
@@ -173,7 +173,7 @@ def rtrim_seq(seq, predicate=None):
     return reversed(tuple(itertools.dropwhile(predicate, reversed(seq))))
 
 
-def rtrim_seq_longest(*seqs, predicate=None, fillvalue=None):
+def rtrim_longest(*seqs, predicate=None, fillvalue=None):
     """
     Remove trailing elements from each sequence as long as predicate is true.
     If the resulting sequences are of uneven length, missing values are filled
@@ -181,7 +181,7 @@ def rtrim_seq_longest(*seqs, predicate=None, fillvalue=None):
 
         >>> lst1 = [1, 2, 3, None, None]
         >>> lst2 = [1, 2, None, None]
-        >>> trimmed = rtrim_seq_longest(lst1, lst2)
+        >>> trimmed = rtrim_longest(lst1, lst2)
         >>> list(trimmed[0])
         [1, 2, 3]
         >>> list(trimmed[1])
