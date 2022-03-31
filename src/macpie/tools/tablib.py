@@ -120,6 +120,26 @@ class SimpleDataset:
 
         self.append(row, tags=tags)
 
+    def compare(self, other):
+        if self.headers != other.headers:
+            raise ValueError("Can only compare datasets with matching headers.")
+
+        if self.height != other.height:
+            raise ValueError("Can only compare datasets with the same number of rows.")
+
+        results = SimpleDataset(headers=self.headers)
+        for i, self_row in enumerate(self):
+            results_row = []
+            for j, self_col in enumerate(self_row):
+                self_cell = self_col
+                other_cell = other.data[i][j]
+                if self_cell != other_cell:
+                    results_row.append(str(self_cell) + "|" + str(other_cell))
+                else:
+                    results_row.append("")
+            results.append(results_row)
+        return results
+
     def extendleft(self, rows, tags=()):
         """Prepend a list of Dataset fields."""
         other_rows = [row for row in self]
@@ -164,7 +184,7 @@ class SimpleDataset:
         return instance
 
     @classmethod
-    def from_excel(cls, filepath, sheet_name) -> "SimpleDataset":
+    def from_excel(cls, filepath, sheet_name=None) -> "SimpleDataset":
         """Construct instance from an Excel sheet."""
         loaded_tlset = read_excel(filepath, sheet_name)
         loaded_tlset.title = sheet_name
