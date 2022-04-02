@@ -156,6 +156,16 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         return collection_dict
 
     def parse_tablib_dataset(self, sheet_name=None, headers=True):
+        return self._reader.parse_tablib_dataset(sheet_name=sheet_name, headers=headers)
+
+    def parse_simple_dataset(self, sheet_name=None, headers=True):
+        tlset = self.parse_tablib_dataset(sheet_name=sheet_name, headers=headers)
+        return tablibtools.SimpleDataset.from_tlset(tlset)
+
+    def parse_dictlike_dataset(self, sheet_name):
+        return self._reader.parse_dictlike_dataset(sheet_name)
+
+    def parse_tablib_datasets(self, sheet_name=None, headers=True):
         ret_dict = False
 
         if isinstance(sheet_name, list):
@@ -175,7 +185,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             else:
                 sheetname = self._reader.get_sheetname_by_index(asheetname)
 
-            tlset = self._reader.parse_tablib_dataset(sheet_name=sheetname, headers=headers)
+            tlset = self.parse_tablib_dataset(sheet_name=sheetname, headers=headers)
             output[asheetname] = tlset
 
         if ret_dict:
@@ -183,11 +193,12 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         else:
             return output[asheetname]
 
-    def parse_simple_dataset(self, sheet_name):
-        return self._reader.parse_simple_dataset(sheet_name)
-
-    def parse_dictlike_dataset(self, sheet_name):
-        return self._reader.parse_dictlike_dataset(sheet_name)
+    def parse_simple_datasets(self, sheet_name=None, headers=True):
+        tlset = self.parse_tablib_datasets(sheet_name=sheet_name, headers=headers)
+        if type(tlset) is dict:
+            return {k: tablibtools.SimpleDataset.from_tlset(v) for (k, v) in tlset.items()}
+        else:
+            return tablibtools.SimpleDataset.from_tlset(tlset)
 
     def parse_dataset_fields(self, sheet_name):
         sdset = self.parse_simple_dataset(sheet_name)

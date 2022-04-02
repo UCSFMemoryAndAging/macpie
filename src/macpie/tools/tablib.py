@@ -237,10 +237,8 @@ class DictLikeDataset(SimpleDataset):
         return instance
 
 
-def read_excel(filepath, sheet_name: str = None, headers=True):
+def read_excel(filepath, sheet_name=None, headers=True):
     """Returns a Tablib Dataset from an Excel file."""
 
     wb = pyxl.load_workbook(filepath, read_only=True, data_only=True)
-    ws = wb.active if sheet_name is None else wb[sheet_name]
-    tlset = openpyxltools.to_tablib_dataset(ws)
-    return tlset
+    return openpyxltools.to_tablib_dataset(wb, sheet_name=sheet_name, headers=headers)

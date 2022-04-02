@@ -38,7 +38,7 @@ def csv_to_dataframe(filepath_or_buffer, engine="pandas"):
         return df
 
 
-def excel_to_dataframe(filepath_or_buffer, engine="openpyxl"):  # pragma: no cover
+def excel_to_dataframe(filepath_or_buffer, sheet_name=None, engine="openpyxl"):  # pragma: no cover
     """Parse an Excel file into a :class:`pandas.DataFrame`.
 
     :param filepath: File path
@@ -48,11 +48,16 @@ def excel_to_dataframe(filepath_or_buffer, engine="openpyxl"):  # pragma: no cov
     """
     if engine == "openpyxl":
         book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
-        ws = book.active
+        if sheet_name is None:
+            ws = book.active
+        else:
+            ws = book[sheet_name]
         df = openpyxltools.to_df(ws)
         return df
     elif engine == "pandas":
-        df = pd.read_excel(filepath_or_buffer)
+        if sheet_name is None:
+            sheet_name = 0
+        df = pd.read_excel(filepath_or_buffer, sheet_name=sheet_name)
         return df
     elif engine == "tablib":
         with open(filepath_or_buffer, "rb") as fh:
