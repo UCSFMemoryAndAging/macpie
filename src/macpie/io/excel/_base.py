@@ -118,7 +118,9 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
     @property
     def dataset_sheetnames(self):
-        return list(self._dataset_dicts.keys())
+        if self._dataset_dicts:
+            return list(self._dataset_dicts.keys())
+        return []
 
     @property
     def collection_classname(self):
@@ -128,7 +130,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
     def get_dataset_dicts(self):
         if DATASETS_SHEET_NAME not in self.sys_sheet_names:
-            return None
+            return {}
             # raise ValueError(f"Cannot read Excel file without a '{DATASETS_SHEET_NAME}' sheet")
 
         dataset_dicts = self._reader.parse_excel_dict_sheet(DATASETS_SHEET_NAME)
@@ -148,13 +150,38 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
 
     def get_collection_dict(self):
         if COLLECTION_SHEET_NAME not in self.sys_sheet_names:
-            return None
+            return {}
 
         collection_dict = self._reader.parse_excel_dict_sheet(COLLECTION_SHEET_NAME)
         return collection_dict
 
-    def parse_tablib_dataset(self, sheet_name):
-        return self._reader.parse_tablib_dataset(sheet_name)
+    def parse_tablib_dataset(self, sheet_name=None, headers=True):
+        ret_dict = False
+
+        if isinstance(sheet_name, list):
+            sheets = sheet_name
+            ret_dict = True
+        elif sheet_name is None:
+            sheets = self.sheet_names
+            ret_dict = True
+        else:
+            sheets = [sheet_name]
+
+        output = {}
+
+        for asheetname in sheets:
+            if isinstance(asheetname, str):
+                sheetname = asheetname
+            else:
+                sheetname = self._reader.get_sheetname_by_index(asheetname)
+
+            tlset = self._reader.parse_tablib_dataset(sheet_name=sheetname, headers=headers)
+            output[asheetname] = tlset
+
+        if ret_dict:
+            return output
+        else:
+            return output[asheetname]
 
     def parse_simple_dataset(self, sheet_name):
         return self._reader.parse_simple_dataset(sheet_name)
@@ -220,7 +247,7 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             sheets = sheet_name
             ret_dict = True
         elif sheet_name is None:
-            sheets = self.dataset_sheetnames
+            sheets = self.sheet_names
             ret_dict = True
         else:
             sheets = [sheet_name]

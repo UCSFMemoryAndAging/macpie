@@ -136,13 +136,20 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
     return df
 
 
-def to_tablib_dataset(ws, headers=True):
+def to_tablib_dataset(wb, sheet_name=None, headers=True, skip_lines=0):
+    if sheet_name is None:
+        ws = wb.active
+    else:
+        ws = wb[sheet_name]
+
     dset = tl.Dataset()
     dset.title = ws.title
 
     for i, row in enumerate(ws.rows):
+        if i < skip_lines:
+            continue
         row_vals = [c.value for c in row]
-        if (i == 0) and (headers):
+        if i == skip_lines and headers:
             dset.headers = row_vals
         else:
             dset.append(row_vals)
