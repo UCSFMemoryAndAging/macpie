@@ -9,6 +9,7 @@ import macpie as mp
 
 
 @click.command()
+@click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
 @click.option("-s", "--sheet", multiple=True)
 @click.option("-p", "--sheet-pair", nargs=2, multiple=True)
 @click.argument(
@@ -19,7 +20,7 @@ import macpie as mp
     ),
 )
 @click.pass_context
-def compare(ctx, sheet, sheet_pair, files):
+def compare(ctx, verbose, sheet, sheet_pair, files):
     left_file, right_file = files
     sheet_pairs = process_sheet_options(left_file, right_file, sheet, sheet_pair)
 
@@ -54,14 +55,16 @@ def compare(ctx, sheet, sheet_pair, files):
 
     for sheetname, df in dfs_results.items():
         click.secho(sheetname, bg="blue", fg="white", bold=True)
-        click.echo(tabulate.tabulate(df, headers="keys", tablefmt="grid"))
+        if verbose:
+            click.echo(tabulate.tabulate(df, headers="keys", tablefmt="grid"))
         click.echo()
 
     tlsets_results = compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs)
 
     for sheetname, tlset in tlsets_results.items():
         click.secho(sheetname, bg="green", fg="black", bold=True)
-        click.echo(tabulate.tabulate(tlset, headers=tlset.headers, tablefmt="grid"))
+        if verbose:
+            click.echo(tabulate.tabulate(tlset, headers=tlset.headers, tablefmt="grid"))
         click.echo()
 
     with mp.MACPieExcelWriter(results_path) as writer:
@@ -100,14 +103,15 @@ def process_sheet_options(left_file, right_file, sheet, sheet_pair):
 def compare_files_as_dataframes(left_file, right_file, sheet_pairs):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
-    left_dfs_dict = mp.read_excel(left_file, sheet_name=left_sheets)
-    right_dfs_dict = mp.read_excel(right_file, sheet_name=right_sheets)
+    left_dfs_dict = pd.read_excel(left_file, sheet_name=left_sheets)
+    right_dfs_dict = pd.read_excel(right_file, sheet_name=right_sheets)
 
     dfs_results = collections.OrderedDict()
     for sheet_pair in sheet_pairs:
         left_sheetname, right_sheetname = sheet_pair
         left_df = left_dfs_dict[left_sheetname]
         right_df = right_dfs_dict[right_sheetname]
+        breakpoint()
         comparison_result_df = compare_dataframes(left_df, right_df)
         if comparison_result_df is not None:
             result_sheetname = mp.io.excel.safe_xlsx_sheet_title(

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import dateutil
 import numpy as np
 import pandas as pd
 import pytest
@@ -261,17 +262,17 @@ def test_to_datetime():
     with pytest.raises(KeyError):
         df1.mac.to_datetime("doesnt_exit")
 
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         df1.mac.to_datetime("col1")
 
     # bool's not convertible due to invalid type
     with pytest.raises(TypeError):
         df1.mac.to_datetime("col3")
 
-    # 'asdf' in col2 should generate TypeError
-    with pytest.raises(TypeError):
+    # 'asdf' in col2 should generate ParserError
+    with pytest.raises(dateutil.parser.ParserError):
         df1.mac.to_datetime("col2")
 
-    # date is out of bounds should raise TypeError
-    with pytest.raises(TypeError):
+    # date is out of bounds
+    with pytest.raises(pd.errors.OutOfBoundsDatetime):
         df1.mac.to_datetime("col5")

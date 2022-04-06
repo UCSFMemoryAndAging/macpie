@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import dateutil
 import numpy as np
 import pytest
 
@@ -33,8 +34,8 @@ def test_dataset():
             data=data, id_col_name="doesnt_exist", date_col_name="col3", name="test_name"
         )
 
-    # invalid date_col_name raises TypeError
-    with pytest.raises(TypeError):
+    # invalid date_col_name raises ParserError
+    with pytest.raises(dateutil.parser._parser.ParserError):
         dset = Dataset(
             data=data,
             id_col_name="ids",

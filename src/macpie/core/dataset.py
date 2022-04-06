@@ -16,6 +16,7 @@ class Dataset(pd.DataFrame):
 
     _metadata = [
         "_id_col_name",
+        "_date_col_errors",
         "_date_col_name",
         "_id2_col_name",
         "_name",
@@ -31,17 +32,18 @@ class Dataset(pd.DataFrame):
         data=None,
         *args,
         id_col_name=None,
+        date_col_errors="raise",
         date_col_name=None,
         id2_col_name=None,
         name=None,
         tags=None,
         display_name_generator=None,
-        id_col_dropna=False,
         **kwargs,
     ):
         super().__init__(data, *args, **kwargs)
 
         self.id_col_name = id_col_name
+        self.date_col_errors = date_col_errors
         self.date_col_name = date_col_name
         self.id2_col_name = id2_col_name
         self.name = name if name else get_option("dataset.default.name")
@@ -52,9 +54,6 @@ class Dataset(pd.DataFrame):
             if display_name_generator
             else self.default_display_name_generator
         )
-
-        if id_col_dropna:
-            self.dropna(subset=["id_col_name"], inplace=True)
 
     def __setattr__(self, attr, val):
         # Have to special case tags b/c pandas tries to use as column.
@@ -114,6 +113,14 @@ class Dataset(pd.DataFrame):
             self._id_col_name = None
 
     @property
+    def date_col_errors(self):
+        return self._date_col_errors
+
+    @date_col_errors.setter
+    def date_col_errors(self, val):
+        self._date_col_errors = val
+
+    @property
     def date_col_name(self):
         if self._date_col_name and self._date_col_name not in self.columns:
             raise AttributeError(f"No date column found: '{self._date_col_name}'.")
@@ -124,7 +131,10 @@ class Dataset(pd.DataFrame):
         if val is not None:
             try:
                 self._date_col_name = get_col_name(self, val)
-                to_datetime(self, self._date_col_name)
+                if not self.mac.is_date_col(self._date_col_name):
+                    self[self._date_col_name] = pd.to_datetime(
+                        self[self._date_col_name], errors=self._date_col_errors
+                    )
             except KeyError:
                 raise ValueError(f"Unknown column '{val}'")
             except Exception:

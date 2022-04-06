@@ -388,7 +388,7 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
     )
 
 
-def to_datetime(df: pd.DataFrame, date_col_name):
+def to_datetime(df: pd.DataFrame, date_col_name, **kwargs):
     """Convert ``date_col_name`` column in ``df`` to datetime.
 
     :param df: DataFrame
@@ -396,37 +396,10 @@ def to_datetime(df: pd.DataFrame, date_col_name):
     """
     try:
         _date_col = get_col_name(df, date_col_name)
-        if not is_date_col(df[_date_col]):
+        if not is_date_col(df[_date_col], **kwargs):
             df[_date_col] = pd.to_datetime(df[_date_col])
         return _date_col
     except KeyError:
         raise KeyError(f"Date column '{date_col_name}' in dataframe is not a valid column")
-    except ValueError:
-        raise TypeError(
-            f"Date column '{date_col_name}' in dataframe contains string(s) that "
-            "are not likely datetime(s)"
-        )
-    except TypeError as e:
-        raise TypeError(
-            (
-                f"Date column '{date_col_name}' in dataframe contains values "
-                f"that are not convertible to datetime"
-            )
-        ) from e
-    except dateutil.parser.ParserError:
-        raise ValueError(
-            (
-                f"Date column '{date_col_name}' in dataframe could not be parsed "
-                f"as a datetime string"
-            )
-        )
-    except pd.errors.OutOfBoundsDatetime:
-        # Since pandas represents timestamps in nanosecond resolution,
-        # the time span that can be represented using a 64-bit integer
-        # is limited to approximately 584 years.
-        raise ValueError(
-            (
-                f"Date column '{date_col_name}' in dataframe contains a date "
-                f"that is out of bounds (i.e. outside of today +- 584 years)"
-            )
-        )
+    except Exception:
+        raise
