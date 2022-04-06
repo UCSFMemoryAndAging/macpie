@@ -13,7 +13,7 @@ import tablib as tl
 from . import openpyxl as openpyxltools
 
 
-class SimpleDataset:
+class TablibDataset:
     """Wrap a :class:`tablib.Dataset` with extra functionality."""
 
     def __init__(self, *args, **kwargs):
@@ -127,7 +127,7 @@ class SimpleDataset:
         if self.height != other.height:
             raise ValueError("Can only compare datasets with the same number of rows.")
 
-        results = SimpleDataset(headers=self.headers)
+        results = TablibDataset(headers=self.headers)
         for i, self_row in enumerate(self):
             results_row = []
             for j, self_col in enumerate(self_row):
@@ -165,7 +165,7 @@ class SimpleDataset:
         print(self.export("cli", tablefmt="grid"))
 
     @classmethod
-    def from_df(cls, df, title: str = None) -> "SimpleDataset":
+    def from_df(cls, df, title: str = None) -> "TablibDataset":
         """Construct instance from a :class:`pandas.DataFrame`."""
         instance = cls(title=title)
         instance.tlset.dict = df.to_dict(orient="records")
@@ -176,7 +176,7 @@ class SimpleDataset:
     def from_tlset(
         cls,
         tlset,
-    ) -> "SimpleDataset":
+    ) -> "TablibDataset":
         """Construct instance from a :class:`tablib.Dataset`."""
         instance = cls()
         instance._tlset = tlset
@@ -184,7 +184,7 @@ class SimpleDataset:
         return instance
 
     @classmethod
-    def from_excel(cls, filepath, sheet_name=None) -> "SimpleDataset":
+    def from_excel(cls, filepath, sheet_name=None) -> "TablibDataset":
         """Construct instance from an Excel sheet."""
         loaded_tlset = read_excel(filepath, sheet_name)
         loaded_tlset.title = sheet_name
@@ -195,15 +195,15 @@ class SimpleDataset:
         return instance
 
 
-class DictLikeDataset(SimpleDataset):
+class DictLikeDataset(TablibDataset):
     """Tabular representation of basic information using two columns
     only: a ``Key`` column and a ``Value`` column, using
-    a :class:`macpie.tablibtools.SimpleDataset`.
+    a :class:`macpie.tablibtools.TablibDataset`.
 
     All ``Value``'s are encoded as JSON. But you can call the ``to_dict()`` method
     to decode the JSON back to native Python objects.
 
-    It is a subclass of :class:`macpie.tablibtools.SimpleDataset`, and therefore
+    It is a subclass of :class:`macpie.tablibtools.TablibDataset`, and therefore
     can be initialized with data the same way.
     """
 

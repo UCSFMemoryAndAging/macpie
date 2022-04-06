@@ -10,12 +10,12 @@ class DatasetField(NamedTuple):
     field: str
 
 
-class DatasetFields(tablibtools.SimpleDataset):
+class DatasetFields(tablibtools.TablibDataset):
     """A tabular representation of a set of :class:`macpie.Dataset` fields.
     First column is the Dataset name.
     Second column is the Dataset column name.
 
-    It is a subclass of :class:`macpie.tablibtools.SimpleDataset`, and therefore
+    It is a subclass of :class:`macpie.tablibtools.TablibDataset`, and therefore
     can be initialized with data the same way.
     """
 
