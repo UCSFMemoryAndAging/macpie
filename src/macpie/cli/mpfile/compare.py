@@ -2,12 +2,15 @@ import collections
 import pathlib
 
 import click
+import pandas as pd
 import tabulate
 
 import macpie as mp
 
 
 @click.command()
+@click.option("-s", "--sheet", multiple=True)
+@click.option("-p", "--sheet-pair", nargs=2, multiple=True)
 @click.argument(
     "files",
     nargs=2,
@@ -16,19 +19,22 @@ import macpie as mp
     ),
 )
 @click.pass_context
-def compare(ctx, files):
-    file1, file2 = files
+def compare(ctx, sheet, sheet_pair, files):
+    left_file, right_file = files
+    sheet_pairs = process_sheet_options(left_file, right_file, sheet, sheet_pair)
 
     click.echo("\nComparing")
-    click.echo(f"'{file1.resolve()}'")
+    click.secho(f"'{left_file.resolve()}'", bold=True)
     click.echo("to")
-    click.echo(f"'{file2.resolve()}'\n")
+    click.secho(f"'{right_file.resolve()}'", bold=True)
+    click.echo("using the following pairs of worksheets:")
+    click.secho(f"{sheet_pairs}\n\n", bold=True)
 
     results_dir = pathlib.Path(".")
     results_filename = (
-        file1.stem
+        left_file.stem
         + "_"
-        + file2.stem
+        + right_file.stem
         + "_diffs_"
         + mp.datetimetools.current_datetime_str()
         + ".xlsx"
@@ -40,106 +46,137 @@ def compare(ctx, files):
     )
     click.echo()
     click.secho(
-        "Results for comparing as tablib datasets will be in blue.", bg="green", fg="black"
+        "Results for comparing as tablib datasets will be in green.", bg="green", fg="black"
     )
-    click.echo()
-    click.echo()
+    click.echo("\n")
 
-    dfs_results = compare_as_dataframes(file1, file2)
-    tlsets_results = compare_as_tablib_datasets(file1, file2)
+    dfs_results = compare_files_as_dataframes(left_file, right_file, sheet_pairs)
+
+    for sheetname, df in dfs_results.items():
+        click.secho(sheetname, bg="blue", fg="white", bold=True)
+        click.echo(tabulate.tabulate(df, headers="keys", tablefmt="grid"))
+        click.echo()
+
+    tlsets_results = compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs)
+
+    for sheetname, tlset in tlsets_results.items():
+        click.secho(sheetname, bg="green", fg="black", bold=True)
+        click.echo(tabulate.tabulate(tlset, headers=tlset.headers, tablefmt="grid"))
+        click.echo()
 
     with mp.MACPieExcelWriter(results_path) as writer:
         for sheetname, df in dfs_results.items():
-            df.to_excel(writer, sheet_name="df_" + sheetname)
+            df.to_excel(writer, sheet_name=sheetname)
         for sheetname, tlset in tlsets_results.items():
-            tlset.title = "tl_" + sheetname
+            tlset.title = sheetname
             tlset.to_excel(writer)
 
-    click.echo(f"\nResults output to: {results_path.resolve()}\n")
+    click.secho(f"\nResults output to: {results_path.resolve()}\n", bold=True)
 
 
-def compare_as_dataframes(file1, file2):
-    dfs1_dict = mp.read_excel(file1, sheet_name=None)
-    dfs2_dict = mp.read_excel(file2, sheet_name=None)
+def process_sheet_options(left_file, right_file, sheet, sheet_pair):
+    results = []
+
+    if sheet:
+        for s in sheet:
+            results.append((s, s))
+
+    if sheet_pair:
+        for sp in sheet_pair:
+            results.append(sp)
+
+    if not results:
+        left_sheets = mp.openpyxltools.get_sheet_names(left_file)
+        right_sheets = mp.openpyxltools.get_sheet_names(right_file)
+        common_sheets = list(set(left_sheets).intersection(right_sheets))
+        for cs in common_sheets:
+            results.append((cs, cs))
+        if not results:
+            results.append((left_sheets[0], right_sheets[0]))
+
+    return results
+
+
+def compare_files_as_dataframes(left_file, right_file, sheet_pairs):
+    left_sheets, right_sheets = map(list, zip(*sheet_pairs))
+
+    left_dfs_dict = mp.read_excel(left_file, sheet_name=left_sheets)
+    right_dfs_dict = mp.read_excel(right_file, sheet_name=right_sheets)
 
     dfs_results = collections.OrderedDict()
-
-    for sheet in dfs1_dict:
-        if sheet in dfs2_dict:
-            df1 = dfs1_dict[sheet]
-            df2 = dfs2_dict[sheet]
-            try:
-                diffs = df1.compare(df2)
-                if diffs.empty:
-                    click.secho(f"{sheet}: No differences!\n", bg="blue", fg="white")
-                else:
-                    click.secho(f"{sheet}: Differences found:", bg="blue", fg="white")
-                    click.echo(tabulate.tabulate(diffs, headers="keys", tablefmt="grid"))
-                    click.echo()
-                    dfs_results[sheet] = diffs
-
-            except ValueError:
-                # if dfs don't have identical labels or shape
-
-                # first compare columns
-                (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2)
-                if left_only_cols != set() or right_only_cols != set():
-                    if left_only_cols != set():
-                        click.secho(
-                            f"{sheet}: The following columns exist only in '{file1.stem}'",
-                            bg="blue",
-                            fg="white",
-                        )
-                        click.echo(left_only_cols)
-                        click.echo()
-
-                    if right_only_cols != set():
-                        click.secho(
-                            f"{sheet}: The following columns exist only in '{file2.stem}'",
-                            bg="blue",
-                            fg="white",
-                        )
-                        click.echo(right_only_cols)
-                        click.echo()
-
-                # then compare rows
-                else:
-                    row_diffs = df1.mac.diff_rows(df2)
-                    if row_diffs.empty:
-                        click.secho(f"{sheet}: No differences!\n", bg="blue", fg="white")
-                    else:
-                        click.secho(f"{sheet}: Differences found:", bg="blue", fg="white")
-                        click.echo(tabulate.tabulate(row_diffs, headers="keys", tablefmt="grid"))
-                        click.echo()
-                        dfs_results[sheet] = row_diffs
+    for sheet_pair in sheet_pairs:
+        left_sheetname, right_sheetname = sheet_pair
+        left_df = left_dfs_dict[left_sheetname]
+        right_df = right_dfs_dict[right_sheetname]
+        comparison_result_df = compare_dataframes(left_df, right_df)
+        if comparison_result_df is not None:
+            result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
+                "df" + "|" + left_sheetname + "|" + right_sheetname
+            )
+            dfs_results[result_sheetname] = comparison_result_df
 
     return dfs_results
 
 
-def compare_as_tablib_datasets(file1, file2):
-    with mp.MACPieExcelFile(file1) as reader:
-        tlsets1_dict = reader.parse_simple_datasets(sheet_name=None)
+def compare_dataframes(left_df, right_df):
+    try:
+        diffs = left_df.compare(right_df)
+        if diffs.empty:
+            return None
+        return diffs
 
-    with mp.MACPieExcelFile(file2) as reader:
-        tlsets2_dict = reader.parse_simple_datasets(sheet_name=None)
+    except ValueError:
+        # if dfs don't have identical labels or shape
+
+        # first compare columns
+        (left_only_cols, right_only_cols) = left_df.mac.diff_cols(right_df)
+        if left_only_cols != set() or right_only_cols != set():
+            col_diffs = pd.DataFrame()
+            if left_only_cols != set():
+                col_diffs["Left_Only_Cols"] = list(left_only_cols)
+            if right_only_cols != set():
+                col_diffs["Right_Only_Cols"] = list(right_only_cols)
+            return col_diffs
+
+        # then compare rows
+        else:
+            row_diffs = left_df.mac.diff_rows(right_df)
+            if row_diffs.empty:
+                return None
+            return row_diffs
+
+
+def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs):
+    left_sheets, right_sheets = map(list, zip(*sheet_pairs))
+
+    with mp.MACPieExcelFile(left_file) as reader:
+        left_tlsets_dict = reader.parse_simple_datasets(sheet_name=left_sheets)
+
+    with mp.MACPieExcelFile(right_file) as reader:
+        right_tlsets_dict = reader.parse_simple_datasets(sheet_name=right_sheets)
 
     tlsets_results = collections.OrderedDict()
-
-    for sheet in tlsets1_dict:
-        if sheet in tlsets2_dict:
-            tlset1 = tlsets1_dict[sheet]
-            tlset2 = tlsets2_dict[sheet]
-            try:
-                diffs = tlset1.compare(tlset2)
-
-                if diffs.height == 0:
-                    click.secho(f"{sheet}: No differences!\n", bg="green", fg="black")
-                else:
-                    click.secho(f"{sheet}: Differences found:", bg="green", fg="black")
-                    click.echo(tabulate.tabulate(diffs, headers="keys", tablefmt="grid"))
-                    click.echo()
-                    tlsets_results[sheet] = diffs
-            except ValueError:
-                click.echo("Couldn't compare: datasets don't have matching labels or shape.")
+    for sheet_pair in sheet_pairs:
+        left_sheetname, right_sheetname = sheet_pair
+        left_tlset = left_tlsets_dict[left_sheetname]
+        right_tlset = right_tlsets_dict[right_sheetname]
+        comparison_result_tlset = compare_tablib_datasets(left_tlset, right_tlset)
+        if comparison_result_tlset is not None:
+            result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
+                "tl" + "|" + left_sheetname + "|" + right_sheetname
+            )
+            tlsets_results[result_sheetname] = comparison_result_tlset
 
     return tlsets_results
+
+
+def compare_tablib_datasets(left_tlset, right_tlset):
+    try:
+        diffs = left_tlset.compare(right_tlset)
+
+        if diffs.height == 0:
+            return None
+        return diffs
+
+    except ValueError:
+        return None

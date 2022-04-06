@@ -38,6 +38,13 @@ def get_column_index(ws, col_header: str = None):
     return -1
 
 
+def get_sheet_names(filepath_or_buffer):
+    book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
+    sheetnames = book.sheetnames
+    book.close()
+    return sheetnames
+
+
 def highlight_row(ws, row: int, color: str = YELLOW):
     """Highlight row a certain color
 
