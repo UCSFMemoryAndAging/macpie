@@ -62,9 +62,16 @@ def compare(ctx, verbose, sheet, sheet_pair, sort_col, engines, files):
     )
     results_path = results_dir / results_filename
 
-    excel_writer = mp.MACPieExcelWriter(
-        results_path,
-    )
+    # singleton excel_writer
+    class excel_writer:
+        instance = None
+
+        def __new__(cls):
+            if cls.instance is None:
+                cls.instance = mp.MACPieExcelWriter(
+                    results_path,
+                )
+            return cls.instance
 
     if "pandas" in engines:
         dfs_results = compare_files_as_dataframes(
@@ -77,7 +84,7 @@ def compare(ctx, verbose, sheet, sheet_pair, sort_col, engines, files):
                 click.echo(tabulate.tabulate(df, headers="keys", tablefmt="grid"))
             click.echo()
 
-            df.to_excel(excel_writer, sheet_name=sheetname)
+            df.to_excel(excel_writer(), sheet_name=sheetname)
 
     if "tablib" in engines:
         tlsets_results = compare_files_as_tablib_datasets(
@@ -91,11 +98,13 @@ def compare(ctx, verbose, sheet, sheet_pair, sort_col, engines, files):
             click.echo()
 
             tlset.title = sheetname
-            tlset.to_excel(excel_writer)
+            tlset.to_excel(excel_writer())
 
-    excel_writer.close()
-
-    click.secho(f"\nResults output to: {results_path.resolve()}\n", bold=True)
+    if excel_writer.instance is None:
+        click.echo("No differences found.")
+    else:
+        excel_writer().close()
+        click.secho(f"\nResults output to: {results_path.resolve()}\n", bold=True)
 
 
 def process_sheet_options(left_file, right_file, sheet, sheet_pair):
@@ -138,8 +147,10 @@ def compare_files_as_dataframes(left_file, right_file, sheet_pairs, sort_col=Non
 
         if sort_col:
             try:
-                left_df = left_df.sort_values(by=[sort_col], na_position="last")
-                right_df = right_df.sort_values(by=[sort_col], na_position="last")
+                left_df = left_df.sort_values(by=[sort_col], na_position="last", ignore_index=True)
+                right_df = right_df.sort_values(
+                    by=[sort_col], na_position="last", ignore_index=True
+                )
             except KeyError:
                 click.secho(
                     f"{result_sheetname}|Warning: No column '{sort_col}'. Cannot sort.",
@@ -221,11 +232,6 @@ def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs, sort_co
 
 def compare_tablib_datasets(left_tlset, right_tlset):
     try:
-        diffs = left_tlset.compare(right_tlset)
-
-        if diffs.height == 0:
-            return None
-        return diffs
-
+        return left_tlset.compare(right_tlset)
     except ValueError:
         return None

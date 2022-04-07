@@ -127,6 +127,7 @@ class TablibDataset:
         if self.height != other.height:
             raise ValueError("Can only compare datasets with the same number of rows.")
 
+        is_equal = True
         results = TablibDataset(headers=self.headers)
         for i, self_row in enumerate(self):
             results_row = []
@@ -134,10 +135,16 @@ class TablibDataset:
                 self_cell = self_col
                 other_cell = other.data[i][j]
                 if self_cell != other_cell:
+                    is_equal = False
                     results_row.append(str(self_cell) + "|" + str(other_cell))
+                elif j == 0:
+                    results_row.append(self_cell)
                 else:
                     results_row.append("")
             results.append(results_row)
+
+        if is_equal:
+            return None
         return results
 
     def extendleft(self, rows, tags=()):
