@@ -15,6 +15,7 @@ possible_engines = ["pandas", "tablib"]
 @click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
 @click.option("-s", "--sheet", multiple=True)
 @click.option("-p", "--sheet-pair", nargs=2, multiple=True)
+@click.option("-c", "--sort-col")
 @click.option("-e", "--engines", multiple=True, default=possible_engines)
 @click.argument(
     "files",
@@ -24,7 +25,7 @@ possible_engines = ["pandas", "tablib"]
     ),
 )
 @click.pass_context
-def compare(ctx, verbose, sheet, sheet_pair, engines, files):
+def compare(ctx, verbose, sheet, sheet_pair, sort_col, engines, files):
     for engine in engines:
         if engine not in possible_engines:
             raise click.BadOptionUsage(
@@ -66,7 +67,9 @@ def compare(ctx, verbose, sheet, sheet_pair, engines, files):
     )
 
     if "pandas" in engines:
-        dfs_results = compare_files_as_dataframes(left_file, right_file, sheet_pairs)
+        dfs_results = compare_files_as_dataframes(
+            left_file, right_file, sheet_pairs, sort_col=sort_col
+        )
 
         for sheetname, df in dfs_results.items():
             click.secho(sheetname, bg="blue", fg="white", bold=True)
@@ -74,11 +77,12 @@ def compare(ctx, verbose, sheet, sheet_pair, engines, files):
                 click.echo(tabulate.tabulate(df, headers="keys", tablefmt="grid"))
             click.echo()
 
-        for sheetname, df in dfs_results.items():
             df.to_excel(excel_writer, sheet_name=sheetname)
 
     if "tablib" in engines:
-        tlsets_results = compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs)
+        tlsets_results = compare_files_as_tablib_datasets(
+            left_file, right_file, sheet_pairs, sort_col=sort_col
+        )
 
         for sheetname, tlset in tlsets_results.items():
             click.secho(sheetname, bg="green", fg="black", bold=True)
@@ -86,7 +90,6 @@ def compare(ctx, verbose, sheet, sheet_pair, engines, files):
                 click.echo(tabulate.tabulate(tlset, headers=tlset.headers, tablefmt="grid"))
             click.echo()
 
-        for sheetname, tlset in tlsets_results.items():
             tlset.title = sheetname
             tlset.to_excel(excel_writer)
 
@@ -118,7 +121,7 @@ def process_sheet_options(left_file, right_file, sheet, sheet_pair):
     return results
 
 
-def compare_files_as_dataframes(left_file, right_file, sheet_pairs):
+def compare_files_as_dataframes(left_file, right_file, sheet_pairs, sort_col=None):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
     left_dfs_dict = pd.read_excel(left_file, sheet_name=left_sheets)
@@ -129,11 +132,24 @@ def compare_files_as_dataframes(left_file, right_file, sheet_pairs):
         left_sheetname, right_sheetname = sheet_pair
         left_df = left_dfs_dict[left_sheetname]
         right_df = right_dfs_dict[right_sheetname]
+        result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
+            "df" + "|" + left_sheetname + "|" + right_sheetname
+        )
+
+        if sort_col:
+            try:
+                left_df = left_df.sort_values(by=[sort_col], na_position="last")
+                right_df = right_df.sort_values(by=[sort_col], na_position="last")
+            except KeyError:
+                click.secho(
+                    f"{result_sheetname}|Warning: No column '{sort_col}'. Cannot sort.",
+                    bg="yellow",
+                    fg="black",
+                )
+
         comparison_result_df = compare_dataframes(left_df, right_df)
+
         if comparison_result_df is not None:
-            result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
-                "df" + "|" + left_sheetname + "|" + right_sheetname
-            )
             dfs_results[result_sheetname] = comparison_result_df
 
     return dfs_results
@@ -167,7 +183,7 @@ def compare_dataframes(left_df, right_df):
             return row_diffs
 
 
-def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs):
+def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs, sort_col=None):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
     with mp.MACPieExcelFile(left_file) as reader:
@@ -181,11 +197,23 @@ def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs):
         left_sheetname, right_sheetname = sheet_pair
         left_tlset = left_tlsets_dict[left_sheetname]
         right_tlset = right_tlsets_dict[right_sheetname]
+        result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
+            "tl" + "|" + left_sheetname + "|" + right_sheetname
+        )
+
+        if sort_col:
+            try:
+                left_tlset = mp.tablibtools.TablibDataset.from_tlset(left_tlset.sort(sort_col))
+                right_tlset = mp.tablibtools.TablibDataset.from_tlset(right_tlset.sort(sort_col))
+            except KeyError:
+                click.secho(
+                    f"{result_sheetname}|Warning: No column '{sort_col}'. Cannot sort.",
+                    bg="yellow",
+                    fg="black",
+                )
+
         comparison_result_tlset = compare_tablib_datasets(left_tlset, right_tlset)
         if comparison_result_tlset is not None:
-            result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
-                "tl" + "|" + left_sheetname + "|" + right_sheetname
-            )
             tlsets_results[result_sheetname] = comparison_result_tlset
 
     return tlsets_results
