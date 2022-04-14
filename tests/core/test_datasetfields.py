@@ -18,7 +18,7 @@ primary.group_by_keep_one()
 assert len(primary.history) == 2
 
 record1 = primary.history[0]
-assert record1["func_name"] == "date_proximity"
+assert record1["method_name"] == "date_proximity"
 
 record2 = primary.history[1]
-assert record2["func_name"] == "group_by_keep_one"
+assert record2["method_name"] == "group_by_keep_one"
