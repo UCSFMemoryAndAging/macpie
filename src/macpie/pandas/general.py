@@ -205,17 +205,42 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_igno
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
-    """Flatten (i.e. collapse) the multiindex on a particular ``axis`` using
+    """
+    Flatten (i.e. collapse) the multiindex on a particular ``axis`` using
     a ``delimiter``.
 
-    :param df: DataFrame
-    :param axis: on which axis to flatten the multiindex. ``0`` for index, ``1`` for columns
-    :param delimiter: delimiter to join multiindex levels on
+    Parameters
+    ----------
+    df : DataFrame.
+    axis : {0 or 'index', 1 or 'columns'}, default 0
+        Whether to flatten labels from the index (0 or 'index') or
+        columns (1 or 'columns').
+    delimiter : str
+        string to join multiindex levels on
+
+    Examples
+    --------
+    Basic usage
+    >>> df = pd.DataFrame({"PIDN": [1, 2], "InstrID": [3, 4]})
+    >>> df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
+    >>> df
+       CDR
+      PIDN InstrID
+    0    1       3
+    1    2       4
+
+    >>> df.mac.flatten_multiindex(axis=1)
+    >>> df
+       CDR_PIDN  CDR_InstrID
+    0         1            3
+    1         2            4
     """
-    if axis == 0:
+
+    axis_name = df._get_axis_name(axis)
+    if axis_name == "index":
         if isinstance(df.index, pd.MultiIndex):
             df.index = [delimiter.join(str(idx) for idx in idx_tup) for idx_tup in df.index]
-    elif axis == 1:
+    elif axis_name == "columns":
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = [delimiter.join(str(col) for col in col_tup) for col_tup in df.columns]
 
@@ -226,6 +251,7 @@ def get_col_name(df: pd.DataFrame, col_name):
     :param df: DataFrame
     :param col_name: case-insensitive name of the column
     """
+
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
