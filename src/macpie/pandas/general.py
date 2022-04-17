@@ -221,6 +221,7 @@ def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
     Examples
     --------
     Basic usage
+
     >>> df = pd.DataFrame({"PIDN": [1, 2], "InstrID": [3, 4]})
     >>> df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
     >>> df

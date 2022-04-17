@@ -28,6 +28,7 @@
       ~MacDataFrameAccessor.flatten_multiindex
       ~MacDataFrameAccessor.get_col_name
       ~MacDataFrameAccessor.get_col_names
+      ~MacDataFrameAccessor.get_cols_by_prefixes
       ~MacDataFrameAccessor.group_by_keep_one
       ~MacDataFrameAccessor.insert
       ~MacDataFrameAccessor.is_date_col

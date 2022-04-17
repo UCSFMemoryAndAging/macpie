@@ -242,6 +242,7 @@
       ~Dataset.axes
       ~Dataset.col_count
       ~Dataset.columns
+      ~Dataset.date_col_errors
       ~Dataset.date_col_name
       ~Dataset.display_name
       ~Dataset.display_name_generator

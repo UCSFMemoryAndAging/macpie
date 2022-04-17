@@ -17,6 +17,7 @@
       ~DictLikeDataset.append_col_fill
       ~DictLikeDataset.append_dict
       ~DictLikeDataset.append_series
+      ~DictLikeDataset.compare
       ~DictLikeDataset.extendleft
       ~DictLikeDataset.filter
       ~DictLikeDataset.from_df

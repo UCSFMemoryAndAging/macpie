@@ -8,7 +8,8 @@ Decorators
 .. autosummary::
    :toctree: api/
 
-   TrackHistory
+   MethodHistory
+   MethodTimer
 
 
 Masker

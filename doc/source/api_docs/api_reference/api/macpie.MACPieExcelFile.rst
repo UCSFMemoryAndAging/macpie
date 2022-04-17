@@ -22,7 +22,9 @@
       ~MACPieExcelFile.parse_dataset_fields
       ~MACPieExcelFile.parse_dictlike_dataset
       ~MACPieExcelFile.parse_simple_dataset
+      ~MACPieExcelFile.parse_simple_datasets
       ~MACPieExcelFile.parse_tablib_dataset
+      ~MACPieExcelFile.parse_tablib_datasets
    
    
 

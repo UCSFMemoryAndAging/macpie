@@ -33,7 +33,7 @@ itertools
    
    duplicate_indices
    filter_get_index
-   filter_get_meta
+   filter_get_message
    overlay
    remove_duplicates
 
@@ -59,7 +59,8 @@ lltools
    maybe_make_list
    maybe_make_tuple
    move_item_to
-   remove_trailers
+   rtrim
+   rtrim_longest
 
 
 openpyxltools
@@ -142,7 +143,7 @@ tablibtools
    :toctree: api/
 
    DictLikeDataset
-   SimpleDataset
+   TablibDataset
    read_excel
 
 

@@ -1,9 +1,9 @@
-﻿macpie.util.TrackHistory
-========================
+﻿macpie.util.MethodHistory
+=========================
 
 .. currentmodule:: macpie.util
 
-.. autoclass:: TrackHistory
+.. autoclass:: MethodHistory
 
    
    .. automethod:: __init__
@@ -13,7 +13,7 @@
 
    .. autosummary::
    
-      ~TrackHistory.__init__
+      ~MethodHistory.__init__
    
    
 

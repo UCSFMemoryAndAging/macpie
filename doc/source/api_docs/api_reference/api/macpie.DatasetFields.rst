@@ -16,6 +16,7 @@
       ~DatasetFields.__init__
       ~DatasetFields.append_col_fill
       ~DatasetFields.append_series
+      ~DatasetFields.compare
       ~DatasetFields.extendleft
       ~DatasetFields.filter
       ~DatasetFields.from_collection
