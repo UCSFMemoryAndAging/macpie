@@ -527,6 +527,20 @@ class Dataset(pd.DataFrame):
             else:
                 dset = self.to_frame()
 
+            if highlight_duplicates:
+                dups_col_name = get_option("column.system.duplicates")
+                if dups_col_name in self.columns:
+                    from macpie.io.formats.style import highlight_axis_by_predicate
+
+                    dset = self.style
+                    dset.apply(
+                        highlight_axis_by_predicate,
+                        axis=1,
+                        opposite_axis_label=dups_col_name,
+                        predicate=bool,
+                        color="yellow",
+                    )
+
             formatter = MACPieExcelFormatter(
                 dset,
                 na_rep=na_rep,
@@ -538,13 +552,6 @@ class Dataset(pd.DataFrame):
                 merge_cells=merge_cells,
                 inf_rep=inf_rep,
             )
-
-            if highlight_duplicates:
-                dups_col_name = get_option("column.system.duplicates")
-                if dups_col_name in self.columns:
-                    formatter.highlight_row_by_column_predicate(
-                        column=dups_col_name, predicate=bool
-                    )
 
             if sheet_name is None:
                 sheet_name = self.excel_sheetname

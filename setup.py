@@ -4,6 +4,7 @@ setup(
     name="macpie",
     install_requires=[
         "click >= 8.0.3",
+        "jinja2 >= 3.0",
         "openpyxl >= 3.0",
         "pandas >= 1.2",
         "tablib >= 3.0",

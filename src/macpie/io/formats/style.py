@@ -21,7 +21,7 @@ URL: https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html#Styler-F
 """
 
 
-def highlight_axis_by_predicate(s: pd.Series, index_or_column, predicate, color="yellow"):
+def highlight_axis_by_predicate(s: pd.Series, opposite_axis_label, predicate=None, color="yellow"):
     """
     Highlight entire row or column if predicate is true for any one of the
     values in the row or column.
@@ -29,11 +29,13 @@ def highlight_axis_by_predicate(s: pd.Series, index_or_column, predicate, color=
     Parameters
     ----------
     s : Series.
-        row or column depending on the axis parameter supplied to style.apply() method
-    index_or_column: index or column label value
+        row or column depending on the axis parameter supplied to style.apply() method.
+        If axis=0 or 'index', series will be a column of data.
+        If axis=1 or 'columns', series will be a row of data.
+    opposite_axis_label: str
         index label (if axis=0) or column label (if axis=1)
     predicate: a Boolean-valued function
-        Tests the value in `index_or_column`. If True, the entire row (i.e. Series)
+        Tests the value in `opposite_axis_label`. If True, the entire series
         is highlighted
     color : str, default 'yellow'
         Background color to use for highlighting.
@@ -41,6 +43,7 @@ def highlight_axis_by_predicate(s: pd.Series, index_or_column, predicate, color=
     Examples
     --------
     Basic usage
+
     >>> df = pd.DataFrame({
     ...     "One": [1.2, 1.6, 1.5],
     ...     "Two": [2.9, 2.1, 2.5],
@@ -48,13 +51,18 @@ def highlight_axis_by_predicate(s: pd.Series, index_or_column, predicate, color=
     ... })
     >>> df.style.apply(
             highlight_axis_by_predicate,
-            index_or_column="Two",
-            predicate=lambda x: x == 2.1,
             axis=1,
+            opposite_axis_label="Two",
+            predicate=lambda x: x == 2.1
         )
     """
+
+    if predicate is None:
+        predicate = bool
+
     props = f"background-color: {color}"
-    if predicate(s[index_or_column]):
+
+    if predicate(s[opposite_axis_label]):
         return [props] * len(s)
     else:
         return [""] * len(s)

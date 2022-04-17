@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pandas.core.common as com
 from pandas import Index, MultiIndex
-from pandas.io.formats.excel import CSSToExcelConverter, ExcelCell, ExcelFormatter
+from pandas.io.formats.excel import ExcelCell, ExcelFormatter
 from pandas.io.formats.format import get_level_lengths
 from pandas.io.formats.printing import pprint_thing
 
@@ -16,23 +16,6 @@ from pandas.io.formats.printing import pprint_thing
 class MACPieExcelFormatter(ExcelFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # defines a function that takes a row (pd.Series) and returns a style
-        # see highlight_row_by_column_predicate for an example
-        self.row_styler = None
-
-    def highlight_row_by_column_predicate(self, column, predicate, color="yellow"):
-        style_converter = CSSToExcelConverter()
-        css = f"background-color: {color}"
-        xlstyle = style_converter(css)
-
-        def f(s: pd.Series):
-            col_val = s[column]
-            if predicate(col_val):
-                return xlstyle
-            return None
-
-        self.row_styler = f
 
     def _format_header_mi(self) -> Iterable[ExcelCell]:
         """Currently, as of pandas 1.3.4, still cannot write to Excel
@@ -166,16 +149,6 @@ class MACPieExcelFormatter(ExcelFormatter):
                     gcolidx += 1
 
         yield from self._generate_body(gcolidx)
-
-    def _generate_body(self, coloffset: int) -> Iterable[ExcelCell]:
-        if self.row_styler:
-            for rowidx in range(len(self.df.index)):
-                series = self.df.iloc[rowidx]
-                xlstyle = self.row_styler(series)
-                for i, val in enumerate(series):
-                    yield ExcelCell(self.rowcounter + rowidx, i + coloffset, val, xlstyle)
-        else:
-            yield from super()._generate_body(coloffset)
 
     def _generate_body_rowwise(self, coloffset: int) -> Iterable[ExcelCell]:
         # useful if you want to generate the body row-wise, instead of
