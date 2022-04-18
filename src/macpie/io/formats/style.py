@@ -21,7 +21,7 @@ URL: https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html#Styler-F
 """
 
 
-def highlight_axis_by_predicate(s: pd.Series, opposite_axis_label, predicate=None, color="yellow"):
+def highlight_axis_by_predicate(s: pd.Series, axis_label, predicate=None, color="yellow"):
     """
     Highlight entire row or column if predicate is true for any one of the
     values in the row or column.
@@ -32,10 +32,10 @@ def highlight_axis_by_predicate(s: pd.Series, opposite_axis_label, predicate=Non
         row or column depending on the axis parameter supplied to style.apply() method.
         If axis=0 or 'index', series will be a column of data.
         If axis=1 or 'columns', series will be a row of data.
-    opposite_axis_label: str
+    axis_label: str
         index label (if axis=0) or column label (if axis=1)
     predicate: a Boolean-valued function
-        Tests the value in `opposite_axis_label`. If True, the entire series
+        Tests the value in `axis_label`. If True, the entire series
         is highlighted
     color : str, default 'yellow'
         Background color to use for highlighting.
@@ -52,7 +52,7 @@ def highlight_axis_by_predicate(s: pd.Series, opposite_axis_label, predicate=Non
     >>> df.style.apply(
             highlight_axis_by_predicate,
             axis=1,
-            opposite_axis_label="Two",
+            axis_label="Two",
             predicate=lambda x: x == 2.1
         )
     """
@@ -62,7 +62,7 @@ def highlight_axis_by_predicate(s: pd.Series, opposite_axis_label, predicate=Non
 
     props = f"background-color: {color}"
 
-    if predicate(s[opposite_axis_label]):
+    if predicate(s[axis_label]):
         return [props] * len(s)
     else:
         return [""] * len(s)

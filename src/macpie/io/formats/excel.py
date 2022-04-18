@@ -2,20 +2,44 @@
 Utilities for conversion to writer-agnostic Excel representation.
 """
 
-from typing import Iterable
+from typing import Callable, Iterable
 
 import numpy as np
 import pandas as pd
 import pandas.core.common as com
 from pandas import Index, MultiIndex
-from pandas.io.formats.excel import ExcelCell, ExcelFormatter
+from pandas.io.formats.excel import CSSToExcelConverter, ExcelCell, ExcelFormatter
 from pandas.io.formats.format import get_level_lengths
 from pandas.io.formats.printing import pprint_thing
+
+
+def highlight_axis_by_predicate(s: pd.Series, axis_label=None, predicate=None, color="yellow"):
+    if predicate is None:
+        predicate = bool
+
+    style_converter = CSSToExcelConverter()
+    css = f"background-color: {color}"
+    xlstyle = style_converter(css)
+
+    if predicate(s[axis_label]):
+        return xlstyle
+    return None
 
 
 class MACPieExcelFormatter(ExcelFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    @property
+    def axis_styler(self):
+        if "_axis_styler" in self.__dict__:
+            return self._axis_styler
+        return None
+
+    def apply_axis_styler(self, func: Callable, axis=0, **kwargs):
+        # styles an entire axis
+        # see highlight_row_by_column_predicate for an example
+        self._axis_styler = (axis, func, kwargs)
 
     def _format_header_mi(self) -> Iterable[ExcelCell]:
         """Currently, as of pandas 1.3.4, still cannot write to Excel
@@ -149,6 +173,30 @@ class MACPieExcelFormatter(ExcelFormatter):
                     gcolidx += 1
 
         yield from self._generate_body(gcolidx)
+
+    def _generate_body(self, coloffset: int) -> Iterable[ExcelCell]:
+        if self.axis_styler:
+            axis, func, kwargs = self.axis_styler
+            if axis == 1:
+                # Write the body of the frame data row by row
+                for rowidx in range(len(self.df.index)):
+                    series = self.df.iloc[rowidx]
+                    xlstyle = func(series, **kwargs)
+                    for i, val in enumerate(series):
+                        yield ExcelCell(
+                            row=self.rowcounter + rowidx, col=i + coloffset, val=val, style=xlstyle
+                        )
+            elif axis == 0:
+                # Write the body of the frame data column by column
+                for colidx in range(len(self.columns)):
+                    series = self.df.iloc[:, colidx]
+                    xlstyle = func(series, **kwargs)
+                    for i, val in enumerate(series):
+                        yield ExcelCell(
+                            row=self.rowcounter + i, col=colidx + coloffset, val=val, style=xlstyle
+                        )
+        else:
+            yield from super()._generate_body(coloffset)
 
     def _generate_body_rowwise(self, coloffset: int) -> Iterable[ExcelCell]:
         # useful if you want to generate the body row-wise, instead of
