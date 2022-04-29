@@ -6,7 +6,7 @@ import pandas as pd
 from macpie import lltools, strtools
 from macpie._config import get_option
 from macpie.io.excel import MACPieExcelWriter, safe_xlsx_sheet_title
-from macpie.pandas.general import get_col_name, to_datetime
+from macpie.pandas.general_df import get_col_name, to_datetime
 from macpie.util.decorators import MethodHistory
 
 from .datasetfields import DatasetField, DatasetFields

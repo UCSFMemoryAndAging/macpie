@@ -4,7 +4,7 @@ import pandas as pd
 
 from macpie._config import get_option
 
-from . import general
+from . import general_df
 from . import multi_index
 from . import operators
 
@@ -33,17 +33,17 @@ class MacDataFrameAccessor:
         self, col_start: str, col_end: str, diff_days_col: str = None, inplace=False
     ):
         """see :meth:`macpie.pandas.add_diff_days`"""
-        return general.add_diff_days(
+        return general_df.add_diff_days(
             self._df, col_start, col_end, diff_days_col=diff_days_col, inplace=inplace
         )
 
     def any_duplicates(self, col: str, ignore_nan: bool = False):
         """see :meth:`macpie.pandas.any_duplicates`"""
-        return general.any_duplicates(self._df, col, ignore_nan=ignore_nan)
+        return general_df.any_duplicates(self._df, col, ignore_nan=ignore_nan)
 
     def assimilate(self, right: pd.DataFrame):
         """see :meth:`macpie.pandas.assimilate`"""
-        return general.assimilate(self._df, right)
+        return general_df.assimilate(self._df, right)
 
     def col_count(self):
         """see :meth:`macpie.pandas.num_cols`"""
@@ -51,64 +51,64 @@ class MacDataFrameAccessor:
 
     def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.diff_cols`"""
-        return general.diff_cols(
+        return general_df.diff_cols(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
         )
 
     def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.diff_rows`"""
-        return general.diff_rows(
+        return general_df.diff_rows(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
         )
 
     def drop_cols(self, cols_list=set(), cols_pat=None):
         """see :meth:`macpie.pandas.drop_cols`"""
-        return general.drop_cols(self._df, cols_list=cols_list, cols_pat=cols_pat)
+        return general_df.drop_cols(self._df, cols_list=cols_list, cols_pat=cols_pat)
 
     def drop_suffix(self, suffix: str):
         """see :meth:`macpie.pandas.drop_suffix`"""
-        return general.drop_suffix(self._df, suffix)
+        return general_df.drop_suffix(self._df, suffix)
 
     def equals(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
         """see :meth:`macpie.pandas.equals`"""
-        return general.equals(
+        return general_df.equals(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
         )
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):
         """see :meth:`macpie.pandas.flatten_multiindex`"""
-        return general.flatten_multiindex(self._df, axis=axis, delimiter=delimiter)
+        return general_df.flatten_multiindex(self._df, axis=axis, delimiter=delimiter)
 
     def get_col_name(self, col_name: str):
         """see :meth:`macpie.pandas.get_col_name`"""
-        return general.get_col_name(self._df, col_name)
+        return general_df.get_col_name(self._df, col_name)
 
     def get_col_names(self, col_names: List[str], strict=True):
         """see :meth:`macpie.pandas.get_col_names`"""
-        return general.get_col_names(self._df, col_names, strict=strict)
+        return general_df.get_col_names(self._df, col_names, strict=strict)
 
     def get_cols_by_prefixes(self, prefixes: List[str], one_match_only=True):
         """see :meth:`macpie.pandas.get_cols_by_prefixes`"""
-        return general.get_cols_by_prefixes(self._df, prefixes, one_match_only=one_match_only)
+        return general_df.get_cols_by_prefixes(self._df, prefixes, one_match_only=one_match_only)
 
     def insert(self, col_name, col_value, allow_duplicates=False):
         """see :meth:`macpie.pandas.insert`"""
-        return general.insert(self._df, col_name, col_value, allow_duplicates=allow_duplicates)
+        return general_df.insert(self._df, col_name, col_value, allow_duplicates=allow_duplicates)
 
     def is_date_col(self, arr_or_dtype):
         """see :meth:`macpie.pandas.is_date_col`"""
-        return general.is_date_col(self._df[arr_or_dtype])
+        return general_df.is_date_col(self._df[arr_or_dtype])
 
     def mark_duplicates_by_cols(self, cols: List[str]):
         """see :meth:`macpie.pandas.mark_duplicates_by_cols`"""
-        return general.mark_duplicates_by_cols(self._df, cols)
+        return general_df.mark_duplicates_by_cols(self._df, cols)
 
     def prepend_multi_index_level(self, level_name: str, axis: int = 0):
         return multi_index.prepend_multi_index_level(self._df, level_name, axis=axis)
 
     def replace_suffix(self, old_suffix, new_suffix):
         """see :meth:`macpie.pandas.replace_suffix`"""
-        return general.replace_suffix(self._df, old_suffix, new_suffix)
+        return general_df.replace_suffix(self._df, old_suffix, new_suffix)
 
     def row_count(self):
         """see :meth:`macpie.pandas.num_rows`"""
@@ -116,7 +116,7 @@ class MacDataFrameAccessor:
 
     def to_datetime(self, date_col_name):
         """see :meth:`macpie.pandas.to_datetime`"""
-        return general.to_datetime(self._df, date_col_name)
+        return general_df.to_datetime(self._df, date_col_name)
 
     # operators
     def date_proximity(

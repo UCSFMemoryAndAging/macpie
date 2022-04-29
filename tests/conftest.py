@@ -6,7 +6,7 @@ from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
 import pytest
 
 from macpie._config import get_option, set_option
-from macpie import MacDataFrameAccessor
+from macpie import MacSeriesAccessor, MacDataFrameAccessor
 
 # import fixtures needed across files
 from tests.cli.macpie.keepone.fixtures import cli_keepone_big

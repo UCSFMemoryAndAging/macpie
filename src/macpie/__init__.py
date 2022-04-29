@@ -21,6 +21,7 @@ from macpie.io import *
 
 from macpie.operators import *
 
+from macpie.pandas.accessor_ser import MacSeriesAccessor
 from macpie.pandas.accessor_df import MacDataFrameAccessor
 
 

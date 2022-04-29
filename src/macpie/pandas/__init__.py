@@ -1,5 +1,5 @@
 # flake8: noqa
-from .general import (
+from .general_df import (
     add_diff_days,
     any_duplicates,
     assimilate,
@@ -18,6 +18,8 @@ from .general import (
     replace_suffix,
     to_datetime,
 )
+
+from .general_ser import remove_trailers
 
 from .io import csv_to_dataframe, excel_to_dataframe, file_to_dataframe
 
