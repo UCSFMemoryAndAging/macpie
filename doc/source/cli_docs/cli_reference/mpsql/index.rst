@@ -1,3 +1,5 @@
+.. _command-mpsql:
+
 ``mpsql`` command
 =================
 

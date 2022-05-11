@@ -7,7 +7,7 @@ from . import general_ser
 class MacSeriesAccessor:
     """
     Custom Series accessor to extend the :class:`pandas.Series` object.
-    This creates an additional namepace on the Series object called "``mac``.
+    This creates an additional namepace on the Series object called ``mac``.
     """
 
     def __init__(self, ser):

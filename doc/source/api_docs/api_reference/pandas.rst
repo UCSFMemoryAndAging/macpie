@@ -2,9 +2,10 @@ Pandas
 ======
 
 As MACPie relies heavily on the ``pandas`` library, a rich set of methods
-that work with :class:`pandas.DataFrame` objects were created and are
-provided through this API. These custom methods are exposed and accessible
-through the :class:`pandas.DataFrame` objects themselves via an extension.
+that work with :class:`pandas.DataFrame` and :class:`pandas.Series` objects
+were created and are provided through this API. These custom methods are
+exposed and accessible through the :class:`pandas.DataFrame` and
+:class:`pandas.Series` objects themselves via an extension.
 
 DataFrame Accessor
 ~~~~~~~~~~~~~~~~~~
@@ -27,12 +28,23 @@ via dot notation. Example: ::
     >>> df.mac.is_date_col('date1')
     True
 
-
 .. currentmodule:: macpie
 .. autosummary::
    :toctree: api/
 
    MacDataFrameAccessor
+
+
+Series Accessor
+~~~~~~~~~~~~~~~
+
+Extension of the :class:`pandas.Series` class.
+
+.. currentmodule:: macpie
+.. autosummary::
+   :toctree: api/
+
+   MacSeriesAccessor
 
 
 .. currentmodule:: macpie.pandas

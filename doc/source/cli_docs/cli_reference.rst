@@ -15,4 +15,5 @@ The ``--help`` option will give more information about any commands and options.
 
   macpie <cli_reference/macpie/index>
   mpsql <cli_reference/mpsql/index>
+  mpfile <cli_reference/mpfile/index>
   

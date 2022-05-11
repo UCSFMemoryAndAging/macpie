@@ -13,7 +13,7 @@ from . import operators
 class MacDataFrameAccessor:
     """
     Custom DataFrame accessor to extend the :class:`pandas.DataFrame` object.
-    This creates an additional namepace on the DataFrame object called "``mac``.
+    This creates an additional namepace on the DataFrame object called ``mac``.
 
     All methods exposed via this accessor are derived from functions already
     available via the public API, leaving out the first DataFrame argument.

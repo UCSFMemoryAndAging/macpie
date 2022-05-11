@@ -12,6 +12,8 @@ Decorators
    MethodTimer
 
 
+.. _util-masker:
+
 Masker
 ------
 .. autosummary::

@@ -42,6 +42,7 @@
       ~XlsxWriterAutofitColumnsWorksheet.outline_settings
       ~XlsxWriterAutofitColumnsWorksheet.print_across
       ~XlsxWriterAutofitColumnsWorksheet.print_area
+      ~XlsxWriterAutofitColumnsWorksheet.print_black_and_white
       ~XlsxWriterAutofitColumnsWorksheet.print_row_col_headers
       ~XlsxWriterAutofitColumnsWorksheet.protect
       ~XlsxWriterAutofitColumnsWorksheet.repeat_columns
@@ -69,6 +70,7 @@
       ~XlsxWriterAutofitColumnsWorksheet.set_selection
       ~XlsxWriterAutofitColumnsWorksheet.set_start_page
       ~XlsxWriterAutofitColumnsWorksheet.set_tab_color
+      ~XlsxWriterAutofitColumnsWorksheet.set_top_left_cell
       ~XlsxWriterAutofitColumnsWorksheet.set_v_pagebreaks
       ~XlsxWriterAutofitColumnsWorksheet.set_vba_name
       ~XlsxWriterAutofitColumnsWorksheet.set_zoom

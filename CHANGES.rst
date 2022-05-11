@@ -12,24 +12,29 @@
 Release notes
 =============
 
-0.4 (2021-XX-XX)
+0.4 (2022-05-10)
 ----------------
 
 Added
 ~~~~~
-- :doc:`Utilities <api_docs/api_reference/util>` classes for masking data
-
-  - :class:`util.Masker`
-  - :class:`util.IdMap`
-  - :class:`util.IdMapCols`
+- :ref:`mpsql <command-mpsql>` command line tool for utilities related to sql
+  databases (e.g. generate create statements for tables and stored procs)
+- :ref:`mpfile <command-mpfile>` command line tool for utilities related to files
+  (e.g. comparing files)
+- :class:`MacSeriesAccessor` to extend :class:`pandas.Series` functionality
+- :external+xlsxwriter:doc:`xlsxwriter <index>` excel writing engine
+  support for much improved writing performance
+- :ref:`Masker <util-masker>` classes for masking data
 
 Changed
 ~~~~~~~
-- ??
+- Refactored :class:`Dataset` class to use inheritance (from :class:`pandas.DataFrame`)
+  rather than composition
 
 Other
 ~~~~~
-- ??
+- Drop support for Python 3.6, 3.7
+- Add support for Python 3.10
 
 
 0.3 (2021-05-24)
