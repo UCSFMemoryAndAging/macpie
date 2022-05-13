@@ -17,26 +17,32 @@ def group_by_keep_one(
     and keep only the earliest or latest row in each group as determined by the date
     in the ``date_col_name`` column.
 
-    :param df: the DataFrame to operate on
-    :param group_by_col: the DataFrame column to group on
-    :param date_col_name: the date column to determine which row is earliest or latest
-    :param keep: specify which row of each group to keep
+    Parameters
+    ----------
+    df : DataFrame
+    group_by_col : str
+        The DataFrame column to group on
+    date_col_name : str
+        The date column to determine which row is earliest or latest
+    keep: {'all', 'earliest', 'latest'}, default 'all'
+        Specify which row of each group to keep.
 
-        ``all``
-             keep all rows
+        * all: keep all rows
+        * earliest: in each group, keep only the earliest (i.e. oldest) row
+        * latest: in each group, keep only the latest (i.e. most recent) row
+    id_col_name : str, optional
+        Used to sort results if there are duplicates. If ``drop_duplicates=True``,
+        the column specified here will also be used for identifying duplicates
+    drop_duplicates : bool, default: False
+        If ``True``, then if more than one row is determined to be
+        'earliest' or 'latest' in each group, drop all duplicates
+        except the first occurrence. If ``id_col_name`` is specified,
+        then that column will also be used for identifying duplicates
 
-        ``earliest``
-             in each group, keep only the earliest (i.e. oldest) row
-
-        ``latest``
-             in each group, keep only the latest (i.e. most recent) row
-
-    :param id_col_name: if ``drop_duplicates=True``, the column specified
-                   here will also be used for identifying duplicates
-    :param drop_duplicates: if ``True``, then if more than one row is determined to be
-                            earliest or or latest in each group, drop all duplicates
-                            except the first occurrence. If ``id_col_name`` is specified,
-                            then that column will also be used for identifying duplicates
+    Returns
+    -------
+    DataFrame
+        A DataFrame of the result.
     """
 
     # groupby.first() and groupby.last() can't handle NaN values (ongoing bug)

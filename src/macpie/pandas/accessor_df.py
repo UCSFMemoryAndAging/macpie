@@ -49,13 +49,13 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.num_cols`"""
         return len(self._df.columns)
 
-    def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
+    def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
         """see :meth:`macpie.pandas.diff_cols`"""
         return general_df.diff_cols(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
         )
 
-    def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
+    def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
         """see :meth:`macpie.pandas.diff_rows`"""
         return general_df.diff_rows(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
@@ -69,7 +69,7 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.drop_suffix`"""
         return general_df.drop_suffix(self._df, suffix)
 
-    def equals(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
+    def equals(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
         """see :meth:`macpie.pandas.equals`"""
         return general_df.equals(
             self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat

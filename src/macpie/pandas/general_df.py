@@ -12,13 +12,29 @@ from macpie import itertools, lltools, strtools
 def add_diff_days(
     df: pd.DataFrame, col_start: str, col_end: str, diff_days_col: str = None, inplace=False
 ):
-    """Adds a column to DataFrame called ``_diff_days`` which contains
+    """
+    Adds a column to DataFrame called ``_diff_days`` which contains
     the number of days between ``col_start`` and ``col_end``
 
-    :param df: DataFrame
-    :param col_start: column containing the start date
-    :param col_end: column containing the end date
+    Parameters
+    ----------
+    df : DataFrame
+    col_start : str
+        column containing the start date
+    col_end : str
+        column containing the end date
+    diff_days_col: str, optional
+        Give the added column a different name other than the default
+        name of "_diff_days".
+    inplace : bool, default False
+        Whether to add the column in place or return a copy.
+
+    Returns
+    -------
+    DataFrame
+        A DataFrame of the result.
     """
+
     if diff_days_col is None:
         diff_days_col = get_option("column.system.diff_days")
 
@@ -37,12 +53,23 @@ def add_diff_days(
 
 
 def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
-    """Return ``True`` if there are any duplicates in ``col``.
-
-    :param df: DataFrame
-    :param col: column to check for duplicates
-    :param ignore_nan: Whether to ignore ``nan`` values
     """
+    Return ``True`` if there are any duplicates in ``col``.
+
+    Parameters
+    ----------
+    df : DataFrame
+    col : str
+        column to check for duplicates
+    ignore_nan : bool, default False
+        Whether to ignore ``nan`` values
+
+    Returns
+    -------
+    bool
+        True if there are duplicates, False otherwise.
+    """
+
     col = get_col_name(df, col)
     if ignore_nan is True:
         return df[col].dropna().duplicated().any()
@@ -50,12 +77,21 @@ def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
 
 
 def assimilate(left: pd.DataFrame, right: pd.DataFrame):
-    """Assimilate ``right`` to look like ``left`` by casting column data types in ``right``
+    """
+    Assimilate ``right`` to look like ``left`` by casting column data types in ``right``
     to the data types in ``left`` where the column name is the same.
 
-    :param left: left DataFrame
-    :param right: right DataFrame
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+
+    Returns
+    -------
+    DataFrame
+        The assimilated ``right`` DataFrame
     """
+
     # give me all the elements in left that are also in right
 
     left_columns = set(left.columns)
@@ -77,19 +113,27 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     return right
 
 
-def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
-    """Return a length-2 tuple where the first element is the set of columns that
-    exist in ``left``, and the second element is the set of columns that only
-    exist in ``right``.
-
-    :param left: left DataFrame
-    :param right: right DataFrame
-    :param cols_ignore: columns to ignore
-    :param cols_ignore_pat: Character sequence or regular expression.
-                            Column names that match will be ignored.
-                            Defaults to None, which uses the pattern
-                            ``'$^'`` to match nothing to ignore nothing
+def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
     """
+    Find the column differences between two DataFrames.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    cols_ignore : list-like, optional
+        Columns to ignore
+    cols_ignore_pat : Regular expression. Default is ``$^``
+        Column names that match will be ignored. Default pattern is ``$^``
+        which matches nothing so no columns are ignored.
+
+    Returns
+    -------
+    Length-2 tuple
+        First element is the set of columns that exist in ``left``,
+        and the second element is the set of columns that only exist in ``right``.
+    """
+
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
 
@@ -105,14 +149,26 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     return (left_only_cols, right_only_cols)
 
 
-def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
-    """If ``left`` and ``right`` share the same columns, returns a DataFrame
+def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+    """
+    If ``left`` and ``right`` share the same columns, returns a DataFrame
     containing rows that differ.
 
-    :param left: left DataFrame
-    :param right: right DataFrame
-    :param cols_ignore: a list of any columns to ignore
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    cols_ignore : list-like, optional
+        Columns to ignore
+    cols_ignore_pat : Regular expression. Default is ``$^``
+        Column names that match will be ignored. Default pattern is ``$^``
+        which matches nothing so no columns are ignored.
+
+    Returns
+    -------
+    DataFrame
     """
+
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
 
@@ -135,17 +191,24 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     raise KeyError("Dataframes do not share the same columns")
 
 
-def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
-    """Drop specified columns
-
-    :param cols_list: List of columns to drop. Defaults to set()
-    :param cols_pat: Character sequence or regular expression.
-                     Column names that match will be dropped.
-                     Defaults to None, which uses the pattern
-                     ``'$^'`` to match nothing to ignore nothing
+def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat="$^"):
     """
-    # Default pattern is to match nothing to ignore nothing
-    cols_pat = "$^" if cols_pat is None else cols_pat
+    Drop specified columns
+
+    Parameters
+    ----------
+    df : DataFrame
+    cols_list : list-like, optional
+        List of columns to drop.
+    cols_pat : Regular expression. Default is ``$^``
+        Column names that match will be dropped. Default pattern is ``$^``
+        which matches nothing so no columns are dropped.
+
+    Returns
+    -------
+    DataFrame
+        DataFrame with columns dropped.
+    """
 
     if isinstance(df.columns, pd.MultiIndex):
         last_level = df.columns.nlevels - 1
@@ -163,25 +226,54 @@ def drop_cols(df: pd.DataFrame, cols_list=set(), cols_pat=None):
 
 
 def drop_suffix(df: pd.DataFrame, suffix):
-    """Removes the ``suffix`` in any column name containing the ``suffix``.
-
-    :param df: DataFrame
-    :param suffix: suffix to drop
     """
+    Removes the ``suffix`` in any column name containing the ``suffix``.
+
+    Parameters
+    ----------
+    df : DataFrame
+    suffix : str
+        suffix to drop
+
+    Returns
+    -------
+    DataFrame
+        DataFrame with renamed columns.
+    """
+
     return df.rename(columns=lambda x: strtools.strip_suffix(x, suffix))
 
 
-def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat=None):
-    """For testing equality of :class:`pandas.DataFrame` objects
-
-    :param df1: left DataFrame to compare
-    :param df2: right DataFrame to compare
-    :param cols_ignore: DataFrame columns to ignore in comparison
-    :param cols_ignore_pat: Character sequence or regular expression.
-                            Column names that match will be ignored in comparison.
-                            Defaults to None, which uses the pattern
-                            ``'$^'`` to match nothing to ignore nothing
+def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
     """
+    For testing equality of :class:`pandas.DataFrame` objects
+
+    Parameters
+    ----------
+    left : DataFrame
+        left DataFrame to compare
+    right : DataFrame
+        right DataFrame to compare
+    cols_ignore : list-like, optional
+        DataFrame columns to ignore in comparison
+    cols_ignore_pat: Regular expression. Default is ``$^``
+        Column names that match will be ignored in comparison. Default pattern is ``$^``
+        which matches nothing so no columns are ignored.
+
+    Returns
+    -------
+    bool
+        True if all elements, except those in ignored columns,
+        are the same in both objects, False otherwise.
+
+    Raises
+    ------
+    TypeError
+        When columns are different types (e.g. Index vs MultiIndex)
+    ValueError
+        When MultiIndexes have different levels.
+    """
+
     # columns should be same type (e.g. Index or MultiIndex)
     if type(left.columns) != type(right.columns):
         raise TypeError(
@@ -211,12 +303,12 @@ def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
 
     Parameters
     ----------
-    df : DataFrame.
+    df : DataFrame
     axis : {0 or 'index', 1 or 'columns'}, default 0
         Whether to flatten labels from the index (0 or 'index') or
         columns (1 or 'columns').
-    delimiter : str
-        string to join multiindex levels on
+    delimiter : str, default is "_"
+        String to join multiindex levels on
 
     Examples
     --------
@@ -247,16 +339,31 @@ def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
 
 
 def get_col_name(df: pd.DataFrame, col_name):
-    """Get the properly-cased column name from ``df``, ignoring case.
+    """
+    Get the properly-cased column name from ``df``, ignoring case.
 
-    :param df: DataFrame
-    :param col_name: case-insensitive name of the column
+    Parameters
+    ----------
+    df : DataFrame
+    col_name : str, tuple of str (for MultiIndexes)
+        Case-insensitive name of the column.
+
+    Returns
+    -------
+    str, tuple of str (if MultiIndex)
+        The properly-cased column name.
+
+    Raises
+    ------
+    KeyError
+        If `col_name` is None or not found in the DataFrame.
     """
 
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
     if lltools.is_list_like(col_name):
+        # handle MultiIndex
         for col in df.columns:
             if lltools.list_like_str_equal(col, col_name, case_sensitive=False):
                 return col
@@ -271,13 +378,24 @@ def get_col_name(df: pd.DataFrame, col_name):
 
 
 def get_col_names(df: pd.DataFrame, col_names: List[str], strict=True):
-    """Get the properly-cased columns names from ``df``, ignoring case.
-
-    :param df: DataFrame
-    :param col_names: list of case-insensitive column names
-    :param strict: if True, raise error if a column can't be found, otherwise
-                   return None for that column
     """
+    Get the properly-cased columns names from ``df``, ignoring case.
+
+    Parameters
+    ----------
+    df : DataFrame
+    col_names : list-like
+        List of case-insensitive column names
+    strict : bool, default True
+        If True, raise error if a column can't be found, otherwise
+        return None for that column
+
+    Returns
+    -------
+    list
+        The list of properly-cased column names.
+    """
+
     df_col_names = []
     for col in col_names:
         try:
@@ -292,14 +410,15 @@ def get_col_names(df: pd.DataFrame, col_names: List[str], strict=True):
 
 
 def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
-    """Get columns that start with the prefixes.
+    """
+    Get columns that start with the prefixes.
 
     Parameters
     ----------
     df : DataFrame
     prefixes: str, or list of strs
         Column labels that start with the prefixes will be returned.
-    one_match_only: bool, optional
+    one_match_only: bool, default True
         If True, raise error if a prefix matches more than one column.
 
     Returns
@@ -307,6 +426,11 @@ def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
     dictionary
         A dict that maps each prefix to list of columns (Series)
         that start with that prefix.
+
+    Raises
+    ------
+    KeyError
+        If `one_match_only` is True, yet multiple columns found.
 
     Examples
     --------
@@ -354,6 +478,7 @@ def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
         }
     )
     """
+
     results = defaultdict(list)
 
     prefixes = set(lltools.maybe_make_list(prefixes))
@@ -374,57 +499,93 @@ def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
 
 
 def insert(df: pd.DataFrame, col_name, col_value, allow_duplicates=False):
-    """Adds a column to the end of the DataFrame
-
-    :param df: DataFrame
-    :param col_name: name of column to insert
-    :param col_value: value of column to insert
     """
+    Adds a column to the end of the DataFrame
+
+    Parameters
+    ----------
+    df : DataFrame
+    col_name : str
+        Name of column to insert
+    col_value : str
+        Value of column to insert
+    allow_duplicates : bool, default False
+        Whether to allow a duplicate column name to be added
+    """
+
     return df.insert(len(df.columns), col_name, col_value, allow_duplicates=allow_duplicates)
 
 
 def is_date_col(arr_or_dtype):
-    """Check whether the provided array or dtype is of the datetime64 dtype.
-
-    :param arr_or_dtype: The array or dtype to check
     """
+    Check whether the provided array or dtype is of the datetime64 dtype.
+
+    Parameters
+    ----------
+    arr_or_dtype : array or dtype
+    """
+
     return pd.api.types.is_datetime64_any_dtype(arr_or_dtype)
 
 
 def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
-    """Create a column in ``df`` called ``_duplicates`` which is a boolean Series
+    """
+    Create a column in ``df`` called ``_duplicates`` which is a boolean Series
     denoting duplicate rows as identified by ``cols``.
 
-    :param df: DataFrame
-    :param cols: Only consider these columns for identifiying duplicates
+    Parameters
+    ----------
+    df : DataFrame
+    cols : list-like
+        Only consider these columns for identifiying duplicates
     """
+
     df[get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
     return df
 
 
 def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
-    """For any column names containing ``old_suffix``, replace the ``old_suffix``
+    """
+    For any column names containing ``old_suffix``, replace the ``old_suffix``
     with ``new_suffix``.
 
-    :param df: DataFrame
-    :param old_suffix: suffix to replace
-    :param new_suffix: suffix to replace ``old_suffix``
+    Parameters
+    ----------
+    df : DataFrame
+    old_suffix : str
+        suffix to replace
+    new_suffix : str
+        suffix to replace ``old_suffix``
     """
+
     return df.rename(
         columns=lambda x: x[: -len(old_suffix)] + new_suffix if x.endswith(old_suffix) else x
     )
 
 
 def to_datetime(df: pd.DataFrame, date_col_name, **kwargs):
-    """Convert ``date_col_name`` column in ``df`` to datetime.
-
-    :param df: DataFrame
-    :param date_col_name: column to convert
     """
+    Convert ``date_col_name`` column in ``df`` to datetime.
+
+    Parameters
+    ----------
+    df : DataFrame
+    date_col_name : str
+        Column to convert, case-insensitive
+    **kwargs
+        All keyword arguments are passed through to the underlying
+        :meth:`pandas.to_datetime` method.
+
+    Returns
+    -------
+    str
+        Properly-cased date column name.
+    """
+
     try:
         _date_col = get_col_name(df, date_col_name)
-        if not is_date_col(df[_date_col], **kwargs):
-            df[_date_col] = pd.to_datetime(df[_date_col])
+        if not is_date_col(df[_date_col]):
+            df[_date_col] = pd.to_datetime(df[_date_col], **kwargs)
         return _date_col
     except KeyError:
         raise KeyError(f"Date column '{date_col_name}' in dataframe is not a valid column")

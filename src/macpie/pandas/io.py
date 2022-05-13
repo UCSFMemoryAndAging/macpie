@@ -10,11 +10,18 @@ from macpie import openpyxltools, pathtools
 
 
 def file_to_dataframe(filepath):
-    """Parse a file into a :class:`pandas.DataFrame`.
-
-    :param filepath: File path
-    :return: a :class:`pandas.DataFrame` object
     """
+    Parse a file into a :class:`pandas.DataFrame`.
+
+    Parameters
+    ----------
+    filepath : File path
+
+    Returns
+    -------
+    DataFrame
+    """
+
     if pathtools.has_csv_extension(filepath):
         return csv_to_dataframe(filepath, engine="pandas")
     if pathtools.has_excel_extension(filepath):
@@ -23,12 +30,20 @@ def file_to_dataframe(filepath):
 
 
 def csv_to_dataframe(filepath_or_buffer, engine="pandas"):
-    """Parse a csv file into a :class:`pandas.DataFrame`.
-
-    :param filepath: File path
-    :param engine: ``'pandas'`` or ``'tablib'``. Defaults to ``'pandas'``.
-    :return: a :class:`pandas.DataFrame` object
     """
+    Parse a csv file into a :class:`pandas.DataFrame`.
+
+    Parameters
+    ----------
+    filepath : File path
+    engine :  {'pandas', 'tablib'}, default 'pandas'
+        Parser engine to use.
+
+    Returns
+    -------
+    DataFrame
+    """
+
     if engine == "pandas":
         return pd.read_csv(filepath_or_buffer)
     elif engine == "tablib":
@@ -39,13 +54,22 @@ def csv_to_dataframe(filepath_or_buffer, engine="pandas"):
 
 
 def excel_to_dataframe(filepath_or_buffer, sheet_name=None, engine="openpyxl"):  # pragma: no cover
-    """Parse an Excel file into a :class:`pandas.DataFrame`.
-
-    :param filepath: File path
-    :param engine: ``'openpyxl'``, ``'pandas'``, or ``'tablib'``.
-                   Defaults to ``'openpyxl'``.
-    :return: a :class:`pandas.DataFrame` object
     """
+    Parse an Excel file into a :class:`pandas.DataFrame`.
+
+    Parameters
+    ----------
+    filepath : File path
+    sheet_name : str, optional
+        Worksheet to parse. If not specified, active worksheet is parsed.
+    engine :  {'openpyxl', 'pandas', 'tablib'}, default 'openpyxl'
+        Parser engine to use.
+
+    Returns
+    -------
+    DataFrame
+    """
+
     if engine == "openpyxl":
         book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
         if sheet_name is None:

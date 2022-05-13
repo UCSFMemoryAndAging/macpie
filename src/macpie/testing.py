@@ -11,19 +11,22 @@ def assert_dfs_equal(
     left: pd.DataFrame,
     right: pd.DataFrame,
     cols_ignore=set(),
-    cols_ignore_pat=None,
+    cols_ignore_pat="$^",
     output_dir=None,
 ):
     """For testing equality of :class:`pandas.DataFrame` objects
 
-    :param left: left DataFrame to compare
-    :param right: right DataFrame to compare
-    :param cols_ignore: DataFrame columns to ignore in comparison
-    :param cols_ignore_pat: Character sequence or regular expression.
-                            Column names that match will be ignored.
-                            Defaults to None, which uses the pattern
-                            ``'$^'`` to match nothing to ignore nothing
-    :param output_dir: directory to write row difference results to
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    cols_ignore : list-like, optional
+        Columns to ignore
+    cols_ignore_pat : Regular expression. Default is ``$^``
+        Column names that match will be ignored. Default pattern is ``$^``
+        which matches nothing so no columns are ignored.
+    output_dir : Path, optional
+        Directory to write row difference results to
     """
 
     if left.mac.equals(right, cols_ignore, cols_ignore_pat):
@@ -58,9 +61,14 @@ def assert_excels_equal(wb1, wb2):
     """
     For testing equality of :class:`openpyxl.workbook.workbook.Workbook` objects
 
-    :param wb1: left Workbook to compare
-    :param wb2: right Workbook to compare
+    Parameters
+    ----------
+    wb1 : Workbook
+        Left Workbook to compare
+    wb2 : Workbook
+        Right Workbook to compare
     """
+
     # same sheets?
     assert set(wb1.sheetnames) == set(wb2.sheetnames)
 

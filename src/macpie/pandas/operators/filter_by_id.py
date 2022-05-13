@@ -4,13 +4,25 @@ import pandas as pd
 
 
 def filter_by_id(df: pd.DataFrame, id_col_name: str, ids: List[int]) -> pd.DataFrame:
-    """Filters a :class:`pandas.DataFrame` object to only include a specified list
+    """
+    Filters a :class:`pandas.DataFrame` object to only include a specified list
     of numerical IDs in a specified numerical ID column.
 
-    :param df: the DataFrame to filter
-    :param id_col_name: the DataFrame column to filter on
-    :param ids: the list of IDs to filter on in the ``id_col_name`` column
+    Parameters
+    ----------
+    df : DataFrame
+        To be filtered
+    id_col_name : str
+        The DataFrame column to filter on
+    ids: list
+        The list of IDs to filter on in the ``id_col_name`` column
+
+    Returns
+    -------
+    DataFrame
+        A DataFrame of the filtered result.
     """
+
     try:
         _ids = [int(i) for i in ids]
     except ValueError as error:
