@@ -4,6 +4,8 @@ Utility functions related to dates and times.
 
 import datetime
 
+import pandas as pd
+
 
 def current_datetime_str(fmt="%Y%m%d_%H%M%S", ms=False, ms_prefix="_"):
     """Get the current datetime with second precision with default format ``YYYYMMDD_HHMMSS``"""
@@ -17,3 +19,10 @@ def current_datetime_str(fmt="%Y%m%d_%H%M%S", ms=False, ms_prefix="_"):
 def datetime_ms(dt: datetime.datetime):
     """Return milliseconds of the datetime"""
     return round(dt.microsecond / 1000)
+
+
+def reformat_datetime_str(arg, format="%Y-%m-%d", **kwargs):
+    dt = pd.to_datetime(arg, **kwargs)
+    if isinstance(dt, (pd.Timestamp, datetime.datetime)) and not pd.isnull(dt):
+        return dt.strftime(format)
+    return dt
