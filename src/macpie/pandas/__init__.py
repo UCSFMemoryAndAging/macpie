@@ -19,7 +19,7 @@ from .general_df import (
     to_datetime,
 )
 
-from .general_ser import remove_trailers
+from .general_ser import count_trailers, remove_trailers, rtrim, rtrim_longest
 
 from .io import csv_to_dataframe, excel_to_dataframe, file_to_dataframe
 
