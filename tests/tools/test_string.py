@@ -19,8 +19,20 @@ def test_add_suffix():
     assert strtools.add_suffix("testing", "suffix", 9) == "tessuffix"
 
 
-def test_strip_suffix():
+def test_seq_contains():
+    seq = ["Albert", "Lee"]
 
+    assert strtools.seq_contains("Albert", seq) is True
+    assert strtools.seq_contains("Nope", seq) is False
+    assert strtools.seq_contains("albert", seq) is False
+    assert strtools.seq_contains("albert", seq, case_sensitive=False) is True
+    assert strtools.seq_contains("albertzzz", seq, case_sensitive=False) is False
+
+    seq = ["Albert", None, False]
+    assert strtools.seq_contains("Albert", seq, case_sensitive=False) is True
+
+
+def test_strip_suffix():
     assert strtools.strip_suffix("test_y", "_y") == "test"
 
     assert strtools.strip_suffix(None, "_y") is None

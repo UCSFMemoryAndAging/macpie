@@ -68,6 +68,17 @@ def add_suffixes_with_base(
     return result
 
 
+def seq_contains(s: str, seq, case_sensitive=True):
+    if case_sensitive:
+        if s in seq:
+            return True
+    else:
+        seq_casefold = [seq_str.casefold() for seq_str in seq if isinstance(seq_str, str)]
+        if s.casefold() in seq_casefold:
+            return True
+    return False
+
+
 def strip_suffix(s: str, suffix: str):
     """Remove a suffix from a string.
 
