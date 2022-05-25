@@ -1,4 +1,3 @@
-import collections
 import itertools
 
 from . import string as strtools
@@ -100,6 +99,28 @@ def make_list_if_list_like(obj, allow_sets: bool = True):
     return obj
 
 
+def make_same_length(*seqs, fillvalue=None):
+    """Make sequences the same length, filling any shorter lists with
+    ``fillvalue`` to make them equal-sized.
+
+    Parameters
+    ----------
+    seqs : Sequences
+    fillvalue : optional, default: None
+        Value to fill missing items with (if ``seqs`` are of uneven length.)
+
+    Returns
+    -------
+    Iterator
+        An iterator that yields the resulting sequences.
+    """
+
+    max_len = len(max(seqs, key=len))
+    for seq in seqs:
+        seq = itertools.chain(seq, itertools.repeat(fillvalue, max_len - len(seq)))
+        yield tuple(seq)
+
+
 def make_tuple_if_list_like(obj, allow_sets: bool = True):
     if is_list_like(obj, allow_sets=allow_sets):
         return tuple(obj)
@@ -179,15 +200,19 @@ def rtrim_longest(*seqs, predicate=None, fillvalue=None):
     If the resulting sequences are of uneven length, missing values are filled
     in with fillvalue.
 
-        >>> lst1 = [1, 2, 3, None, None]
-        >>> lst2 = [1, 2, None, None]
-        >>> trimmed = rtrim_longest(lst1, lst2)
-        >>> list(trimmed[0])
-        [1, 2, 3]
-        >>> list(trimmed[1])
-        [1, 2, None]
+    Parameters
+    ----------
+    seqs : objects that are acceptable to the built-in :py:func:`reversed` function
 
-    :param seq: an object acceptable to the built-in reversed function
+    Examples
+    --------
+    >>> lst1 = [1, 2, 3, None, None]
+    >>> lst2 = [1, 2, None, None]
+    >>> trimmed = rtrim_longest(lst1, lst2)
+    >>> list(trimmed[0])
+    [1, 2, 3]
+    >>> list(trimmed[1])
+    [1, 2, None]
     """
 
     if predicate is None:

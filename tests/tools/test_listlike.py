@@ -141,6 +141,23 @@ def test_list_like_str_equal():
     lltools.list_like_str_equal(("abc", "def"), ("ABC", "def", "g"), case_sensitive=False) is False
 
 
+def test_make_same_length():
+    l1 = [1, 2, 3, None, None, None]
+    l2 = [1, 2, 3, None]
+
+    result = lltools.make_same_length(l1, l2)
+    assert next(result) == tuple(l1)
+    assert next(result) == tuple(l1)
+
+    result = lltools.make_same_length(l2, l1)
+    assert next(result) == tuple(l1)
+    assert next(result) == tuple(l1)
+
+    result = lltools.make_same_length(l1, l2, fillvalue=8)
+    assert next(result) == tuple(l1)
+    assert next(result) == (1, 2, 3, None, 8, 8)
+
+
 def test_rtrim():
     l1 = [1, 2, 3, None, None]
     l1_result = lltools.rtrim(l1)
