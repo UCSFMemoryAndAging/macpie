@@ -20,35 +20,29 @@ def safe_xlsx_sheet_title(s, replace="-"):
     return re.sub(INVALID_TITLE_REGEX, replace, s)[:31]
 
 
-def read_excel(
-    io,
-    as_collection=False,
-    sheet_name=0,
-    header=0,
-    names=None,
-    index_col=None,
-    usecols=None,
-    squeeze=None,
-    dtype=None,
-    engine=None,
-    converters=None,
-    true_values=None,
-    false_values=None,
-    skiprows=None,
-    nrows=None,
-    na_values=None,
-    keep_default_na=True,
-    na_filter=True,
-    verbose=False,
-    parse_dates=False,
-    date_parser=None,
-    thousands=None,
-    comment=None,
-    skipfooter=0,
-    convert_float=None,
-    mangle_dupe_cols=True,
-    storage_options=None,
-):
+def read_excel(io, as_collection=False, storage_options=None, engine=None, **kwargs):
+    """
+    Read an Excel file into a macpie Dataset.
+
+    This is the analog of :func:`pandas.read_excel`, so read
+    the documentation for that function for descriptions of available
+    parameters, notes, and examples.
+
+
+    Parameters
+    ----------
+    as_collection : bool, default False
+        Whether to parse the Excel file as a :class:`macpie.BaseCollection` and
+        return the appropriate collection type.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :meth:`pandas.ExcelFile.parse` method.
+
+    See Also
+    --------
+    Dataset.to_excel : Write Dataset to an Excel file.
+    pandas.read_excel : Pandas analog
+    """
 
     should_close = False
     if not isinstance(io, MACPieExcelFile):
@@ -64,31 +58,7 @@ def read_excel(
         if as_collection:
             data = io.parse_collection()
         else:
-            data = io.parse(
-                sheet_name=sheet_name,
-                header=header,
-                names=names,
-                index_col=index_col,
-                usecols=usecols,
-                squeeze=squeeze,
-                dtype=dtype,
-                converters=converters,
-                true_values=true_values,
-                false_values=false_values,
-                skiprows=skiprows,
-                nrows=nrows,
-                na_values=na_values,
-                keep_default_na=keep_default_na,
-                na_filter=na_filter,
-                verbose=verbose,
-                parse_dates=parse_dates,
-                date_parser=date_parser,
-                thousands=thousands,
-                comment=comment,
-                skipfooter=skipfooter,
-                convert_float=convert_float,
-                mangle_dupe_cols=mangle_dupe_cols,
-            )
+            data = io.parse(**kwargs)
     finally:
         # make sure to close opened file handles
         if should_close:
@@ -98,6 +68,28 @@ def read_excel(
 
 
 class MACPieExcelFile(pd.io.excel._base.ExcelFile):
+    """
+    Class for parsing tabular Excel sheets into Dataset objects.
+
+    This is the analog of :class:`pandas.ExcelFile`, so read
+    the documentation for more information.
+
+    See :func:`read_excel` also for more documentation.
+
+    Parameters
+    ----------
+    path_or_buffer : str, bytes, path object (pathlib.Path or
+        py._path.local.LocalPath), a file-like object, or openpyxl workbook.
+        If a string or path object, expected to be a path to a
+        .xls, .xlsx, .xlsb, .xlsm, .odf, .ods, or .odt file.
+    engine : str, default "mp_openpyxl"
+        If io is not a buffer or path, this must be set to identify io.
+        Supported engines: ``mp_openpyxl``
+        Engine compatibility :
+
+        - ``mp_openpyxl`` supports newer Excel file formats.
+    """
+
     def __init__(self, path_or_buffer, storage_options=None):
         from ._openpyxl import MACPieOpenpyxlReader
 
@@ -219,37 +211,16 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         collection_class = getattr(mp.collections, collection_class_name)
         return collection_class.from_excel_dict(self, self._collection_dict)
 
-    def parse(
-        self,
-        sheet_name=0,
-        header=0,
-        names=None,
-        index_col=None,
-        usecols=None,
-        squeeze=None,
-        converters=None,
-        true_values=None,
-        false_values=None,
-        skiprows=None,
-        nrows=None,
-        na_values=None,
-        parse_dates=False,
-        date_parser=None,
-        thousands=None,
-        comment=None,
-        skipfooter=0,
-        convert_float=None,
-        mangle_dupe_cols=True,
-        **kwds,
-    ):
+    def parse(self, sheet_name=0, **kwargs):
         """
-        Parse specified sheet(s) into a DataFrame.
-        Equivalent to read_excel(ExcelFile, ...)  See the read_excel
+        Parse specified sheet(s) into a macpie Dataset.
+        Equivalent to read_excel(MACPieExcelFile, ...) See the :func:`read_excel`
         docstring for more info on accepted parameters.
+
         Returns
         -------
-        DataFrame or dict of DataFrames
-            DataFrame from the passed in Excel file.
+        Dataset or dict of Datasets
+            Dataset from the passed in Excel file.
         """
 
         ret_dict = False
@@ -277,33 +248,13 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             else:
                 read_excel_kwargs = {}
 
-            df = self._reader.parse(
-                sheet_name=sheetname,
-                header=read_excel_kwargs.get("header", header),
-                names=read_excel_kwargs.get("names", names),
-                index_col=read_excel_kwargs.get("index_col", index_col),
-                usecols=read_excel_kwargs.get("usecols", usecols),
-                squeeze=read_excel_kwargs.get("squeeze", squeeze),
-                converters=read_excel_kwargs.get("converters", converters),
-                true_values=read_excel_kwargs.get("true_values", true_values),
-                false_values=read_excel_kwargs.get("false_values", false_values),
-                skiprows=read_excel_kwargs.get("skiprows", skiprows),
-                nrows=read_excel_kwargs.get("nrows", nrows),
-                na_values=read_excel_kwargs.get("na_values", na_values),
-                parse_dates=read_excel_kwargs.get("parse_dates", parse_dates),
-                date_parser=read_excel_kwargs.get("date_parser", date_parser),
-                thousands=read_excel_kwargs.get("thousands", thousands),
-                comment=read_excel_kwargs.get("comment", comment),
-                skipfooter=read_excel_kwargs.get("skipfooter", skipfooter),
-                convert_float=read_excel_kwargs.get("convert_float", convert_float),
-                mangle_dupe_cols=read_excel_kwargs.get("mangle_dupe_cols", mangle_dupe_cols),
-                **kwds,
-            )
+            kwargs.update(read_excel_kwargs)
+            df = self._reader.parse(sheet_name=sheetname, **kwargs)
 
             if excel_dict is not None:
                 output[asheetname] = mp.Dataset.from_excel_dict(excel_dict, df)
             else:
-                output[asheetname] = df
+                output[asheetname] = mp.Dataset(df)
 
         if ret_dict:
             return output
@@ -359,6 +310,14 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
+    """
+    Class for writing Dataset objects into Excel sheets.
+
+    This is the analog of :class:`pandas.ExcelWriter`, so read
+    the documentation for that class for descriptions of available
+    parameters, notes, and examples.
+    """
+
     def __new__(cls, *args, **kwargs):
         # only switch class if generic(MACPieExcelWriter)
         if cls is MACPieExcelWriter:

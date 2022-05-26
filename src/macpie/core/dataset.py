@@ -6,8 +6,8 @@ import pandas as pd
 from macpie import lltools, strtools
 from macpie._config import get_option
 from macpie.io.excel import MACPieExcelWriter, safe_xlsx_sheet_title
-from macpie.pandas.general_df import get_col_name, to_datetime
-from macpie.util.decorators import MethodHistory
+from macpie.pandas.general_df import get_col_name
+from macpie.util.decorators.method import MethodHistory
 
 from .datasetfields import DatasetField, DatasetFields
 
@@ -432,7 +432,15 @@ class Dataset(pd.DataFrame):
     # -------------------------------------------------------------------------
 
     def to_excel_dict(self):
-        """Convert the :class:`Dataset` to a dictionary."""
+        """
+        Convert the :class:`Dataset` to a dictionary representation needed
+        for Excel reading/writing.
+
+        Returns
+        -------
+        dict
+        """
+
         return {
             "class_name": self.__class__.__name__,
             "id_col_name": self._id_col_name,
@@ -448,6 +456,17 @@ class Dataset(pd.DataFrame):
 
     @classmethod
     def from_excel_dict(cls, excel_dict, df):
+        """
+        Construct a Dataset from a dictionary representation.
+
+        Parameters
+        ----------
+        excel_dict : dict
+            The dictionary generated from :meth:`to_excel_dict`
+        df : DataFrame
+            The DataFrame containing the data.
+        """
+
         return Dataset(
             data=df,
             id_col_name=excel_dict.get("id_col_name"),
@@ -495,20 +514,39 @@ class Dataset(pd.DataFrame):
         startrow=0,
         startcol=0,
         engine=None,
-        merge_cells=True,
-        encoding=None,
         inf_rep="inf",
-        verbose=True,
+        merge_cells=True,
         freeze_panes=None,
         storage_options=None,
         write_excel_dict=True,
         highlight_duplicates=True,
+        **kwargs,
     ) -> None:
         """Write :class:`Dataset` to an Excel sheet.
 
-        :param excel_writer: File path or existing ExcelWriter.
-        :param kwargs:
+        This is the analog of :meth:`pandas.DataFrame.to_excel`, so read
+        the documentation for that method for descriptions of available
+        parameters, notes, and examples.
+
+        Parameters
+        ----------
+        write_excel_dict : bool, default True
+            Whether to write a representation of the Dataset to the Excel file.
+            This is needed if you intend to read the file back into a Dataset object
+        highlight_duplicates : bool, default True
+            Whether to highlight any duplicate rows. Only applies to Datasets with a
+            ``_mp_duplicates`` column where the row value is ``True``.
+        **kwargs
+            All remaining keyword arguments are passed through to the underlying
+            :meth:`pandas.DataFrame.to_excel` method.
+
+        See Also
+        --------
+        MACPieExcelWriter : Class for writing Dataset objects into Excel sheets.
+        read_excel : Read an Excel file into a macpie Dataset.
+        pandas.DataFrame.to_excel : Pandas analog
         """
+
         from macpie.io.formats.excel import MACPieExcelFormatter
 
         if isinstance(excel_writer, MACPieExcelWriter):
@@ -576,13 +614,12 @@ class Dataset(pd.DataFrame):
                     "startcol": startcol,
                     "engine": engine,
                     "merge_cells": merge_cells,
-                    "encoding": encoding,
                     "inf_rep": inf_rep,
-                    "verbose": verbose,
                     "freeze_panes": freeze_panes,
                     "storage_options": storage_options,
                     "write_excel_dict": write_excel_dict,
                     "highlight_duplicates": highlight_duplicates,
+                    **kwargs,
                 }
 
                 if not header:
@@ -602,11 +639,9 @@ class Dataset(pd.DataFrame):
                     index_col = 0
 
                 # ensure successful write/read round-trip
-                read_excel_kwargs = {"header": header_col, "index_col": index_col}
-
                 excel_dict = self.to_excel_dict()
                 excel_dict["to_excel_kwargs"] = to_excel_kwargs
-                excel_dict["read_excel_kwargs"] = read_excel_kwargs
+                excel_dict["read_excel_kwargs"] = {"header": header_col, "index_col": index_col}
                 excel_writer.write_excel_dict(excel_dict)
         finally:
             # make sure to close opened file handles
