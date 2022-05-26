@@ -4,7 +4,7 @@ import itertools
 from macpie.tools.listlike import make_same_length
 
 
-class TableList(collections.UserList):
+class DataTable(collections.UserList):
     """
     A list of of equal-sized lists.
     """

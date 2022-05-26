@@ -14,48 +14,56 @@ def date_proximity(
     merge_suffixes=get_option("operators.binary.column_suffixes"),
     prepend_level_name: bool = True,
 ) -> None:
-    """Links data across two :class:`Dataset` objects by date proximity, first joining
-    them on their :attr:`Dataset.id2_col_name`.
+    """Links data across two :class:`Dataset` objects by date proximity,
+    first joining them on their :attr:`Dataset.id2_col_name`.
 
-    Specifically, a `left` Dataset contains a timepoint anchor, and a `right` Dataset
-    is linked to the `left` by retrieving all rows that match on :attr:`Dataset.id2_col_name`, and
-    whose :attr:`Dataset.date_col_name` fields are within a certain time range of each other.
+    Specifically, a `left` Dataset contains a timepoint anchor, and a `right`
+    Dataset is linked to the `left` by retrieving all rows that match on
+    :attr:`Dataset.id2_col_name`, and whose :attr:`Dataset.date_col_name`
+    fields are within a certain time range of each other.
 
     This is the :class:`Dataset` analog of :func:`macpie.pandas.date_proximity`.
 
-    :param left: the :class:`Dataset` containing the timepoint anchor
-    :param right: the :class:`Dataset` to link. Its :attr:`Dataset.df` attribute gets updated with
-                  the results of this operation
-    :param get: which rows of the right :class:`Dataset` to link in reference to the
-                timepoint anchor:
 
-        ``all``
-             keep all rows
+    Parameters
+    ----------
+    left : Dataset
+        Contains the timepoint anchor (i.e. `date_col`)
+    right : Dataset
+        The Dataset to link.
+    get : {'all', 'closest'}, default 'all'
+        Indicates which rows of the right Dataset to link in reference to the
+        timepoint anchor:
 
-        ``closest``
-             get only the closest row that is within ``days`` days of the
-             right DataFrame timepoint anchor
+        * all: keep all rows
+        * closest: get only the closest row that is within ``days`` days of the
+          timepoint anchor
+    when : {'earlier', 'later', 'earlier_or_later'}, default 'earlier_or_later'
+        Indicates which rows of the right Dataset to link in temporal relation
+        to the timepoint anchor
 
-    :param when: which rows of the right Dataset to link in temporal relation
-                 to the timepoint anchor
-
-        ``earlier``
-             get only rows that are earlier than the timepoint anchor
-
-        ``later``
-             get only rows that are lter (more recent) than the timepoint anchor
-
-        ``earlier_or_later``
-             get rows that are earlier or later than the timepoint anchor
-
-    :param days: the time range measured in days
-    :param dropna: whether to exclude rows that did not find any match
-    :param duplicates_indicator: if True, adds a boolean column to the output Dataset called
-                                 "_mp_duplicates" (True if duplicate, false if not). The column
-                                 can be given a different name by providing a string argument.
-    :param merge_suffixes: A length-2 sequence where the first element is
-                           suffix to add to the left Dataset columns, and
-                           second element is suffix to add to the right Dataset columns.
+        * earlier: get only rows that are earlier than the timepoint anchor
+        * later: get only rows that are lter (more recent) than the timepoint anchor
+        * earlier_or_later: get rows that are earlier or later than the timepoint anchor
+    days : int, default 90
+        The time range measured in days
+    dropna : bool, default: False
+        Whether to exclude rows that did not find any match
+    drop_duplicates : bool, default: False
+        If ``True``, then if more than one row in the right DataFrame is found,
+        all will be dropped except the last one.
+    duplicates_indicator : bool or str, default False
+        If True, adds a column to the output DataFrame called "_mp_duplicates"
+        denoting which rows are duplicates. The column can be given a different
+        name by providing a string argument.
+    merge_suffixes : list-like, default is ("_x", "_y")
+        A length-2 sequence where the first element is suffix to add to the
+        left DataFrame columns, and second element is suffix to add to the
+        right DataFrame columns.
+    prepend_levels : bool, default True
+        Whether to add a top-level index using the :attr:`Dataset.name` attribute
+        to column indexes in ``left`` and ``right`` respectively (thus
+        creating a :class:`pandas.MultiIndex` if needed).
     """
 
     if prepend_level_name:

@@ -1,5 +1,5 @@
 """
-This module is imported from the pandas package __init__.py file
+This module is imported from the macpie package __init__.py file
 in order to ensure that the core.config options registered here will
 be available as soon as the user loads the package. If register_option
 is invoked inside specific modules, they will not be registered until that

@@ -38,15 +38,6 @@ class DatasetFields(tablibtools.TablibDataset):
         """A list of unique :class:`macpie.Dataset` names."""
         return list(set(self.tlset[self._col_header_dataset]))
 
-    """
-    def extendleft(self, dataset_fields, tags=()):
-        
-        other_fields = [field for field in self]
-        self.wipe_data()
-        self.extend(dataset_fields, tags=tags)
-        self.extend(other_fields)
-    """
-
     def sort(self, collection):
         """Sort the Dataset fields according to the order they have in
         their respective collections.
@@ -62,16 +53,6 @@ class DatasetFields(tablibtools.TablibDataset):
         for dataset_field in self:
             d[dataset_field.dataset].append(dataset_field.field)
         return d
-
-    """
-    @classmethod
-    def from_excel(cls, filepath, sheet_name) -> "DatasetFields":
-    
-        instance = cls()
-        df = pd.read_excel(filepath, sheet_name=sheet_name, header=0, index_col=None)
-        df.apply(lambda x: instance.append_series(x, with_tags=True), axis="columns")
-        return instance
-    """
 
     @classmethod
     def from_collection(cls, collection, **kwargs) -> "DatasetFields":

@@ -35,6 +35,7 @@ def register_option(
 ) -> None:
     """
     Register an option in the package-wide macpie config object
+
     Parameters
     ----------
     key : str
@@ -50,6 +51,7 @@ def register_option(
         a function of a single argument "key", which is called
         immediately after an option value is set/reset. key is
         the full name of the option.
+
     Raises
     ------
     ValueError if `validator` is specified and `defval` is not a valid value.
@@ -138,6 +140,7 @@ def reset_option(key: str) -> None:
 def _get_registered_option(key: str):
     """
     Retrieves the option metadata if `key` is a registered option.
+
     Returns
     -------
     RegisteredOption (namedtuple) if key is deprecated, None otherwise
@@ -159,6 +162,7 @@ def is_tuple_of_str(value: Tuple[str, ...]) -> None:
     ValueError
         When the value is not a tuple of strings
     """
+
     if isinstance(value, tuple):
         for str_value in value:
             if type(str_value) != str:
@@ -181,6 +185,7 @@ def is_tuple_of_two(value: Tuple[str, str]) -> None:
     ValueError
         When the value is not a tuple of 2 strings
     """
+
     if isinstance(value, tuple):
         if len(value) == 2:
             if type(value[0]) == str and type(value[1] == str):

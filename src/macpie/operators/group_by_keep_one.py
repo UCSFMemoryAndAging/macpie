@@ -8,23 +8,21 @@ def group_by_keep_one(dset: mp.Dataset, keep: str = "all", drop_duplicates: bool
 
     This is the :class:`Dataset` analog of :func:`macpie.pandas.group_by_keep_one`.
 
-    :param dset: the :class:`Dataset` to operate on. Its ``df`` attribute
-                 gets updated with the result of this operation.
-    :param keep: specify which row of each group to keep
 
-        ``all``
-             keep all rows
+    Parameters
+    ----------
+    dset : Dataset
+    keep: {'all', 'earliest', 'latest'}, default 'all'
+        Specify which row of each group to keep.
 
-        ``earliest``
-             in each group, keep only the earliest (i.e. oldest) row
-
-        ``latest``
-             in each group, keep only the latest (i.e. most recent) row
-
-    :param drop_duplicates: if ``True``, then if more than one row is determined to be
-                            earliest or or latest in each group, drop all duplicates
-                            except the first occurrence. ``dset``'s ``id_col_name`` will
-                            be used for identifying duplicates
+        * all: keep all rows
+        * earliest: in each group, keep only the earliest (i.e. oldest) row
+        * latest: in each group, keep only the latest (i.e. most recent) row
+    drop_duplicates : bool, default: False
+        If ``True``, then if more than one row is determined to be
+        'earliest' or 'latest' in each group, drop all duplicates
+        except the first occurrence. If ``dset`` has an ``id_col_name``,
+        then that column will also be used for identifying duplicates
     """
     result_df = mp.pandas.operators.group_by_keep_one.group_by_keep_one(
         df=dset,

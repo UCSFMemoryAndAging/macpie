@@ -30,9 +30,10 @@ def date_proximity(
     """
     Links data across two :class:`pandas.DataFrame` objects by date proximity.
 
-    Specifically, a "left" DataFrame contains a timepoint anchor, and a "right" DataFrame
-    is linked to the left by retrieving all rows that match on a specified id col, and
-    whose specified date fields are within a certain time range of each other.
+    Specifically, a "left" DataFrame contains a timepoint anchor, and a "right"
+    DataFrame is linked to the left by retrieving all rows that match on a
+    specified id col, and whose specified date fields are within a certain
+    time range of each other.
 
     Parameters
     ----------
