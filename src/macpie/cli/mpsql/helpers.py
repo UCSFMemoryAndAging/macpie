@@ -37,6 +37,9 @@ def show_create_procedure(cnx, procname):
         database_collation,
     ) = result
 
+    if proc_code is None:
+        raise ValueError("No proc code retrieved. Perhaps you don't have proper permissions.")
+
     return proc_code
 
 
