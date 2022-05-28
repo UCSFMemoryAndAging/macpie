@@ -12,7 +12,7 @@ Usage
 ~~~~~
 .. code-block:: bash
 
-    $ macpie keepone [OPTIONS] [PRIMARY]
+    $ macpie keepone [OPTIONS] PRIMARY
 
 
 Options

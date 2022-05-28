@@ -5,18 +5,9 @@ As MACPie relies heavily on the ``pandas`` library, a rich set of methods
 that work with :class:`pandas.DataFrame` and :class:`pandas.Series` objects
 were created and are provided through this API. These custom methods are
 exposed and accessible through the :class:`pandas.DataFrame` and
-:class:`pandas.Series` objects themselves via an extension.
+:class:`pandas.Series` objects themselves via the ``mac`` namespace.
 
-DataFrame Accessor
-~~~~~~~~~~~~~~~~~~
-
-Pandas allows extensions of its :class:`pandas.DataFrame` class using custom accessors.
-To create a custom accessor with its own "namespace," a class is decorated with the
-:meth:`pandas.api.extensions.register_dataframe_accessor` decorator and provides the name
-of the namespace attribute.
-
-MACPie creates a namespace called ``mac``, which can then be accessed
-via dot notation. Example: ::
+Example: ::
 
     >>> from datetime import datetime 
     >>> import pandas as pd
@@ -27,6 +18,11 @@ via dot notation. Example: ::
     False
     >>> df.mac.is_date_col('date1')
     True
+
+DataFrame Accessor
+~~~~~~~~~~~~~~~~~~
+
+Extension of the :class:`pandas.DataFrame` class.
 
 .. currentmodule:: macpie
 .. autosummary::

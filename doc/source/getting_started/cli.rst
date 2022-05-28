@@ -14,12 +14,12 @@ All ``macpie`` commands start with ``macpie`` and take the following form:
 
 .. code-block:: bash
 
-    $ macpie [global_options] COMMAND [command_options] [ARGS]...
+    $ macpie [main_options] COMMAND [command_options] [ARGS]...
 
 where:
-    * ``[global_options]`` allow you to specify which columns in the files are the ID columns
+    * ``[main_options]`` allow you to specify which columns in the files are the ID columns
       and/or Date columns, otherwise defaults are used.
-      See :ref:`Global Options <global-options>` section for more details.
+      See :ref:`Main Options <macpie-main-options>` section for more details.
 
     * ``COMMAND`` is one of the commands you wish to execute, such as
       :ref:`link <command-link>` or :ref:`keepone <command-keepone>`.

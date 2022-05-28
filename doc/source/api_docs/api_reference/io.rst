@@ -9,6 +9,8 @@ Excel files
    :toctree: api/
 
    read_excel
-   MACPieExcelFile
+   Dataset.to_excel
+   Dataset.from_file   
+   MACPieExcelFile.parse
    MACPieExcelWriter
 

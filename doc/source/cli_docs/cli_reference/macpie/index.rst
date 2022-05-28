@@ -3,12 +3,12 @@
 
 .. program:: macpie
 
-.. _global-options:
+.. _macpie-main-options:
 
-Global Options
---------------
+Main Options
+------------
 
-These global options help ``macpie`` know which columns in your files are the key columns
+These main options help ``macpie`` know which columns in your files are the key columns
 (such as columns containing your primary IDs and dates and/or any secondary IDs).
 If they are not specified using these options, then defaults (as described below) will be used.
 

@@ -22,11 +22,8 @@ Serialization / IO / conversion
 
 .. autosummary::
    :toctree: api/
-
-   Dataset.from_file
-   Dataset.to_excel
+   
    Dataset.to_excel_dict
    Dataset.from_excel_dict
-   
 
 All pandas ``DataFrame`` methods are also available.

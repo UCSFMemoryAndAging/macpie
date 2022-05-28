@@ -3,6 +3,14 @@
 Utilities
 =========
 
+DataTable
+---------
+.. autosummary::
+   :toctree: api/
+
+   DataTable
+
+
 Decorators
 ----------
 .. autosummary::
