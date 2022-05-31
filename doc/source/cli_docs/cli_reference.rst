@@ -45,6 +45,7 @@ Command Summary
 
 .. toctree::
   :maxdepth: 3
+  :caption: Commands
 
   macpie <cli_reference/macpie/index>
   mpsql <cli_reference/mpsql/index>

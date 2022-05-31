@@ -7,10 +7,8 @@ from . import datetime as datetimetools
 from . import iterator as itertools
 
 
-def create_dir_with_datetime(
-    dir_name_prefix="new_folder_",
-    where=Path("."),
-):
+def create_dir_with_datetime(dir_name_prefix="new_folder_", where=Path(".")):
+    """Create a new directory with the current datetime appended."""
     new_dir_name = dir_name_prefix + datetimetools.current_datetime_str()
     return create_subdir(new_dir_name, where=where)
 

@@ -574,7 +574,7 @@ def to_datetime(df: pd.DataFrame, date_col_name, **kwargs):
         Column to convert, case-insensitive
     **kwargs
         All keyword arguments are passed through to the underlying
-        :meth:`pandas.to_datetime` method.
+        :func:`pandas.to_datetime` method.
 
     Returns
     -------

@@ -6,6 +6,8 @@ that work with :class:`pandas.DataFrame` and :class:`pandas.Series` objects
 were created and are provided through this API. These custom methods are
 exposed and accessible through the :class:`pandas.DataFrame` and
 :class:`pandas.Series` objects themselves via the ``mac`` namespace.
+See the corresponding accessor class to see which methods are available
+via the ``mac`` namespace.
 
 Example: ::
 
@@ -22,7 +24,8 @@ Example: ::
 DataFrame Accessor
 ~~~~~~~~~~~~~~~~~~
 
-Extension of the :class:`pandas.DataFrame` class.
+Methods on this accessor class are available on :class:`pandas.DataFrame`
+objects via the ``mac`` namespace.
 
 .. currentmodule:: macpie
 .. autosummary::
@@ -34,7 +37,9 @@ Extension of the :class:`pandas.DataFrame` class.
 Series Accessor
 ~~~~~~~~~~~~~~~
 
-Extension of the :class:`pandas.Series` class.
+Methods on this accessor class are available on :class:`pandas.Series`
+objects via the ``mac`` namespace.
+
 
 .. currentmodule:: macpie
 .. autosummary::
@@ -68,8 +73,8 @@ I/O Functions
    file_to_dataframe
 
 
-Helper Functions
-~~~~~~~~~~~~~~~~
+DataFrame Helper Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: api/
@@ -79,13 +84,27 @@ Helper Functions
    assimilate
    diff_cols
    diff_rows
+   drop_cols
    drop_suffix
    equals
    flatten_multiindex
    get_col_name
    get_col_names
+   get_cols_by_prefixes
    insert
    is_date_col
    mark_duplicates_by_cols
    replace_suffix
    to_datetime
+
+
+Series Helper Functions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   count_trailers
+   remove_trailers
+   rtrim
+   rtrim_longest

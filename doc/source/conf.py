@@ -13,8 +13,8 @@
 
 
 # General information about the project.
-project = u"MACPie"
-copyright = u"2021, Regents of the University of California"
+project = "MACPie"
+copyright = "2022, Regents of the University of California"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -228,7 +228,7 @@ html_sidebars = {
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "macpie", u"MACPie Documentation", [u"Albert Lee"], 1)]
+man_pages = [("index", "macpie", "MACPie Documentation", ["Albert Lee"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -243,8 +243,8 @@ texinfo_documents = [
     (
         "index",
         "MACPie",
-        u"MACPie Documentation",
-        u"Albert Lee",
+        "MACPie Documentation",
+        "Albert Lee",
         "MACPie",
         "One line description of project.",
         "Miscellaneous",

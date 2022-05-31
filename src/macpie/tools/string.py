@@ -69,6 +69,7 @@ def add_suffixes_with_base(
 
 
 def seq_contains(s: str, seq, case_sensitive=True):
+    """Does sequence contain string."""
     if case_sensitive:
         if s in seq:
             return True
@@ -77,6 +78,22 @@ def seq_contains(s: str, seq, case_sensitive=True):
         if s.casefold() in seq_casefold:
             return True
     return False
+
+
+def str_equals(a: str, b: str, case_sensitive=True):
+    """Are strings equal."""
+    if case_sensitive:
+        return str(a) == str(b)
+    else:
+        return str(a).casefold() == str(b).casefold()
+
+
+def str_startswith(s: str, prefix: str, case_sensitive=True):
+    """Does string start with a prefix."""
+    if case_sensitive:
+        return s.startswith(prefix)
+    else:
+        return s.lower().startswith(prefix.lower())
 
 
 def strip_suffix(s: str, suffix: str):
@@ -88,17 +105,3 @@ def strip_suffix(s: str, suffix: str):
     if s is not None and s.endswith(suffix):
         return s[: -len(suffix)]
     return s
-
-
-def str_equals(a: str, b: str, case_sensitive=True):
-    if case_sensitive:
-        return str(a) == str(b)
-    else:
-        return str(a).casefold() == str(b).casefold()
-
-
-def str_startswith(s: str, prefix: str, case_sensitive=True):
-    if case_sensitive:
-        return s.startswith(prefix)
-    else:
-        return s.lower().startswith(prefix.lower())

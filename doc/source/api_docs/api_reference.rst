@@ -1,7 +1,8 @@
 API Reference
 =============
 
-The API Reference provides an overview of all public objects, functions and methods implemented in GeoPandas. All classes and function exposed in ``geopandas.*`` namespace plus those listed in the reference are public.
+The API Reference provides an overview of all public objects, functions and
+methods implemented in MACPie.
 
 .. toctree::
   :maxdepth: 2

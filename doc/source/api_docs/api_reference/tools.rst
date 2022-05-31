@@ -19,6 +19,7 @@ datetimetools
 
    current_datetime_str
    datetime_ms
+   reformat_datetime_str
 
 
 itertools
@@ -55,6 +56,7 @@ lltools
    is_list_like
    list_like_str_equal
    make_list_if_list_like
+   make_same_length
    make_tuple_if_list_like
    maybe_make_list
    maybe_make_tuple
@@ -75,6 +77,7 @@ openpyxltools
 
    autofit_column_width
    get_column_index
+   get_sheet_names
    highlight_row
    is_row_empty
    iter_rows_with_column_value
@@ -126,7 +129,9 @@ strtools
    add_suffix
    add_suffixes
    add_suffixes_with_base
+   seq_contains
    str_equals
+   str_startswith
    strip_suffix
 
 
@@ -142,8 +147,8 @@ tablibtools
 .. autosummary::
    :toctree: api/
 
-   DictLikeDataset
    TablibDataset
+   DictLikeDataset
    read_excel
 
 

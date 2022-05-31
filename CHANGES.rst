@@ -12,6 +12,27 @@
 Release notes
 =============
 
+0.5 (2022-??-??)
+----------------
+
+Added
+~~~~~
+- :class:`util.DataTable` class to represent a table of data
+  using a list of lists data structure
+- :func:`datetimetools.reformat_datetime_str`
+- :func:`lltools.make_same_length`
+- :func:`pandas.count_trailers`
+- :func:`pandas.rtrim`
+- :func:`pandas.rtrim_longest`
+- :func:`strtools.seq_contains`
+
+Changed
+~~~~~~~
+
+Other
+~~~~~
+
+
 0.4 (2022-05-10)
 ----------------
 
