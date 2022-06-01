@@ -1,5 +1,7 @@
 import collections
 
+_marker = object()
+
 
 def duplicate_indices(iterable):
     """Make an iterator that returns duplicate items from the ``seq`` along
@@ -89,6 +91,39 @@ def filter_get_message(predicates, iterable, only_first=False):
                     already_filtered.append(i)
 
 
+def first_true(iterable, default=False, pred=None):
+    """Returns the first true value in the iterable.
+
+    If no true value is found, returns ``default``.
+
+    If ``pred`` is not None, returns the first item
+    for which ``pred(item)`` is true.
+
+    Parameters
+    ----------
+    iterable :
+    default : object, Default is False
+        Default value if no true value found.
+    pred : Boolean-valued function, Default is None
+
+    Examples
+    --------
+    >>> mp.itertools.first_true([None, 0, 1])
+    1
+    >>> mp.itertools.first_true([None, 0, 1], pred=lambda x: x is not None)
+    0
+    >>> mp.itertools.first_true([None, 0, 1], pred=lambda x: x == 2)
+    False
+    >>> mp.itertools.first_true([None, 0, 1], pred=lambda x: x == 2, default='albert')
+    'albert'
+
+    Notes
+    -----
+    Taken from Itertools Recipes from https://docs.python.org/3/library/itertools.html
+    """
+    return next(filter(pred, iterable), default)
+
+
 def overlay(bottom, top, predicate=None, constrain_to_top=False, fillvalue=None):
     """Overlay elements from ``top`` over ``bottom``.
     If ``predicate`` is specified, only overlay elements from top over elements
@@ -123,13 +158,12 @@ def overlay(bottom, top, predicate=None, constrain_to_top=False, fillvalue=None)
     if predicate is None:
         predicate = lambda x: False
 
-    sentinel = object()
     bottom_iterator = iter(bottom)
     top_iterator = iter(top)
 
     while bottom_iterator:
-        bottom_elem = next(bottom_iterator, sentinel)
-        if bottom_elem is sentinel:
+        bottom_elem = next(bottom_iterator, _marker)
+        if bottom_elem is _marker:
             if constrain_to_top:
                 for top_elem in top_iterator:
                     yield fillvalue
@@ -137,8 +171,8 @@ def overlay(bottom, top, predicate=None, constrain_to_top=False, fillvalue=None)
             else:
                 return
 
-        top_elem = next(top_iterator, sentinel)
-        if top_elem is sentinel:
+        top_elem = next(top_iterator, _marker)
+        if top_elem is _marker:
             if constrain_to_top:
                 return
             yield bottom_elem

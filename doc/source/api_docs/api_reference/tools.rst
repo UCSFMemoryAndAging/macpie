@@ -35,6 +35,7 @@ itertools
    duplicate_indices
    filter_get_index
    filter_get_message
+   first_true
    overlay
    remove_duplicates
 
