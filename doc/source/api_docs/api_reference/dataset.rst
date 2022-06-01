@@ -6,9 +6,9 @@ Dataset
 A ``Dataset`` is a tabular data structure that contains columns representing common
 data associated with clinical research:
 
-   * ``id_col_name`` to represent record IDs
-   * ``date_col_name`` to represent record collection dates
-   * ``id2_col_name`` to represent a secondary id column, most commonly a patient/subject ID.
+* ``id_col_name`` to represent record IDs
+* ``date_col_name`` to represent record collection dates
+* ``id2_col_name`` to represent a secondary id column, most commonly a patient/subject ID.
 
 Constructor
 -----------

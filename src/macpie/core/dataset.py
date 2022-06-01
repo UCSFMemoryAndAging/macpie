@@ -13,6 +13,55 @@ from .datasetfields import DatasetField, DatasetFields
 
 
 class Dataset(pd.DataFrame):
+    """
+    A Dataset object is a pandas.DataFrame that has columns representing
+    common data associated with clinical research assessments. In addition
+    to the standard DataFrame constructor arguments, Dataset also accepts
+    the following keyword arguments:
+
+    Parameters
+    ----------
+    id_col_name : str (optional)
+        Column to use as record IDs.
+    date_col_name : str (optional)
+        Column to use as record collection date.
+    date_col_errors : {'ignore', 'raise', 'coerce'}, default 'raise'
+        - If :const:`'raise'`, then invalid parsing will raise an exception.
+        - If :const:`'coerce'`, then invalid parsing will be set as :const:`NaT`.
+        - If :const:`'ignore'`, then invalid parsing will return the input.
+    id2_col_name : str (optional)
+        Column to use as secondary IDs, most commonly patient/subject IDs.
+    name : str (optional)
+        Name of the Dataset.
+    tags : str or sequence of strs
+        Associate tags with this Dataset to enable filtering later on.
+    display_name_generator : function
+        A function that accepts a single Dataset parameter and returns
+        a string to be used as :attr:`display_name`.
+
+    Examples
+    --------
+    Constructing Dataset from a dictionary.
+
+    >>> d = {"pidn": [1, 2], "dcdate": ["1/1/2001", "2/2/2002"], "cdr": [1.0, 1.5]}
+    >>> dset = mp.Dataset(d, id_col_name="pidn", date_col_name="dcdate")
+    >>> dset
+    Dataset(id_col_name='pidn', date_col_name='dcdate', id2_col_name=None, name='NO_NAME', tags=[], data=
+       pidn     dcdate  cdr
+    0     1 2001-01-01  1.0
+    1     2 2002-02-02  1.5
+    )
+
+    Notice that the ``date_col_name`` column has been converted to a
+    ``datetime`` column. Errors raised trying to convert the column
+    are controlled by :py:attr:`date_col_errors`.
+
+    >>> dset.dtypes
+    pidn               int64
+    dcdate    datetime64[ns]
+    cdr              float64
+    dtype: object
+    """
 
     _metadata = [
         "_id_col_name",
@@ -73,29 +122,24 @@ class Dataset(pd.DataFrame):
             f"id2_col_name={self.id2_col_name!r}, "
             f"name={self.name!r}, "
             f"tags={self.tags!r}, "
-            f"df=\n{super().__repr__()}\n)"
+            f"data=\n{super().__repr__()}\n)"
         )
 
     __hash__ = object.__hash__
 
     @property
     def row_count(self):
-        """The number of rows currently in the :class:`Dataset`."""
+        """Number of rows in :class:`Dataset`."""
         return len(self.index)
 
     @property
     def col_count(self):
-        """The number of columns currently in the :class:`Dataset`."""
+        """Number of columns in :class:`Dataset`."""
         return len(self.columns)
-
-    def equals(self, other: object):
-        if isinstance(other, Dataset):
-            if self.name != other.name or self.tags != other.tags:
-                return False
-        return super().equals(other)
 
     @property
     def id_col_name(self):
+        """Column to use as record IDs."""
         if self._id_col_name and self._id_col_name not in self.columns:
             raise AttributeError(f"No id column found: '{self._id_col_name}'.")
         return self._id_col_name
@@ -114,6 +158,7 @@ class Dataset(pd.DataFrame):
 
     @property
     def date_col_errors(self):
+        """Errors flag to use when parsing :attr:`date_col_name`"""
         return self._date_col_errors
 
     @date_col_errors.setter
@@ -122,6 +167,7 @@ class Dataset(pd.DataFrame):
 
     @property
     def date_col_name(self):
+        """Column to use as record collection date."""
         if self._date_col_name and self._date_col_name not in self.columns:
             raise AttributeError(f"No date column found: '{self._date_col_name}'.")
         return self._date_col_name
@@ -144,6 +190,7 @@ class Dataset(pd.DataFrame):
 
     @property
     def id2_col_name(self):
+        """Column to use as secondary record IDs."""
         if self._id2_col_name and self._id2_col_name not in self.columns:
             raise AttributeError(f"No id2 column found: '{self._id2_col_name}'.")
         return self._id2_col_name
@@ -162,6 +209,7 @@ class Dataset(pd.DataFrame):
 
     @property
     def name(self):
+        """Name of Dataset."""
         return self._name
 
     @name.setter
@@ -170,6 +218,7 @@ class Dataset(pd.DataFrame):
 
     @property
     def tags(self):
+        """Tag(s) of Dataset."""
         return self._tags
 
     @tags.setter
@@ -192,12 +241,16 @@ class Dataset(pd.DataFrame):
         The function should have the following input signature and
         will be passed the following parameters:
 
-        :param arg1: :attr:`name`
-        :param arg2: :attr:`tags`
-        :param max_length: int denoting maximum length of the display name,
-                           (-1 is default and denotes no limit)
-        :param delimiter: string denoting a delimiter
-                          ("_" is default)
+        Parameters
+        ----------
+        arg1: str
+            :attr:`name`
+        arg2: str or list of str
+            :attr:`tags`
+        max_length : int, Default is -1 (meaning no limit)
+            Maximum length of the display name
+        delimiter : str, Default is "_"
+            Delimiter to use to separate tags.
 
         Defaults to :func:`macpie.strtools.add_suffixes_with_base`,
         which simply appends any tags to the :class:`Dataset` name.
@@ -220,12 +273,10 @@ class Dataset(pd.DataFrame):
             return self._method_history
         return []
 
-    @property
-    def _constructor(self):
-        return Dataset
-
     @staticmethod
     def default_display_name_generator(dset):
+        """Default function to use as :attr:`display_name_generator`. It
+        appends any tags to :attr:`name`."""
         return strtools.add_suffixes_with_base(dset.name, dset.tags, max_length=-1, delimiter="_")
 
     # -------------------------------------------------------------------------
@@ -346,9 +397,12 @@ class Dataset(pd.DataFrame):
     def create_id_col(self, col_name="mp_id_col", start_index=1):
         """Create :attr:`id_col_name` with sequential numerical index.
 
-        :param col_name: name of :attr:`id_col_name` to create
-        :param start_index: index starting number
-
+        Parameters
+        ----------
+        col_name : str
+            Name of :attr:`id_col_name` to create
+        start_index : int
+            Index starting number
         """
         if self._id_col_name is not None:
             raise ValueError(f'"id_col_name" with value "{self._id_col_name}"" already exists')
@@ -369,6 +423,7 @@ class Dataset(pd.DataFrame):
             raise KeyError(f"Column '{old_col}' not in dataset or is a key column.")
 
     def prepend_level(self, level, inplace=False):
+        """Create a ``MultiIndex`` by adding level as the first level."""
         if isinstance(self.columns, pd.MultiIndex):
             raise NotImplementedError("Dataset already has multiple levels.")
 
@@ -478,6 +533,7 @@ class Dataset(pd.DataFrame):
 
     @staticmethod
     def excel_dict_has_tags(excel_dict, tags):
+        """Helper function to determine if an ``excel_dict`` has ``tags``."""
         excel_dict_tags = excel_dict["tags"]
         if tags is None:
             return False
@@ -487,6 +543,7 @@ class Dataset(pd.DataFrame):
             return bool(len(set(tags) & set(excel_dict_tags)))
 
     def cross_section(self, excel_dict):
+        """Return the Dataset defined by ``excel_dict`` from this Dataset."""
         if not isinstance(self.columns, pd.MultiIndex):
             raise NotImplementedError
 
@@ -707,10 +764,37 @@ class Dataset(pd.DataFrame):
 
     @MethodHistory
     def group_by_keep_one(self, keep="all", drop_duplicates=False):
-        """ """
+        """
+        Group on the :attr:`id2_col_name` column and keep only the earliest
+        or latest row in each group as determined by the date in the
+        :attr:`date_col_name` column.
+
+        Parameters
+        ----------
+        keep :
+            See :meth:`macpie.pandas.group_by_keep_one`
+        drop_duplicates :
+            See :meth:`macpie.pandas.group_by_keep_one`
+        """
         from macpie.operators.group_by_keep_one import group_by_keep_one
 
         return group_by_keep_one(self, keep, drop_duplicates)
+
+    # -------------------------------------------------------------------------
+    # Overriding methods
+    # -------------------------------------------------------------------------
+
+    @property
+    def _constructor(self):
+        """Retain Dataset as a result of an operation."""
+        return Dataset
+
+    def equals(self, other: object):
+        """Test whether two Datasets are equal."""
+        if isinstance(other, Dataset):
+            if self.name != other.name or self.tags != other.tags:
+                return False
+        return super().equals(other)
 
 
 class LavaDataset(Dataset):

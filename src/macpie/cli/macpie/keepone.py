@@ -27,14 +27,15 @@ from ._common import _BaseCommand
 @click.pass_context
 def keepone(ctx, keep, primary):
     """
-    This command groups rows that have the same :option:`--id2-col` value, and allows you to keep
-    only the earliest or latest row in each group as determined by the :option:`--date-col` values
-    (discarding the other rows in the group).
+    This command groups rows that have the same :option:`--id2-col` value, and
+    allows you to keep only the earliest or latest row in each group as
+    determined by the :option:`--date-col` values (discarding the other rows
+    in the group).
 
     primary : pathlib.Path
-        a file path
-
+        A file path
     """
+
     command_meta = ctx.obj
     command_meta.command_name = ctx.info_name
     command_meta.add_opt("keep", keep)

@@ -14,11 +14,14 @@ from ..base import BaseCollection
 
 
 class BasicGraph(BaseCollection):
-    """A collection of Datasets using a directed graph structure,
+    """
+    A collection of Datasets using a directed graph structure,
     composed of Dataset nodes and directed edges (i.e. the edges
     are an ordered pair of Dataset nodes).
 
-    :param g: an existing :class:`networkx.DiGraph`. Defaults to None.
+    Parameters
+    ----------
+    g : :class:`networkx.DiGraph`. Default is None.
     """
 
     def __init__(self, g: nx.DiGraph = None):

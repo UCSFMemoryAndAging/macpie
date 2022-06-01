@@ -12,9 +12,12 @@ class AnchoredList(BaseCollection):
     A collection of Datasets where one is considered the `primary`
     or `anchor` Dataset, and the rest are considered `secondary` Datasets.
 
-    :param primary: The primary `anchor` Dataset of the collection.
-    :param secondary: The secondary Datasets of the collection.
-
+    Parameters
+    ----------
+    primary : Dataset
+        The primary `anchor` Dataset of the collection.
+    secondary : BasicList
+        The secondary Datasets of the collection.
     """
 
     #: Tag that gets added to the `primary` Dataset

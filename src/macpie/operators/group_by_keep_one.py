@@ -8,7 +8,6 @@ def group_by_keep_one(dset: mp.Dataset, keep: str = "all", drop_duplicates: bool
 
     This is the :class:`Dataset` analog of :func:`macpie.pandas.group_by_keep_one`.
 
-
     Parameters
     ----------
     dset : Dataset
