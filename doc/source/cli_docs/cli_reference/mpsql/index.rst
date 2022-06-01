@@ -7,6 +7,7 @@
 
 Commands for working with SQL databases.
 
+
 .. _mpsql-main-options:
 
 Main Options

@@ -3,6 +3,9 @@
 
 .. program:: macpie
 
+Commands for analyzing data contained in Excel and/or CSV/text files.
+
+
 .. _macpie-main-options:
 
 Main Options

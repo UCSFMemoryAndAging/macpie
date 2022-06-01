@@ -1,7 +1,7 @@
 .. currentmodule:: macpie
 
-Collections
-===========
+Dataset Collections
+===================
 
 Classes
 -------

@@ -17,6 +17,16 @@ Constructor
 
    Dataset
 
+
+Data manipulations
+------------------
+.. autosummary::
+   :toctree: api/
+
+   date_proximity
+   group_by_keep_one
+
+
 Serialization / IO / conversion
 -------------------------------
 
@@ -26,4 +36,11 @@ Serialization / IO / conversion
    Dataset.to_excel_dict
    Dataset.from_excel_dict
 
-All pandas ``DataFrame`` methods are also available.
+
+Helpers
+-------
+
+.. autosummary::
+   :toctree: api/
+   
+   DatasetFields

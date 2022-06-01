@@ -8,9 +8,7 @@ methods implemented in MACPie.
   :maxdepth: 2
 
   api_reference/io
-  api_reference/functions
   api_reference/dataset
-  api_reference/datasetfields
   api_reference/collections
   api_reference/pandas
   api_reference/tools
