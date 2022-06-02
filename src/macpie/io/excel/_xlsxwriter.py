@@ -103,20 +103,20 @@ class MACPieXlsxWriterWorkbook(xlsxwriter.workbook.Workbook):
             options = {}
 
         self.autofit_columns = options.pop("autofit_columns", False)
-        self.strip_carriage_return = options.pop("strip_carriage_return", False)
+        self.strip_carriage_returns = options.pop("strip_carriage_returns", False)
 
         super().__init__(filename=filename, options=options)
 
     def add_worksheet(
-        self, name=None, worksheet_class=None, autofit_columns=None, strip_carriage_return=None
+        self, name=None, worksheet_class=None, autofit_columns=None, strip_carriage_returns=None
     ):
         if worksheet_class is not None:
             return super().add_worksheet(name, worksheet_class=worksheet_class)
 
         worksheet = super().add_worksheet(name, worksheet_class=MACPieXlsxWriterWorksheet)
         worksheet.autofit_columns = autofit_columns if autofit_columns else self.autofit_columns
-        worksheet.strip_carriage_return = (
-            strip_carriage_return if strip_carriage_return else self.strip_carriage_return
+        worksheet.strip_carriage_returns = (
+            strip_carriage_returns if strip_carriage_returns else self.strip_carriage_returns
         )
 
         return worksheet
@@ -171,14 +171,14 @@ class MACPieXlsxWriterWorksheet(xlsxwriter.worksheet.Worksheet):
             if string_width > max_width:
                 self.max_column_widths[col] = string_width
 
-    def do_strip_carriage_return(self, row, col, string, cell_format=None):
+    def do_strip_carriage_returns(self, row, col, string, cell_format=None):
         if "\r" in string:
             return string.replace("\r", "")
         return string
 
     def _write_string(self, row, col, string, cell_format=None):
-        if self.strip_carriage_return:
-            string = self.do_strip_carriage_return(row, col, string, cell_format)
+        if self.strip_carriage_returns:
+            string = self.do_strip_carriage_returns(row, col, string, cell_format)
 
         if self.autofit_columns:
             self.do_autofit_column_width(row, col, string, cell_format)

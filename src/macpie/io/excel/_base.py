@@ -313,6 +313,33 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
     """
     Class for writing Dataset objects into Excel sheets.
 
+    Default is to use the ``mp_xlsxwriter`` engine, which is the macpie version
+    of panda's ``xlsxwriter`` engine. It has the best writing performance. The
+    other engine option is ``mp_openpyxl`` (the macpie version of the ``openpyxl``
+    engine).
+
+    ``mp_xlsxwriter`` engine-specific options:
+
+    * ``autofit_columns`` - True/False. Whether to autofit columns.
+    * ``strip_carriage_returns`` - True/False. Whether to strip carriage
+      returns (i.e. "\\\\r"). Otherwise Excel will encode it as "_x000D_".
+      See https://github.com/jmcnamara/XlsxWriter/issues/680.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        writer = mp.MACPieExcelWriter(
+            file_path,
+            engine="mp_xlsxwriter",
+            engine_kwargs={
+                "options": {"autofit_columns": True, "strip_carriage_returns": True}
+            },
+        )
+
+
+    Notes
+    -----
     This is the analog of :class:`pandas.ExcelWriter`, so read
     the documentation for that class for descriptions of available
     parameters, notes, and examples.
