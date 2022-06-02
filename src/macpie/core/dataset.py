@@ -3,7 +3,7 @@ from typing import ClassVar, List
 import numpy as np
 import pandas as pd
 
-from macpie import lltools, strtools
+from macpie import itertools, lltools, strtools
 from macpie._config import get_option
 from macpie.io.excel import MACPieExcelWriter, safe_xlsx_sheet_title
 from macpie.pandas.general_df import get_col_name
@@ -807,9 +807,15 @@ class LavaDataset(Dataset):
     FIELD_DATE_COL_VALUES_POSSIBLE: ClassVar[List[str]] = ["DATE", "DCDATE", "LINK_DATE"]
 
     def __init__(self, *args, **kwargs):
-        id_col_name = kwargs.pop("id_col_name", LavaDataset.FIELD_ID_COL_VALUE_DEFAULT)
-        date_col_name = kwargs.pop("date_col_name", LavaDataset.FIELD_DATE_COL_VALUE_DEFAULT)
-        id2_col_name = kwargs.pop("id2_col_name", LavaDataset.FIELD_ID2_COL_VALUE_DEFAULT)
+        id_col_name = itertools.first_true(
+            [kwargs.pop("id_col_name", None), LavaDataset.FIELD_ID_COL_VALUE_DEFAULT]
+        )
+        date_col_name = itertools.first_true(
+            [kwargs.pop("date_col_name", None), LavaDataset.FIELD_DATE_COL_VALUE_DEFAULT]
+        )
+        id2_col_name = itertools.first_true(
+            [kwargs.pop("id2_col_name", None), LavaDataset.FIELD_ID2_COL_VALUE_DEFAULT]
+        )
 
         super().__init__(
             *args,
@@ -818,14 +824,3 @@ class LavaDataset(Dataset):
             id2_col_name=id2_col_name,
             **kwargs,
         )
-
-    @classmethod
-    def from_file(cls, filepath, **kwargs) -> "LavaDataset":
-        """
-        Construct LavaDataset from a file.
-        """
-        from macpie.pandas.io import file_to_dataframe
-
-        df = file_to_dataframe(filepath)
-        name = kwargs.pop("name", filepath.stem)
-        return cls(data=df, name=name, **kwargs)
