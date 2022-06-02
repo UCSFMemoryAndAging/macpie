@@ -98,21 +98,89 @@ class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
 
 
 class MACPieXlsxWriterWorkbook(xlsxwriter.workbook.Workbook):
-    def add_worksheet(self, name=None, worksheet_class=None, autofit_columns=False):
-        if autofit_columns:
-            worksheet = super().add_worksheet(
-                name, worksheet_class=xlsxwritertools.XlsxWriterAutofitColumnsWorksheet
-            )
-        else:
-            worksheet = super().add_worksheet(name, worksheet_class=worksheet_class)
+    def __init__(self, filename=None, options=None):
+        if options is None:
+            options = {}
+
+        self.autofit_columns = options.pop("autofit_columns", False)
+        self.strip_carriage_return = options.pop("strip_carriage_return", False)
+
+        super().__init__(filename=filename, options=options)
+
+    def add_worksheet(
+        self, name=None, worksheet_class=None, autofit_columns=None, strip_carriage_return=None
+    ):
+        if worksheet_class is not None:
+            return super().add_worksheet(name, worksheet_class=worksheet_class)
+
+        worksheet = super().add_worksheet(name, worksheet_class=MACPieXlsxWriterWorksheet)
+        worksheet.autofit_columns = autofit_columns if autofit_columns else self.autofit_columns
+        worksheet.strip_carriage_return = (
+            strip_carriage_return if strip_carriage_return else self.strip_carriage_return
+        )
 
         return worksheet
 
     def close(self):
         for worksheet in self.worksheets():
-            if type(worksheet) is xlsxwritertools.XlsxWriterAutofitColumnsWorksheet:
+            if hasattr(worksheet, "autofit_columns") and worksheet.autofit_columns is True:
                 # Apply stored column widths. This will override any other
                 # set_column() values that may have been applied.
                 worksheet.set_autofit_column_width()
 
         return super().close()
+
+
+class MACPieXlsxWriterWorksheet(xlsxwriter.worksheet.Worksheet):
+    def __init__(self):
+        super().__init__()
+
+        # Store column widths
+        self.max_column_widths = {}
+
+    def set_autofit_column_width(self):
+        for column, width in self.max_column_widths.items():
+            self.set_column(column, column, width)
+
+    def do_autofit_column_width(self, row, col, string, cell_format=None):
+        # Store the maximum string width seen in each column.
+
+        # Check that row and col are valid and store max and min values.
+        if self._check_dimensions(row, col):
+            return -1
+
+        def excel_string_width(str):
+            """Calculate the length of the string in Excel character units."""
+
+            string_width = len(str)
+
+            if string_width == 0:
+                return 0
+            else:
+                return string_width * 1.1
+
+        # Set the min width for the cell. In some cases this might be the
+        # default width of 8.43. In this case we use 0 and adjust for all
+        # string widths.
+        min_width = 0
+
+        # Check if it the string is the largest we have seen for this column.
+        string_width = excel_string_width(string)
+        if string_width > min_width:
+            max_width = self.max_column_widths.get(col, min_width)
+            if string_width > max_width:
+                self.max_column_widths[col] = string_width
+
+    def do_strip_carriage_return(self, row, col, string, cell_format=None):
+        if "\r" in string:
+            return string.replace("\r", "")
+        return string
+
+    def _write_string(self, row, col, string, cell_format=None):
+        if self.strip_carriage_return:
+            string = self.do_strip_carriage_return(row, col, string, cell_format)
+
+        if self.autofit_columns:
+            self.do_autofit_column_width(row, col, string, cell_format)
+
+        return super()._write_string(row, col, string, cell_format)
