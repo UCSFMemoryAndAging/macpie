@@ -17,20 +17,23 @@ Release notes
 
 Added
 ~~~~~
-- :class:`util.DataTable` class to represent a table of data
-  using a list of lists data structure
-- :func:`datetimetools.reformat_datetime_str`
-- :func:`lltools.make_same_length`
-- :func:`pandas.count_trailers`
-- :func:`pandas.rtrim`
-- :func:`pandas.rtrim_longest`
-- :func:`strtools.seq_contains`
 
-Changed
-~~~~~~~
+- Pandas Functions
 
-Other
-~~~~~
+  - :func:`pandas.count_trailers`
+  - :func:`pandas.rtrim`
+  - :func:`pandas.rtrim_longest`
+
+- Tools
+
+  - :func:`datetimetools.reformat_datetime_str`
+  - :func:`itertools.first_true`
+  - :func:`lltools.make_same_length`
+  - :func:`strtools.seq_contains`
+
+- Utilities
+
+  - :class:`util.DataTable` class to represent a table of data using a list of lists data structure
 
 
 0.4 (2022-05-10)

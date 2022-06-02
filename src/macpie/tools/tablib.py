@@ -45,6 +45,7 @@ class TablibDataset:
 
     @property
     def title(self):
+        """Title of Dataset."""
         return self._tlset.title
 
     @title.setter
@@ -53,6 +54,7 @@ class TablibDataset:
 
     @property
     def headers(self):
+        """Headers of Dataset."""
         return self._tlset.headers
 
     @headers.setter
@@ -61,10 +63,12 @@ class TablibDataset:
 
     @property
     def data(self):
+        """Data of Dataset."""
         return self._tlset._data
 
     @property
     def tlset(self):
+        """The wrapped :class:`tablib.Dataset` object."""
         return self._tlset
 
     @property
@@ -75,9 +79,14 @@ class TablibDataset:
     def append_col_fill(self, fill_value, header=None):
         """Adds a column to the Dataset with a specified `fill_value`.
 
-        :param fill_value: Value to fill new column with.
-        :param header: Header for new column. Defaults to None.
+        Parameters
+        ----------
+        fill_value : str
+            Value to fill new column with.
+        header : str, Default is None
+            Header for new column
         """
+
         fill_values = [fill_value] * self._tlset.height
         self.tlset.append_col(fill_values, header)
 
@@ -86,30 +95,37 @@ class TablibDataset:
         from the labels in ``ser`` that are not headers in ``dset``,
         and whose value is ``'x'`` or ``'X'``.
 
-            >>> dset = tl.Dataset()
-            >>> dset.headers = ('Dataset', 'Field')
-            >>> dset.append(('CDR', 'Col1'))
-            >>> dset.export("df")
-            Dataset Field
-            0     CDR  Col1
-            >>> ser_data = {'Dataset':'CDR', 'Field':'Col2', 'Merge?': 'x'}
-            >>> ser = pd.Series(data=ser_data, index=['Dataset','Field','Merge?'])
-            >>> ser
-            Dataset     CDR
-            Field      Col2
-            Merge?        x
-            >>> mp.tablibtools.append_with_tags(dset, ser)
-            >>> dset.export("df")
-            Dataset Field
-            0     CDR  Col1
-            1     CDR  Col2
-            >>> dset2 = dset.filter('Merge?')
-            Dataset Field
-            0     CDR  Col2
+        Parameters
+        ----------
+        dset : :class:`tablib.Dataset`
+            The Dataset that gets ``ser`` appended to
+        ser : :class:`pd.Series`
+            A row of data to append to ``dset``
 
-        :param dset: The :class:`tablib.Dataset` that gets ``ser`` appended to
-        :param ser: A row of data to append to ``dset``
+        Examples
+        --------
+        >>> dset = tl.Dataset()
+        >>> dset.headers = ('Dataset', 'Field')
+        >>> dset.append(('CDR', 'Col1'))
+        >>> dset.export("df")
+        Dataset Field
+        0     CDR  Col1
+        >>> ser_data = {'Dataset':'CDR', 'Field':'Col2', 'Merge?': 'x'}
+        >>> ser = pd.Series(data=ser_data, index=['Dataset','Field','Merge?'])
+        >>> ser
+        Dataset     CDR
+        Field      Col2
+        Merge?        x
+        >>> mp.tablibtools.append_with_tags(dset, ser)
+        >>> dset.export("df")
+        Dataset Field
+        0     CDR  Col1
+        1     CDR  Col2
+        >>> dset2 = dset.filter('Merge?')
+        Dataset Field
+        0     CDR  Col2
         """
+
         ser = ser.copy()
         row = [ser.pop(item=header) for header in self.headers]
 
@@ -121,6 +137,7 @@ class TablibDataset:
         self.append(row, tags=tags)
 
     def compare(self, other):
+        """Compare this TablibDataset with another."""
         if self.headers != other.headers:
             raise ValueError("Can only compare datasets with matching headers.")
 
@@ -161,6 +178,7 @@ class TablibDataset:
         return self.from_tlset(self.tlset.filter(tag))
 
     def to_excel(self, excel_writer):
+        """Write to an excel file using an :class:`MACPieExcelWriter` instance."""
         excel_writer.write_tablib_dataset(self.tlset)
 
     def wipe_data(self):

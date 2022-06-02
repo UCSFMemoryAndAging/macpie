@@ -12,15 +12,19 @@ class DatasetField(NamedTuple):
 
 class DatasetFields(tablibtools.TablibDataset):
     """A tabular representation of a set of :class:`macpie.Dataset` fields.
-    First column is the Dataset name.
-    Second column is the Dataset column name.
+    First column is the Dataset name. Second column is the Dataset column name.
 
     It is a subclass of :class:`macpie.tablibtools.TablibDataset`, and therefore
     can be initialized with data the same way.
     """
 
+    #: Tag to indicate key fields
     tag_key_field = "key_field"
+
+    #: Tag to indicate non-key fields
     tag_non_key_field = "non_key_field"
+
+    #: Tag to indicate system fields
     tag_sys_field = "sys_field"
 
     def __init__(self, *args, **kwargs):

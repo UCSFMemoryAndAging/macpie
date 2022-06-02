@@ -18,8 +18,23 @@ Constructor
    Dataset
 
 
-Data manipulations
-------------------
+Column changes
+--------------
+Methods related to changing the columns in the Dataset.
+
+.. autosummary::
+   :toctree: api/
+   
+    Dataset.create_id_col
+    Dataset.rename_col
+    Dataset.prepend_level
+    Dataset.drop_sys_cols
+    Dataset.keep_cols
+    Dataset.keep_fields
+
+
+Binary operator functions
+-------------------------
 .. autosummary::
    :toctree: api/
 
@@ -27,12 +42,24 @@ Data manipulations
    group_by_keep_one
 
 
-Serialization / IO / conversion
--------------------------------
+Reshaping, sorting
+------------------
+.. autosummary::
+   :toctree: api/
+
+   Dataset.sort_by_id2
+
+
+Excel IO
+--------
+Serialization to and from Excel requires an ``excel_dict``, which
+is a dict that contains the needed information to round-trip a Dataset.
 
 .. autosummary::
    :toctree: api/
    
+   Dataset.cross_section
+   Dataset.display_name_generator
    Dataset.to_excel_dict
    Dataset.from_excel_dict
 
@@ -44,3 +71,12 @@ Helpers
    :toctree: api/
    
    DatasetFields
+
+
+Subclasses
+----------
+
+.. autosummary::
+   :toctree: api/
+   
+   LavaDataset

@@ -244,14 +244,16 @@ class Dataset(pd.DataFrame):
         Parameters
         ----------
         arg1: str
-            :attr:`name`
+            :attr:`Dataset.name`
         arg2: str or list of str
-            :attr:`tags`
+            :attr:`Dataset.tags`
         max_length : int, Default is -1 (meaning no limit)
             Maximum length of the display name
         delimiter : str, Default is "_"
             Delimiter to use to separate tags.
 
+        Notes
+        -----
         Defaults to :func:`macpie.strtools.add_suffixes_with_base`,
         which simply appends any tags to the :class:`Dataset` name.
         """
@@ -798,12 +800,31 @@ class Dataset(pd.DataFrame):
 
 
 class LavaDataset(Dataset):
+    """
+    A Dataset using LAVA defaults. (LAVA is the data management system used
+    at the Memory and Aging Center.) Defaults used are the following:
 
+    * ``id_col_name`` = "InstrID"
+    * ``date_col_name`` = "DCDate"
+    * ``id2_col_name`` = "PIDN"
+    """
+
+    #: Default value for ``id_col_name`` of Dataset.
     FIELD_ID_COL_VALUE_DEFAULT: ClassVar[str] = "InstrID"
+
+    #: Possible default values for ``id_col_name`` of Dataset.
     FIELD_ID_COL_VALUES_POSSIBLE: ClassVar[List[str]] = ["INSTRID", "LINK_ID"]
+
+    #: Default value for ``id2_col_name`` of Dataset.
     FIELD_ID2_COL_VALUE_DEFAULT: ClassVar[str] = "PIDN"
+
+    #: Possible default values for ``id2_col_name`` of Dataset.
     FIELD_ID2_COL_VALUES_POSSIBLE: ClassVar[List[str]] = ["PIDN"]
+
+    #: Default value for ``date_col_name`` of Dataset.
     FIELD_DATE_COL_VALUE_DEFAULT: ClassVar[str] = "DCDate"
+
+    #: Possible default values for ``date_col_name`` of Dataset.
     FIELD_DATE_COL_VALUES_POSSIBLE: ClassVar[List[str]] = ["DATE", "DCDATE", "LINK_DATE"]
 
     def __init__(self, *args, **kwargs):
