@@ -311,3 +311,39 @@ To upgrade dependencies, we use `pip tools <https://github.com/jazzband/pip-tool
     .. code-block:: console
 
         $ pip install -r requirements/dev.txt
+
+
+Uploading new version to PyPI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-   Create a git tag for the new version
+
+    .. code-block:: console
+
+        $ git tag -a v0.5.0 -m "release: v0.5.0"
+
+-   Push tag to remote
+
+    .. code-block:: console
+
+        $ git push origin v0.5.0
+
+-   Create distribution archives
+
+    .. code-block:: console
+
+        $ python setup.py sdist bdist_wheel
+
+-   Upload distribution files to PyPI via twine (``pip install twine`` if needed)
+
+    .. code-block:: console
+
+        $ python3 -m twine upload dist/macpie-0.5.0*
+
+-   In github, perform the following:
+
+    #. Click on `Releases`
+    #. Click on `Draft a new release`
+    #. Choose the proper tag
+    #. Release title: v0.5.0
+    #. Describe this release: Refer to the [changelog](https://macpie.readthedocs.io/en/latest/changelog/) for details.
