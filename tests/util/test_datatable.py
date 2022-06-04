@@ -23,3 +23,7 @@ def test_datatable():
     df = pd.DataFrame({"col1": [1, 2], "col2": ["3", None]})
     dt = DataTable.from_df(df)
     assert dt.data == [[1, "3"], [2, None]]
+
+    dt = DataTable([l1, l2])
+    dt.transpose()
+    assert dt.data == [[1, 3], [2, 4], [None, 5]]
