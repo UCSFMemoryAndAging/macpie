@@ -18,6 +18,12 @@ The easiest way to install MACPie is using ``pip``:
 
     $ pip install macpie
 
+To install all the extra dependencies, including all command line tools:
+
+.. code-block:: bash
+
+    $ pip install macpie[all]
+
 
 Detailed instructions
 ~~~~~~~~~~~~~~~~~~~~~

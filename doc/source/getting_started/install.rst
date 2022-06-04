@@ -192,3 +192,58 @@ with no environment specified.
 .. code-block:: bash
 
     $ conda activate
+
+
+Installing optional dependencies
+--------------------------------
+
+macpie has optional dependencies that are only used for specific classes
+or methods. For example, macpie.collections.BasicGraph uses the ``networkx``
+package, while the ``mpfile`` command requires the ``tabulate`` package.
+
+Dotenv file support for CLI tools
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Some commands make use of environment variables, and such environment variables
+can be loaded from a dotenv file in your home directory called ``.macpieenv``.
+To support this functionality, the following dependency needs to be installed.
+
+========================= ================== =============================================================
+Dependency                Minimum Version    Notes
+========================= ================== =============================================================
+python-dotenv             0.20               Reads .env file and sets environment variables
+========================= ================== =============================================================
+
+Install with: ``pip install macpie[dotenv]``
+
+mpsql command
+~~~~~~~~~~~~~
+The ``mpsql`` commands deals with SQL databases, and therefore depends on the
+the following packages:
+
+========================= ================== =============================================================
+Dependency                Minimum Version    Notes
+========================= ================== =============================================================
+mysql-connector-python    8.0                Python driver for communicating with MySQL servers
+SQLAlchemy                1.3                Python ORM library
+========================= ================== =============================================================
+
+Install with: ``pip install macpie[mpsql]``
+
+mpfile command
+~~~~~~~~~~~~~~
+
+========================= ================== =============================================================
+Dependency                Minimum Version    Notes
+========================= ================== =============================================================
+tabulate                  0.8                Pretty print tabular data
+========================= ================== =============================================================
+
+Install with: ``pip install macpie[mpfile]``
+
+All command line tools
+~~~~~~~~~~~~~~~~~~~~~~
+You can also install all of the command line tool dependencies with:
+
+.. code-block:: bash
+
+    $ pip install macpie[cli]

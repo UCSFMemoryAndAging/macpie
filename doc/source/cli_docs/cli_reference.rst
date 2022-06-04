@@ -13,6 +13,11 @@ All commands should be executed inside your activated virtual environment
 (or conda environment) that you created in the :ref:`installation` section.
 The ``--help`` option will give more information about any commands and options.
 
+To install all command line tool dependencies:
+
+.. code-block:: bash
+
+    $ pip install macpie[cli]
 
 Environment Variables
 ---------------------
