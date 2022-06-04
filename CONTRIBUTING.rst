@@ -96,6 +96,24 @@ First time setup
 
         $ pip install -e . -r requirements/dev.txt
 
+    If you want to start with all dependencies:
+
+    -   At the prompt:
+
+        .. code-block:: text
+
+            $ pip install -e .[all] -r requirements/dev.txt
+
+    -   Or if you are using ``zsh`` shell, note that square brackets are used
+        for globbing / pattern matching, so you'll need to quote the argument like so:
+
+        .. code-block:: text
+
+            $ pip install -e '.[all]' -r requirements/dev.txt
+
+        
+
+
 .. _latest version of git: https://git-scm.com/downloads
 .. _username: https://help.github.com/en/articles/setting-your-username-in-git
 .. _email: https://help.github.com/en/articles/setting-your-commit-email-address-in-git

@@ -8,7 +8,6 @@ class DataTable(collections.UserList):
     """
     A list of of equal-sized lists.
 
-
     Parameters
     ----------
     axis : int, Default is 0
