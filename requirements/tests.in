@@ -1,3 +1,9 @@
+# optional dependencies
+matplotlib
+networkx
+python-dotenv
+
+# testing
 coverage
 pytest
 tox

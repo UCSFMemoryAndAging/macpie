@@ -106,7 +106,7 @@ markupsafe==2.1.1
     #   jinja2
     #   nbconvert
 matplotlib==3.5.2
-    # via -r requirements/doc.in
+    # via -r requirements/tests.in
 matplotlib-inline==0.1.3
     # via ipython
 mdit-py-plugins==0.3.0
@@ -126,14 +126,14 @@ nbformat==5.4.0
     #   nbclient
     #   nbconvert
     #   nbsphinx
-nbsphinx==0.8.8
+nbsphinx==0.8.9
     # via -r requirements/doc.in
 nest-asyncio==1.5.5
     # via
     #   jupyter-client
     #   nbclient
 networkx==2.8.3
-    # via -r requirements/doc.in
+    # via -r requirements/tests.in
 numpy==1.22.4
     # via matplotlib
 numpydoc==1.3.1
@@ -197,7 +197,7 @@ python-dateutil==2.8.2
     #   jupyter-client
     #   matplotlib
 python-dotenv==0.20.0
-    # via -r requirements/doc.in
+    # via -r requirements/tests.in
 pytz==2022.1
     # via babel
 pyyaml==6.0

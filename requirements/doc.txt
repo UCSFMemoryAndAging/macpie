@@ -28,8 +28,6 @@ charset-normalizer==2.0.12
     # via requests
 click==8.1.3
     # via sphinx-click
-cycler==0.11.0
-    # via matplotlib
 decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
@@ -50,8 +48,6 @@ executing==0.8.3
     # via stack-data
 fastjsonschema==2.15.3
     # via nbformat
-fonttools==4.33.3
-    # via matplotlib
 idna==3.3
     # via requests
 imagesize==1.3.0
@@ -81,8 +77,6 @@ jupyter-core==4.10.0
     #   nbformat
 jupyterlab-pygments==0.2.2
     # via nbconvert
-kiwisolver==1.4.2
-    # via matplotlib
 markdown-it-py==2.1.0
     # via
     #   mdit-py-plugins
@@ -91,8 +85,6 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.5.2
-    # via -r requirements/doc.in
 matplotlib-inline==0.1.3
     # via ipython
 mdit-py-plugins==0.3.0
@@ -112,21 +104,16 @@ nbformat==5.4.0
     #   nbclient
     #   nbconvert
     #   nbsphinx
-nbsphinx==0.8.8
+nbsphinx==0.8.9
     # via -r requirements/doc.in
 nest-asyncio==1.5.5
     # via
     #   jupyter-client
     #   nbclient
-networkx==2.8.3
-    # via -r requirements/doc.in
-numpy==1.22.4
-    # via matplotlib
 numpydoc==1.3.1
     # via -r requirements/doc.in
 packaging==21.3
     # via
-    #   matplotlib
     #   nbconvert
     #   pydata-sphinx-theme
     #   sphinx
@@ -138,8 +125,6 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pillow==9.1.1
-    # via matplotlib
 prompt-toolkit==3.0.29
     # via ipython
 ptyprocess==0.7.0
@@ -155,17 +140,11 @@ pygments==2.12.0
     #   sphinx
     #   sphinx-tabs
 pyparsing==3.0.9
-    # via
-    #   matplotlib
-    #   packaging
+    # via packaging
 pyrsistent==0.18.1
     # via jsonschema
 python-dateutil==2.8.2
-    # via
-    #   jupyter-client
-    #   matplotlib
-python-dotenv==0.20.0
-    # via -r requirements/doc.in
+    # via jupyter-client
 pytz==2022.1
     # via babel
 pyyaml==6.0

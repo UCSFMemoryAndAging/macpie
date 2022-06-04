@@ -8,18 +8,33 @@ attrs==21.4.0
     # via pytest
 coverage==6.4.1
     # via -r requirements/tests.in
+cycler==0.11.0
+    # via matplotlib
 distlib==0.3.4
     # via virtualenv
 filelock==3.7.1
     # via
     #   tox
     #   virtualenv
+fonttools==4.33.3
+    # via matplotlib
 iniconfig==1.1.1
     # via pytest
+kiwisolver==1.4.2
+    # via matplotlib
+matplotlib==3.5.2
+    # via -r requirements/tests.in
+networkx==2.8.3
+    # via -r requirements/tests.in
+numpy==1.22.4
+    # via matplotlib
 packaging==21.3
     # via
+    #   matplotlib
     #   pytest
     #   tox
+pillow==9.1.1
+    # via matplotlib
 platformdirs==2.5.2
     # via virtualenv
 pluggy==1.0.0
@@ -31,11 +46,18 @@ py==1.11.0
     #   pytest
     #   tox
 pyparsing==3.0.9
-    # via packaging
+    # via
+    #   matplotlib
+    #   packaging
 pytest==7.1.2
+    # via -r requirements/tests.in
+python-dateutil==2.8.2
+    # via matplotlib
+python-dotenv==0.20.0
     # via -r requirements/tests.in
 six==1.16.0
     # via
+    #   python-dateutil
     #   tox
     #   virtualenv
 toml==0.10.2
