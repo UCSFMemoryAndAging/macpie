@@ -12,11 +12,16 @@
 Release notes
 =============
 
-0.5 (2022-??-??)
+0.5 (2022-06-04)
 ----------------
 
 Added
 ~~~~~
+
+- Input / Output
+
+  - :attr:`MACPieXlsxWriterWorkbook.strip_carriage_return` to strip '``\r``'
+    characters before writing file
 
 - Pandas Functions
 

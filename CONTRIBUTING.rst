@@ -84,6 +84,12 @@ First time setup
              > py -3 -m venv env
              > env\Scripts\activate
 
+-   Upgrade pip and setuptools.
+
+    .. code-block:: text
+
+        $ python -m pip install --upgrade pip setuptools
+
 -   Install MACPie in editable mode with development dependencies.
 
     .. code-block:: text
@@ -150,7 +156,7 @@ Running full test suite
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The full test suite takes a long time to run because it tests multiple combinations
-of Python and dependencies. You need to have Python 3.7 and 3.8 installed to
+of Python and dependencies. You need to have Python 3.8, 3.9, and 3.10 installed to
 run all of the environments. Then run:
 
 .. code-block:: text
@@ -163,18 +169,32 @@ If you aren't already set up to install multiple version of Python, I recommend 
 .. _pyenv: https://github.com/pyenv/pyenv
 
 -   Install ``pyenv``
--   Install all Python versions to test
+
+-   Update list of available versions.
 
     .. code-block:: text
 
-        $ pyenv install 3.7.9
-        $ pyenv install 3.8.5
+        $ pyenv update
+
+-   List available versions to install.
+
+    .. code-block:: text
+
+        $ pyenv install -l
+
+-   Install the Python versions you want to test
+
+    .. code-block:: text
+
+        $ pyenv install 3.8.13
+        $ pyenv install 3.9.13
+        $ pyenv install 3.10.4
     
 -   In your local repo root:
 
     .. code-block:: text
 
-        $ pyenv local 3.8.5 3.7.9
+        $ pyenv local 3.8.13 3.9.13 3.10.4
 
     This will set local application-specific Python version(s) (in order of preference)
     by writing the version name(s) to a ``.python-version`` file in the current directory.
@@ -190,6 +210,24 @@ If you aren't already set up to install multiple version of Python, I recommend 
     .. code-block:: text
 
         $ pyenv local --unset
+
+Other useful ``pyenv`` commands:
+
+.. code-block:: console
+    
+    $ # list versions
+    $ pyenv versions
+    $
+    $ # set the global Python version
+    $ pyenv global 3.6.12
+    $
+    $ # set application-specific version by creating a .python-version file in current dir.
+    $ # sets the pyverison for current dir and subdirs
+    $ pyenv local 3.8.5
+    $
+    $ # set shell-specific Python version
+    $ pyenv shell 3.8-dev
+
 
 Read more about `tox <https://tox.readthedocs.io>`__.
 
@@ -225,3 +263,33 @@ Build the docs in the ``docs`` directory using Sphinx.
 Open ``_build/html/index.html`` in your browser to view the docs.
 
 Read more about `Sphinx <https://www.sphinx-doc.org/en/stable/>`__.
+
+
+Upgrading dependencies
+~~~~~~~~~~~~~~~~~~~~~~
+
+To upgrade dependencies, we use `pip tools <https://github.com/jazzband/pip-tools>`__.
+
+-   Update all packages for dev
+
+    .. code-block:: console
+
+        $ pip-compile --upgrade --output-file requirements/dev.txt requirements/dev.in
+
+-   Update all packages for tests
+
+    .. code-block:: console
+
+        $ pip-compile --upgrade --output-file requirements/tests.txt requirements/tests.in
+
+-   Update all packages for docs
+
+    .. code-block:: console
+
+        $ pip-compile --upgrade --output-file requirements/doc.txt requirements/doc.in
+
+-   Then to proceed with development, install the upgraded dev dependencies
+
+    .. code-block:: console
+
+        $ pip install -r requirements/dev.txt
