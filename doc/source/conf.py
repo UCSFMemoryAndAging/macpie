@@ -76,15 +76,13 @@ def setup(app):
     sys.modules["macpie.shelltools"] = macpie.shelltools
     sys.modules["macpie.strtools"] = macpie.strtools
     sys.modules["macpie.tablibtools"] = macpie.tablibtools
-    sys.modules["macpie.xlsxwritertools"] = macpie.xlsxwritertools
     sys.modules["macpie.validatortools"] = macpie.validatortools
+    sys.modules["macpie.xlsxwritertools"] = macpie.xlsxwritertools
 
     app.add_css_file("custom.css")  # may also be an URL
 
 
 # Add any paths that contain templates here, relative to this directory.
-
-templates_path = ["_templates"]
 
 autosummary_generate = True
 
