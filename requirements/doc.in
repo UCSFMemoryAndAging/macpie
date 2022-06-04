@@ -1,3 +1,12 @@
+# optional dependencies
+matplotlib
+mysql-connector-python
+networkx
+python-dotenv
+SQLAlchemy
+tabulate
+
+# documentation
 ipython
 myst_parser
 nbsphinx

@@ -28,6 +28,8 @@ charset-normalizer==2.0.12
     # via requests
 click==8.1.3
     # via sphinx-click
+cycler==0.11.0
+    # via matplotlib
 decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
@@ -48,6 +50,10 @@ executing==0.8.3
     # via stack-data
 fastjsonschema==2.15.3
     # via nbformat
+fonttools==4.33.3
+    # via matplotlib
+greenlet==1.1.2
+    # via sqlalchemy
 idna==3.3
     # via requests
 imagesize==1.3.0
@@ -77,6 +83,8 @@ jupyter-core==4.10.0
     #   nbformat
 jupyterlab-pygments==0.2.2
     # via nbconvert
+kiwisolver==1.4.2
+    # via matplotlib
 markdown-it-py==2.1.0
     # via
     #   mdit-py-plugins
@@ -85,6 +93,8 @@ markupsafe==2.1.1
     # via
     #   jinja2
     #   nbconvert
+matplotlib==3.5.2
+    # via -r requirements/doc.in
 matplotlib-inline==0.1.3
     # via ipython
 mdit-py-plugins==0.3.0
@@ -93,6 +103,8 @@ mdurl==0.1.1
     # via markdown-it-py
 mistune==0.8.4
     # via nbconvert
+mysql-connector-python==8.0.29
+    # via -r requirements/doc.in
 myst-parser==0.17.2
     # via -r requirements/doc.in
 nbclient==0.6.4
@@ -110,10 +122,15 @@ nest-asyncio==1.5.5
     # via
     #   jupyter-client
     #   nbclient
+networkx==2.8.3
+    # via -r requirements/doc.in
+numpy==1.22.4
+    # via matplotlib
 numpydoc==1.3.1
     # via -r requirements/doc.in
 packaging==21.3
     # via
+    #   matplotlib
     #   nbconvert
     #   pydata-sphinx-theme
     #   sphinx
@@ -125,8 +142,12 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
+pillow==9.1.1
+    # via matplotlib
 prompt-toolkit==3.0.29
     # via ipython
+protobuf==4.21.1
+    # via mysql-connector-python
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
@@ -140,11 +161,17 @@ pygments==2.12.0
     #   sphinx
     #   sphinx-tabs
 pyparsing==3.0.9
-    # via packaging
+    # via
+    #   matplotlib
+    #   packaging
 pyrsistent==0.18.1
     # via jsonschema
 python-dateutil==2.8.2
-    # via jupyter-client
+    # via
+    #   jupyter-client
+    #   matplotlib
+python-dotenv==0.20.0
+    # via -r requirements/doc.in
 pytz==2022.1
     # via babel
 pyyaml==6.0
@@ -193,8 +220,12 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
+sqlalchemy==1.4.37
+    # via -r requirements/doc.in
 stack-data==0.2.0
     # via ipython
+tabulate==0.8.9
+    # via -r requirements/doc.in
 tinycss2==1.1.1
     # via nbconvert
 tornado==6.1
