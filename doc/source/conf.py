@@ -49,7 +49,6 @@ extensions = [
     "numpydoc",
     "sphinx_toggleprompt",
     "sphinx_click",
-    "matplotlib.sphinxext.plot_directive",
 ]
 
 # continue doc build and only print warnings/errors in examples
