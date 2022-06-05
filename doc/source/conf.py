@@ -24,12 +24,12 @@ autosummary_generate = True
 intersphinx_mapping = {
     "networkx": ("https://networkx.org/documentation/stable/", None),
     "openpyxl": ("https://openpyxl.readthedocs.io/en/stable/", None),
-    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "tablib": ("https://tablib.readthedocs.io/en/stable/", None),
     "xlsxwriter": ("https://xlsxwriter.readthedocs.io/", None),
     "python": ("https://docs.python.org/3/", None),
 }
-
+pygments_style = "sphinx"
 # Fix issue with warnings from numpydoc (see discussion in PR #534)
 numpydoc_show_class_members = False
 
@@ -61,7 +61,7 @@ html_theme_options = {
 html_logo = "_static/logo/UCSF_Logo_21_Navy_300dpi_RGB.png"
 html_static_path = ["_static"]
 html_css_files = [
-    "custom.css",
+    "css/custom.css",
 ]
 html_sidebars = {
     "**": ["sidebar-nav-bs", "sidebar-ethical-ads"],
