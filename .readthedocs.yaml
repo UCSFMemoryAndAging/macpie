@@ -9,5 +9,5 @@ python:
     - method: pip
       path: .
 sphinx:
-  builder: readthedocsdirhtml
+  builder: html
   fail_on_warning: true
