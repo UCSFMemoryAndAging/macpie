@@ -6,22 +6,10 @@
 #
 alabaster==0.7.12
     # via sphinx
-appnope==0.1.3
-    # via ipython
-asttokens==2.0.5
-    # via stack-data
-attrs==21.4.0
-    # via jsonschema
 babel==2.10.1
     # via sphinx
-backcall==0.2.0
-    # via ipython
 beautifulsoup4==4.11.1
-    # via
-    #   nbconvert
-    #   pydata-sphinx-theme
-bleach==5.0.0
-    # via nbconvert
+    # via pydata-sphinx-theme
 certifi==2022.5.18.1
     # via requests
 charset-normalizer==2.0.12
@@ -30,26 +18,12 @@ click==8.1.3
     # via sphinx-click
 cycler==0.11.0
     # via matplotlib
-decorator==5.1.1
-    # via ipython
-defusedxml==0.7.1
-    # via nbconvert
 docutils==0.17.1
     # via
-    #   myst-parser
-    #   nbsphinx
     #   pydata-sphinx-theme
     #   sphinx
     #   sphinx-click
     #   sphinx-tabs
-entrypoints==0.4
-    # via
-    #   jupyter-client
-    #   nbconvert
-executing==0.8.3
-    # via stack-data
-fastjsonschema==2.15.3
-    # via nbformat
 fonttools==4.33.3
     # via matplotlib
 greenlet==1.1.2
@@ -60,68 +34,18 @@ imagesize==1.3.0
     # via sphinx
 importlib-metadata==4.11.4
     # via sphinx
-ipython==8.4.0
-    # via -r requirements/doc.in
-jedi==0.18.1
-    # via ipython
-jinja2==3.0.3
+jinja2==3.1.2
     # via
-    #   myst-parser
-    #   nbconvert
-    #   nbsphinx
     #   numpydoc
     #   sphinx
-    #   sphinx-toggleprompt
-jsonschema==4.6.0
-    # via nbformat
-jupyter-client==7.3.1
-    # via nbclient
-jupyter-core==4.10.0
-    # via
-    #   jupyter-client
-    #   nbconvert
-    #   nbformat
-jupyterlab-pygments==0.2.2
-    # via nbconvert
 kiwisolver==1.4.2
     # via matplotlib
-markdown-it-py==2.1.0
-    # via
-    #   mdit-py-plugins
-    #   myst-parser
 markupsafe==2.1.1
-    # via
-    #   jinja2
-    #   nbconvert
+    # via jinja2
 matplotlib==3.5.2
     # via -r requirements/doc.in
-matplotlib-inline==0.1.3
-    # via ipython
-mdit-py-plugins==0.3.0
-    # via myst-parser
-mdurl==0.1.1
-    # via markdown-it-py
-mistune==0.8.4
-    # via nbconvert
 mysql-connector-python==8.0.29
     # via -r requirements/doc.in
-myst-parser==0.17.2
-    # via -r requirements/doc.in
-nbclient==0.6.4
-    # via nbconvert
-nbconvert==6.5.0
-    # via nbsphinx
-nbformat==5.4.0
-    # via
-    #   nbclient
-    #   nbconvert
-    #   nbsphinx
-nbsphinx==0.8.9
-    # via -r requirements/doc.in
-nest-asyncio==1.5.5
-    # via
-    #   jupyter-client
-    #   nbclient
 networkx==2.8.3
     # via -r requirements/doc.in
 numpy==1.22.4
@@ -131,60 +55,32 @@ numpydoc==1.3.1
 packaging==21.3
     # via
     #   matplotlib
-    #   nbconvert
     #   pydata-sphinx-theme
     #   sphinx
-pandocfilters==1.5.0
-    # via nbconvert
-parso==0.8.3
-    # via jedi
-pexpect==4.8.0
-    # via ipython
-pickleshare==0.7.5
-    # via ipython
 pillow==9.1.1
     # via matplotlib
-prompt-toolkit==3.0.29
-    # via ipython
 protobuf==4.21.1
     # via mysql-connector-python
-ptyprocess==0.7.0
-    # via pexpect
-pure-eval==0.2.2
-    # via stack-data
 pydata-sphinx-theme==0.8.1
     # via -r requirements/doc.in
 pygments==2.12.0
     # via
-    #   ipython
-    #   nbconvert
     #   sphinx
     #   sphinx-tabs
 pyparsing==3.0.9
     # via
     #   matplotlib
     #   packaging
-pyrsistent==0.18.1
-    # via jsonschema
 python-dateutil==2.8.2
-    # via
-    #   jupyter-client
-    #   matplotlib
+    # via matplotlib
 python-dotenv==0.20.0
     # via -r requirements/doc.in
 pytz==2022.1
     # via babel
-pyyaml==6.0
-    # via myst-parser
-pyzmq==23.1.0
-    # via jupyter-client
 requests==2.27.1
     # via sphinx
 six==1.16.0
-    # via
-    #   asttokens
-    #   bleach
-    #   python-dateutil
+    # via python-dateutil
 snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.3.2.post1
@@ -192,21 +88,13 @@ soupsieve==2.3.2.post1
 sphinx==4.5.0
     # via
     #   -r requirements/doc.in
-    #   myst-parser
-    #   nbsphinx
     #   numpydoc
     #   pydata-sphinx-theme
     #   sphinx-click
-    #   sphinx-gallery
     #   sphinx-tabs
-    #   sphinx-toggleprompt
 sphinx-click==4.1.0
     # via -r requirements/doc.in
-sphinx-gallery==0.10.1
-    # via -r requirements/doc.in
 sphinx-tabs==3.3.1
-    # via -r requirements/doc.in
-sphinx-toggleprompt==0.2.0
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
@@ -222,36 +110,9 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 sqlalchemy==1.4.37
     # via -r requirements/doc.in
-stack-data==0.2.0
-    # via ipython
 tabulate==0.8.9
     # via -r requirements/doc.in
-tinycss2==1.1.1
-    # via nbconvert
-tornado==6.1
-    # via jupyter-client
-traitlets==5.2.2.post1
-    # via
-    #   ipython
-    #   jupyter-client
-    #   jupyter-core
-    #   matplotlib-inline
-    #   nbclient
-    #   nbconvert
-    #   nbformat
-    #   nbsphinx
-typing-extensions==4.2.0
-    # via myst-parser
 urllib3==1.26.9
     # via requests
-wcwidth==0.2.5
-    # via prompt-toolkit
-webencodings==0.5.1
-    # via
-    #   bleach
-    #   tinycss2
 zipp==3.8.0
     # via importlib-metadata
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools

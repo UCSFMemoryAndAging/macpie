@@ -7,13 +7,8 @@ SQLAlchemy
 tabulate
 
 # documentation
-ipython
-myst_parser
-nbsphinx
-numpydoc
 pydata-sphinx-theme
 sphinx
 sphinx-click
-sphinx_gallery
 sphinx_tabs
-sphinx_toggleprompt
+numpydoc
