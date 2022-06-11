@@ -36,9 +36,14 @@ What now?
   a brief introduction :doc:`here <cli>`. Or get the complete documentation on
   all the available command line tools at the
   :doc:`CLI Reference </cli_docs/cli_reference>`.
-* If you are interested in the complete documenation of all classes,
+* If you are interested in the complete documentation of all classes,
   methods, functions, utilities, and attributes MACPie offers, check
   out the :doc:`API Reference </api_docs/api_reference>`.
+
+.. container:: button
+
+    :doc:`Installation details <install>` :doc:`Using the command line <cli>`
+
 
 .. toctree::
   :maxdepth: 2

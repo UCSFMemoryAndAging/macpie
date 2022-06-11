@@ -25,6 +25,11 @@ data contained in your local Excel/CSV files.
 MACPie was created at the `UCSF Memory and Aging Center <https://memory.ucsf.edu/>`_, 
 a dynamic multidisciplinary clinical research program investigating neurodegenerative diseases.
 
+.. container:: button
+
+    :doc:`Getting started <getting_started/index>` :doc:`CLI reference <cli_docs/cli_reference>`
+    :doc:`API reference <getting_started/index>` :doc:`Release notes <changelog>`
+    
 
 Useful links
 ------------

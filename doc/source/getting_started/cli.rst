@@ -56,4 +56,3 @@ examples section:
 #. :ref:`keepone <examples-keepone>` examples
 #. :ref:`link <examples-link>` examples
 #. :ref:`merge <examples-merge>` examples
-

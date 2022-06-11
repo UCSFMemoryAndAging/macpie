@@ -5,3 +5,31 @@
     --pst-color-active-navigation: 0, 114, 66;
     --pst-color-h2: var(--color-text-base);
 }
+
+
+/* buttons */
+
+.button>p>a {
+    box-shadow: 0px 4px 14px -7px #999999;
+    background-color: white;
+    border: 1px solid #bbbbbb;
+    display: inline-block;
+    cursor: pointer;
+    color: #007242;
+    padding: 1em 1em;
+    text-align: center;
+    text-decoration: none;
+    font-size: 140%;
+    margin: 2%;
+    width: 40%;
+}
+
+.button>p>a:hover {
+    border-color: #007242;
+    color: #e32e00;
+}
+
+.button>p>a:active {
+    position: relative;
+    top: 1px;
+}
