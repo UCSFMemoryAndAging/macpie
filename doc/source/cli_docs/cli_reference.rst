@@ -19,6 +19,9 @@ To install all command line tool dependencies:
 
     $ pip install macpie[cli]
 
+
+.. _cli_envvars:
+
 Environment Variables
 ---------------------
 

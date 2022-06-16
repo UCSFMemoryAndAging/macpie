@@ -11,6 +11,15 @@ Usage
 ~~~~~
 .. code-block:: bash
 
+    $ mpsql -u USERNAME -p DATABASE createtable faq
+
+Remember you can also set :ref:`environment variables <cli_envvars>` so that you
+don't have to include certain parameters in the command each time you use it.
+For example, if you set the ``MACPIE_MYSQL_USER`` and ``MACPIE_MYSQL_PWD``
+environment variables, you can simplify the above command like so:
+
+.. code-block:: bash
+
     $ mpsql DATABASE createtable TABLENAME
 
 

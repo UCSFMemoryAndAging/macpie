@@ -11,7 +11,7 @@ Usage
 ~~~~~
 .. code-block:: bash
 
-    $ mpsql DATABASE createproc PROCNAME
+    $ mpsql -u USERNAME -p DATABASE createproc PROCNAME
 
 
 Arguments
