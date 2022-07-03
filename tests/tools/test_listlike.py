@@ -1,3 +1,5 @@
+import itertools
+
 from macpie import lltools
 
 
@@ -56,16 +58,67 @@ def test_is_list_like():
     assert lltools.is_list_like({1, 2}, allow_sets=True) is True
 
 
-def make_list_if_list_like():
+def test_make_list_if_list_like():
     assert lltools.make_list_if_list_like("a") == "a"
     assert lltools.make_list_if_list_like(["a", "b"]) == ["a", "b"]
     assert lltools.make_list_if_list_like(("a", "b")) == ["a", "b"]
 
 
-def make_tuple_if_list_like():
+def test_make_tuple_if_list_like():
     assert lltools.make_tuple_if_list_like("a") == "a"
     assert lltools.make_tuple_if_list_like(["a", "b"]) == ("a", "b")
     assert lltools.make_tuple_if_list_like(("a", "b")) == ("a", "b")
+
+
+def test_make_unique():
+    l1 = ["name", "state", "name", "city", "name", "zip", "zip"]
+
+    result = lltools.make_unique(l1)
+    assert result == ["name1", "state", "name2", "city", "name3", "zip1", "zip2"]
+
+    result = lltools.make_unique(l1, suffs_iter=itertools.count(2))
+    assert result == ["name2", "state", "name3", "city", "name4", "zip2", "zip3"]
+
+    result = lltools.make_unique(l1, skip=1)
+    assert result == ["name", "state", "name1", "city", "name2", "zip", "zip1"]
+
+    result = lltools.make_unique(l1, skip=2)
+    assert result == ["name", "state", "name", "city", "name1", "zip", "zip"]
+
+    result = lltools.make_unique(l1, skip=2, skip_suffix="_skipped")
+    assert result == [
+        "name_skipped",
+        "state",
+        "name_skipped",
+        "city",
+        "name1",
+        "zip_skipped",
+        "zip_skipped",
+    ]
+
+    result = lltools.make_unique(l1, skip=3)
+    assert result == ["name", "state", "name", "city", "name", "zip", "zip"]
+
+    result = lltools.make_unique(l1, skip=3, skip_suffix="_skipped")
+    assert result == [
+        "name_skipped",
+        "state",
+        "name_skipped",
+        "city",
+        "name_skipped",
+        "zip_skipped",
+        "zip_skipped",
+    ]
+
+    result = lltools.make_unique(l1, suffs_prefix="_")
+    assert result == ["name_1", "state", "name_2", "city", "name_3", "zip_1", "zip_2"]
+
+    result = lltools.make_unique(l1, suffs_prefix="(", suffs_suffix=")")
+    assert result == ["name(1)", "state", "name(2)", "city", "name(3)", "zip(1)", "zip(2)"]
+
+    result = lltools.make_unique(l1, inplace=True)
+    assert result is None
+    assert l1 == ["name1", "state", "name2", "city", "name3", "zip1", "zip2"]
 
 
 def test_maybe_make_list():

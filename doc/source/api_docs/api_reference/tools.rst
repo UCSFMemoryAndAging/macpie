@@ -59,6 +59,7 @@ lltools
    make_list_if_list_like
    make_same_length
    make_tuple_if_list_like
+   make_unique
    maybe_make_list
    maybe_make_tuple
    move_item_to
