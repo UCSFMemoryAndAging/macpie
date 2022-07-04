@@ -126,13 +126,15 @@ def make_unique(
         result = seq.copy()
 
     not_unique = [k for k, v in collections.Counter(result).items() if v > 1]
-    suff_gens = dict(zip(not_unique, itertools.tee(final_suffs_iter, len(not_unique))))
+    suffix_generator_mapping = dict(
+        zip(not_unique, itertools.tee(final_suffs_iter, len(not_unique)))
+    )
 
     for idx, item in enumerate(seq):
         try:
-            suffix = next(suff_gens[item])
+            suffix = next(suffix_generator_mapping[item])
         except KeyError:
-            # s was unique
+            # item was unique
             continue
         else:
             result[idx] = str(result[idx]) + suffix
