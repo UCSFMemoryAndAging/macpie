@@ -1,4 +1,3 @@
-import collections
 import itertools
 
 from . import string as strtools
@@ -126,78 +125,6 @@ def make_tuple_if_list_like(obj, allow_sets: bool = True):
     if is_list_like(obj, allow_sets=allow_sets):
         return tuple(obj)
     return obj
-
-
-def make_unique(
-    seq,
-    suffs_iter=None,
-    suffs_prefix="",
-    suffs_suffix="",
-    skip=0,
-    skip_suffix="",
-    inplace=False,
-):
-    """Make sequence of string elements unique by adding a differentiating suffix.
-
-    Parameters
-    ----------
-    seq : Sequence
-        Mutable sequence of strings
-    suffs_iter : optional, default is itertools.count(1)
-        An alternative iterable of suffixes
-    suffs_prefix : optional, default is empty string
-        An alternative string to prepend to each suffix in ``suffs_iter``
-    suffs_prefix : optional, default is empty string
-        An alternative string to append to each suffix in ``suffs_iter``
-    skip : optional, default is 0
-        How many duplicates to skip before appending suffixes.
-    skipped_suffix : optional, default is empty string
-        Add this suffix to any skipped duplicates.
-    inplace : optional, default is False
-        Whether to modify the list in place
-
-    Examples
-    --------
-    >>> lst = ["name", "state", "name", "city", "name", "zip", "zip"]
-    >>> make_unique(lst)
-    ["name1", "state", "name2", "city", "name3", "zip1", "zip2"]
-
-    >>> make_unique(lst, skip=1)
-    ["name", "state", "name1", "city", "name2", "zip", "zip1"]
-
-    >>> make_unique(lst, suffs_prefix="_")
-    ["name_1", "state", "name_2", "city", "name_3", "zip_1", "zip_2"]
-    """
-
-    if suffs_iter is None:
-        suffs_iter = itertools.count(1)
-
-    def final_suffs_iter():
-        for si in suffs_iter:
-            yield suffs_prefix + str(si) + suffs_suffix
-
-    final_suffs_iter = itertools.chain(itertools.repeat(skip_suffix, skip), final_suffs_iter())
-
-    if inplace:
-        result = seq
-    else:
-        result = seq.copy()
-
-    not_unique = [k for k, v in collections.Counter(result).items() if v > 1]
-    suff_gens = dict(zip(not_unique, itertools.tee(final_suffs_iter, len(not_unique))))
-
-    for idx, item in enumerate(seq):
-        try:
-            suffix = next(suff_gens[item])
-        except KeyError:
-            # s was unique
-            continue
-        else:
-            result[idx] += suffix
-
-    if inplace:
-        return None
-    return result
 
 
 def maybe_make_list(obj, allow_sets: bool = True):
