@@ -1,4 +1,5 @@
 from collections import defaultdict
+import itertools
 import warnings
 
 import numpy as np
@@ -199,6 +200,17 @@ class MergeableAnchoredList(AnchoredList):
             if self._selected_fields and sec.name not in self._selected_fields.unique_datasets:
                 sec.add_tag(MergeableAnchoredList.tag_not_merged)
             else:
+                if not sec.columns.is_unique:
+                    # merge cannot handle a non-unique multi-index, so make
+                    # them unique by appending numbers
+                    # TODO: this belongs elsewhere? or perhaps drop them?
+                    sec.columns = strtools.make_unique(
+                        sec.columns.tolist(),
+                        suffs_iter=itertools.count(2),
+                        skip=1,
+                        suffs_prefix="_",
+                    )
+
                 merged_dset = merged_dset.mac.merge(
                     sec.copy(deep=True),
                     left_on=[(self._primary.name, self._primary_anchor_col)],
