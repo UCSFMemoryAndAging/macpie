@@ -59,7 +59,6 @@ lltools
    make_list_if_list_like
    make_same_length
    make_tuple_if_list_like
-   make_unique
    maybe_make_list
    maybe_make_tuple
    move_item_to
@@ -131,6 +130,7 @@ strtools
    add_suffix
    add_suffixes
    add_suffixes_with_base
+   make_unique
    seq_contains
    str_equals
    str_startswith

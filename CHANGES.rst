@@ -21,7 +21,7 @@ Added
 
 - Tools
 
-  - :func:`lltools.make_unique`
+  - :func:`strtools.make_unique`
 
 
 0.5 (2022-06-04)

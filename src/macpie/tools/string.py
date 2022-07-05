@@ -89,7 +89,7 @@ def make_unique(
         An alternative iterable of suffixes
     suffs_prefix : optional, default is empty string
         An alternative string to prepend to each suffix in ``suffs_iter``
-    suffs_prefix : optional, default is empty string
+    suffs_suffix : optional, default is empty string
         An alternative string to append to each suffix in ``suffs_iter``
     skip : optional, default is 0
         How many duplicates to skip before appending suffixes.
