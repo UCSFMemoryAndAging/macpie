@@ -1,16 +1,16 @@
 """
-Contains classes to help mask (i.e. de-identify) production data contained in your files,
-currently PHI data contained in ID and Date columns. In the MAC Lava database, for
-example, these would be any columns containing PIDNs, InstrIDs, and Dates of Service
-(e.g. DCDate, VDate).
+Contains classes to help mask (i.e. de-identify) production data contained in your
+files, currently PHI data contained in ID and Date columns. In the MAC Lava database,
+for example, these would be any columns containing PIDNs, InstrIDs, and Dates of
+Service (e.g. DCDate, VDate).
 
-Specifically, a per-ID replacement ID and a per-ID date-shift value
-(random number between 365 and 730) are created. Each unique ID is replaced with a
-unique masked ID, and all Dates are shifted back by the date-shift value for that
-particular ID. A second set of ID columns can be replaced with a second set of
-replacement IDs as well.
+Specifically, a per-ID replacement ID and date-shift value (random number between
+365 and 730) are created. Each unique ID is replaced with a unique masked ID,
+and all Dates are shifted back by the random date-shift value for that
+particular ID. A second set of ID columns (e.g. InstrID) can be replaced with another
+set of replacement IDs as well.
 
-Columns that are not masked will have their column header renamed to a generic
+Columns that are not masked by default have their column header renamed to a generic
 name (e.g. Col1, Col2).
 
 In summary, given a pandas DataFrame, these operations will be performed on the columns:
@@ -32,7 +32,6 @@ A dataframe can only be masked ONLY if there is at least one ID column found.
 
 """
 import collections
-import itertools
 import random
 from typing import Dict
 
@@ -43,212 +42,164 @@ from macpie import lltools
 
 
 class Masker:
-    """Masks data in pandas DataFrames.
+    """Masks data for pandas DataFrames.
 
-    :param mappers: One or more instances of :class:`macpie.util.IdMapCols`.
-    :param cols_to_drop: Columns to drop (e.g. because they contain PHI or unnecessarily
-                         risky data.
-    :param cols_no_mask: Columns not to mask (leave untouched). Columns specified elsewhere
-                         will override these columns.
+    Parameters
+    ----------
+    mask_map : MaskMap
+        An instance of :class:`MaskMap`
+    id_col_names : str, list
+        ID column names that should have their ids masked with `mask_map`
+    date_col_names : str, list
+        Date column names that should have their dates masked with `mask_map`
     """
 
-    def __init__(self, mappers, cols_to_drop=None, cols_no_mask=None):
-        self.mappers = mappers
-        self.cols_to_drop = cols_to_drop if cols_to_drop else []
-        self.cols_no_mask = cols_no_mask if cols_no_mask else []
+    day_shift_helper_col_prefix = "__day_shift_"
 
-    @property
-    def mappers(self):
-        return self._mappers
+    def __init__(self, mask_map, id_col_names, date_col_names=None):
+        self.id_col_to_masker_map = {}
+        self.date_col_to_masker_map = {}
+        self.add(mask_map, id_col_names, date_col_names=date_col_names)
 
-    @mappers.setter
-    def mappers(self, mappers):
-        self._mappers = []
-        mappers = lltools.maybe_make_list(mappers)
-        for mapper in mappers:
-            self.add_mapper(mapper)
-
-    @property
-    def id_cols(self):
-        return list(itertools.chain.from_iterable([mapper.id_cols for mapper in self.mappers]))
-
-    @property
-    def date_cols(self):
-        return list(itertools.chain.from_iterable([mapper.date_cols for mapper in self.mappers]))
-
-    @property
-    def cols(self):
-        return self.id_cols + self.date_cols
-
-    def add_mapper(self, mapper):
-        common_cols = lltools.common_members(self.cols, mapper.cols)
-        if common_cols:
-            raise KeyError(f"A mask for the following columns already exists: {str(common_cols)}")
-
-        self._mappers.append(mapper)
-
-    def get_mapper(self, col):
-        for mapper in self.mappers:
-            if mapper.has_col(col):
-                return mapper
-        return None
-
-    def get_mappers(self, cols):
-        return [self.get_mapper(col) for col in cols]
-
-    def mask_df(self, df):
-        id_cols_to_mask = [c for c in df.mac.get_col_names(self.id_cols, strict=False) if c]
-        if len(id_cols_to_mask) < 1:
-            print("No id cols to mask in df. Skipping.")
-            return
-
-        date_cols_to_mask = [c for c in df.mac.get_col_names(self.date_cols, strict=False) if c]
-
-        # all cols to mask
-        cols_to_mask = id_cols_to_mask + date_cols_to_mask
-
-        # identify columns not to mask (leave untouched)
-        cols_no_mask = [c for c in df.mac.get_col_names(self.cols_no_mask, strict=False) if c]
-        cols_no_mask = lltools.diff(cols_no_mask, cols_to_mask)
-
-        # identify columns to drop
-        cols_to_drop = [c for c in df.mac.get_col_names(self.cols_to_drop, strict=False) if c]
-        cols_to_drop = lltools.diff(cols_to_drop, cols_to_mask)
-
-        # identify columns to rename
-        cols_not_to_rename = set().union(cols_to_mask, cols_no_mask, cols_to_drop)
-        cols_to_rename = lltools.diff(df.columns.tolist(), cols_not_to_rename)
-
-        # now perform the masking
-
-        # 1. drop columns
-        result_df = df.drop(columns=cols_to_drop)
-
-        # 2. rename columns
-        col_rename_dict = {}
-        for num, col_to_rename in enumerate(cols_to_rename):
-            col_rename_dict[col_to_rename] = "Col" + str(num + 1)
-        result_df.rename(columns=col_rename_dict, inplace=True)
-
-        # 3. mask id columns
-        for id_col in id_cols_to_mask:
-            mapper = self.get_mapper(id_col)
-            if mapper:
-                mapper.mask_df_id_col(result_df, id_col)
-            else:
-                print("Mapper not found for id col", id_col)
-
-        # 4. mask date columns
-        for date_col_name in date_cols_to_mask:
-            mapper = self.get_mapper(date_col_name)
-            if mapper:
-                mapper.mask_df_date_col(result_df, date_col_name)
-            else:
-                print("Mapper not found for date col", date_col_name)
-
-        col_transformations = {**col_rename_dict, **dict.fromkeys(cols_to_drop)}
-
-        return (result_df, col_transformations)
-
-
-class IdMapCols:
-    """Associates ID and Date columns with an instance of IdMap.
-
-    :param id_cols: ID columns to mask using replacement IDs.
-    :param date_cols: Date columns to mask using a day shift value.
-    """
-
-    def __init__(self, id_map, id_cols, date_cols=None):
-        self.id_map = id_map
-        self.id_cols = [id_col.lower() for id_col in id_cols]
-        self.date_cols = (
-            [date_col_name.lower() for date_col_name in date_cols] if date_cols else []
-        )
-
-    def __len__(self):
-        return len(self.id_map)
-
-    @property
-    def cols(self):
-        return self.id_cols + self.date_cols
-
-    def has_col(self, col):
-        return col.lower() in self.cols
-
-    def get_id_cols_in_df(self, df):
-        """Masking a date column requires at least one id column in the same
-        DataFrame from which to retrieve the day_shift value. Given a dataframe,
-        this helps find the id columns.
+    def add(self, mask_map, id_col_names, date_col_names=None):
+        """Add a new :class:`MaskMap` with associated `id_col_names`
+        and `date_col_names`.
         """
-        return [c for c in df.mac.get_col_names(self.id_cols, strict=False) if c]
+        id_col_names = lltools.maybe_make_list(id_col_names)
+        date_col_names = lltools.maybe_make_list(date_col_names)
+        for id_col_name in id_col_names:
+            if id_col_name in self.id_col_to_masker_map:
+                raise KeyError(f"A mask for column '{id_col_name}' columns already exists.")
+            else:
+                self.id_col_to_masker_map[id_col_name] = mask_map
+        if date_col_names:
+            for date_col_name in date_col_names:
+                if date_col_name in self.date_col_to_masker_map:
+                    raise KeyError(f"A mask for column '{date_col_name}' columns already exists.")
+                else:
+                    self.date_col_to_masker_map[date_col_name] = (mask_map, id_col_names)
 
-    def mask_df_id_col(self, df, id_col):
-        df[id_col] = df[id_col].apply(
-            lambda x: self.id_map.get(x).masked_id if not pd.isnull(x) else None
+    def mask_df(self, df, rename_cols=True, norename_cols=None, drop_cols=None, inplace=False):
+        """Perform data mask.
+
+        Parameters
+        ----------
+        df : DataFrame
+            The dataframe to mask
+        rename_cols : bool, list, default is True
+            Columns that should be renamed. If True, all columns (except masked
+            columns) will be renamed
+        norename_cols : list
+            Columns that should not be renamed
+        drop_cols : list
+            Columns to drop (e.g. because they contain PHI or unnecessarily
+            risky data.
+        """
+
+        if inplace:
+            result = df
+        else:
+            result = df.copy()
+
+        # 1. drop cols
+        if drop_cols is None:
+            drop_cols = []
+        else:
+            result.drop(columns=drop_cols, inplace=True, errors="ignore")
+
+        # 2. mask cols
+        masked_cols = []
+
+        # 2a. mask date columns first
+        for col in result.columns:
+            col = col.lower()
+            if col in self.date_col_to_masker_map:
+                mask_map, id_col_names = self.date_col_to_masker_map[col]
+                for id_col_name in id_col_names:
+                    if id_col_name in result.columns:
+                        break
+                else:
+                    # Masking a date column requires at least one id column in the same
+                    # DataFrame from which to retrieve the day_shift value.
+                    raise ValueError(f"No id column found to mask the date column: '{col}'")
+
+                if not result.mac.is_date_col(col):
+                    result[col] = pd.to_datetime(result[col], errors="raise")
+                day_shift_helper_col_name = Masker.day_shift_helper_col_prefix + id_col_name
+                if day_shift_helper_col_name not in result.columns:
+                    result[day_shift_helper_col_name] = result[id_col_name].apply(
+                        lambda x: pd.Timedelta(mask_map[x].day_shift, unit="d")
+                        if not pd.isnull(x)
+                        else None
+                    )
+                result[col] = result[col] - result[day_shift_helper_col_name]
+                masked_cols.append(col)
+        result.drop(
+            columns=[
+                c for c in result.columns if c.startswith(Masker.day_shift_helper_col_prefix)
+            ],
+            inplace=True,
         )
 
-    def mask_df_date_col(self, df, date_col_name):
-        if not df.mac.is_date_col(date_col_name):
-            raise TypeError(f"Invalid date column '{date_col_name}'")
+        # 2b. mask id columns
+        for col in result.columns:
+            col = col.lower()
+            if col in self.id_col_to_masker_map:
+                mask_map = self.id_col_to_masker_map[col]
+                result[col] = result[col].apply(
+                    lambda x: mask_map[x].masked_id if not pd.isnull(x) else None
+                )
+                masked_cols.append(col)
 
-        id_cols_in_df = self.get_id_cols_in_df(df)
+        # 3. rename cols
+        col_rename_dict = {}
+        if rename_cols is not False:
+            if rename_cols is True:
+                if norename_cols is None:
+                    cols_not_to_rename = masked_cols
+                else:
+                    cols_not_to_rename = set().union(masked_cols, norename_cols)
+                rename_cols = lltools.diff(result.columns.tolist(), cols_not_to_rename)
+            for num, col_to_rename in enumerate(rename_cols):
+                col_rename_dict[col_to_rename] = "Col" + str(num + 1)
+            result.rename(columns=col_rename_dict, inplace=True)
 
-        if len(id_cols_in_df) < 1:
-            print(f"Need id col in df to mask date_col_name '{date_col_name}'. Skipping.")
-            return
+        col_transformations = {**col_rename_dict, **dict.fromkeys(drop_cols)}
 
-        id_col = id_cols_in_df[0]  # any will do
-
-        day_shift_helper_col = "__day_shift_" + id_col
-
-        df[day_shift_helper_col] = df[id_col].apply(
-            lambda x: pd.Timedelta(self.id_map.get(x).day_shift, unit="d")
-            if not pd.isnull(x)
-            else None
-        )
-
-        df[date_col_name] = df[date_col_name] - df[day_shift_helper_col]
-
-        df.drop(columns=[day_shift_helper_col], inplace=True)
-
-    @classmethod
-    def from_ids(cls, ids, id_cols, date_cols=None, random_seed=None):
-        id_map = IdMap.from_ids(ids, day_shift=bool(date_cols), random_seed=random_seed)
-        return cls(id_map, id_cols, date_cols=date_cols)
+        if not inplace:
+            return (result, col_transformations)
+        return (None, col_transformations)
 
 
 # stores the masking data for each unique, original ID
 _MaskedData = collections.namedtuple("_MaskedData", "masked_id, day_shift")
 
 
-class IdMap:
-    """Essentially a dict that maps IDs (ints) to instaces of _MaskedData,
-    a namedtuple containing the following data used for masking:
+class MaskMap(collections.UserDict):
+    """A dict that maps IDs (ints) to a namedtuple containing the following
+    named fields:
 
-    Parameters
-    ----------
-    masked_id :
-        a replacement ID
-    day_shift :
-        a random number between 365 and 730 used to shift
-        date values backwards by
+    * ``masked_id``: a replacement ID
+    * ``day_shift``: a random number between 365 and 730 used to shift \
+      date values backwards by
+
+    This class is meant to be used by :class:`Masker` for masking dataframes,
+    but can be used for other purposes.
     """
 
-    def __init__(self, id_map=None):
-        self.id_map = id_map if id_map else {}
-
     def __len__(self):
-        return len(self.id_map)
+        return len(self.data)
+
+    @property
+    def mask_map(self):
+        return self.data
 
     @property
     def headers(self):
-        return ["id", "masked", "day_shift"]
-
-    def get(self, id):
-        return self.id_map[int(id)]
+        return ["id", "masked_id", "day_shift"]
 
     def to_flat_rows(self):
-        return [(k, v.masked_id, v.day_shift) for k, v in self.id_map.items()]
+        return [(k, v.masked_id, v.day_shift) for k, v in self.data.items()]
 
     def to_tablib(self, headers=True):
         """Convert to a :class:`tablib.Dataset`."""
@@ -271,55 +222,64 @@ class IdMap:
         print(tlset.export("cli", tablefmt="grid"))
 
     @classmethod
-    def from_csv_file(cls, filepath, day_shift=True, headers=False):
+    def from_csv_file(cls, filepath, day_shift=True, headers=True):
         """
-        Construct :class:`IdMap` from a csv file.
+        Construct :class:`MaskMap` from a csv file, usually generated by
+        :meth:`to_csv_file`.
         """
         with open(filepath, "r") as fh:
             tlset = tl.Dataset().load(fh, headers=headers)
 
-        id_map = {}
+        mask_map: Dict[int, _MaskedData] = {}
         for row in tlset:
-            id_map[int(row[0])] = _MaskedData(int(row[1]), int(row[2]) if day_shift else 0)
+            mask_map[int(row[0])] = _MaskedData(int(row[1]), int(row[2]) if day_shift else 0)
 
-        return cls(id_map)
+        return cls(mask_map)
 
     @classmethod
-    def from_ids(cls, ids, day_shift=True, random_seed=None):
-        """Create a map given a list of IDs (ints)
-        :param ids: list of IDs (ints) to generate masked data for
-        :param day_shift: whether to also generate a random day_shift value for each id
-        :param random_seed: Random seed used to create masking data. Note that pseudo-random
-                            number generation always produces the same output given the same
-                            seed. So if the same seed and ID ranges are used, you should
-                            reliably get the same masking. This is useful if you want to use
-                            the same masking across multiple executions of the command,
-                            which is often the case.
+    def from_id_range(cls, min_id, max_id, day_shift=True, random_seed=None):
+        """Create a map given a range of IDs (ints)
+
+        Parameters
+        ----------
+        min_id : int
+            Lower bound of ids to mask.
+        max_id : int
+            Upper bound of ids to mask.
+        day_shift : bool, default True
+            Whether to also generate a random day_shift value for each id
+        random_seed : int, float, str, bytes, or bytearray
+            Seed value. Note that pseudo-random number generation always
+            produces the same output given the same seed. So if the same
+            seed and ID ranges are used, you should reliably get the same
+            masking. This is useful if you want to use the same masking
+            across multiple executions of the command, which is often the case.
+            'None' defaults to current system time.
         """
-        # change seed if you want different set of randoms
-        # 'None' defaults to current system time
-        random.seed(random_seed)
-
-        min_id = min(ids)
-        max_id = max(ids)
-
         # generate masked ids
-        masked_ids = list(range(min_id, max_id + 1))
-        random.shuffle(masked_ids)
+        masked_ids = shuffle_range(min_id, max_id, random_seed=random_seed)
 
         # generate random day shift value for each id
         if day_shift:
-            day_shifts = [random.randint(365, 730) for _ in range(min_id, max_id + 1)]
+            day_shifts = random_day_shifts(min_id, max_id, random_seed=random_seed)
 
-        id_map: Dict[int, _MaskedData] = {}
-
-        for i in ids:
-            if i in id_map:
-                continue
-
-            masked_index = i - min_id
-            id_map[i] = _MaskedData(
-                masked_ids[masked_index], day_shifts[masked_index] if day_shift else 0
+        mask_map: Dict[int, _MaskedData] = {}
+        for i in range(min_id, max_id + 1):
+            masked_idx = i - min_id
+            mask_map[i] = _MaskedData(
+                masked_ids[masked_idx], day_shifts[masked_idx] if day_shift else 0
             )
 
-        return cls(id_map)
+        return cls(mask_map)
+
+
+def shuffle_range(start, stop, random_seed=None):
+    random.seed(random_seed)
+    shuffled = list(range(start, stop + 1))
+    random.shuffle(shuffled)
+    return shuffled
+
+
+def random_day_shifts(start, stop, lower_bound=365, upper_bound=730, random_seed=None):
+    random.seed(random_seed)
+    return [random.randint(lower_bound, upper_bound) for _ in range(start, stop + 1)]

@@ -27,6 +27,5 @@ Masker
 .. autosummary::
    :toctree: api/
 
-   IdMap
-   IdMapCols
    Masker
+   MaskMap

@@ -1,10 +1,12 @@
+# TODO: UNFINISHED
+
 from pathlib import Path
 
 import click
 import pandas as pd
 
 from macpie import pathtools
-from macpie.util import IdMapCols, Masker
+from macpie.util import MaskMap, Masker
 
 from macpie.cli.common import show_parameter_source
 from macpie.cli.macpie.masker import masker_params
@@ -33,29 +35,26 @@ def masktable(
     date_cols,
     id2_range,
     id2_cols,
-    cols_no_mask,
+    cols_no_rename,
     cols_to_drop,
     output_id_maps,
 ):
     if not masked_tablename:
         masked_tablename = tablename
 
-    id_map_cols = IdMapCols.from_ids(
-        list(range(id_range[0], id_range[1])),
-        id_cols,
-        date_cols=date_cols,
-        random_seed=random_seed,
+    mask_map_1 = MaskMap.from_id_range(id_range[0], id_range[1], random_seed=random_seed)
+    mask_map_2 = MaskMap.from_id_range(
+        id2_range[0], id2_range[1], day_shift=False, random_seed=random_seed
     )
-    id2_map_cols = IdMapCols.from_ids(
-        list(range(id2_range[0], id2_range[1])), id2_cols, date_cols=False, random_seed=random_seed
-    )
-    masker = Masker(
-        [id_map_cols, id2_map_cols], cols_to_drop=cols_to_drop, cols_no_mask=cols_no_mask
-    )
+
+    masker = Masker(mask_map_1, id_cols, date_col_names=date_cols)
+    masker.add(mask_map_2, id2_cols)
 
     with sqlalchemy_connection(db_cfg) as cnx:
         table_df = pd.read_sql_table(tablename, cnx)
-        masked_df, col_transformations = masker.mask_df(table_df)
+        _, col_transformations = masker.mask_df(
+            table_df, drop_cols=cols_to_drop, norename_cols=cols_no_rename, inplace=True
+        )
 
     with mysql_connector_connection(db_cfg) as cnx:
         orig_table_def = show_create_table(cnx, tablename)
@@ -69,7 +68,7 @@ def masktable(
     with open(sql_script, "w") as f:
         f.write(new_table_def)
 
-    masked_df.to_csv(results_dir / (masked_tablename + ".csv"), header=True, index=False)
+    table_df.to_csv(results_dir / (masked_tablename + ".csv"), header=True, index=False)
 
 
 def create_table(cnx, table_def):

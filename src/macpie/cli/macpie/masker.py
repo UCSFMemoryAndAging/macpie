@@ -47,7 +47,7 @@ import pandas as pd
 
 import macpie as mp
 from macpie import pathtools
-from macpie.util import IdMapCols, Masker
+from macpie.util import Masker, MaskMap
 
 from macpie.cli.common import allowed_path, show_parameter_source
 
@@ -71,22 +71,13 @@ DEFAULT_ID2_RANGE = (1, 999999)  # upper range not included
 
 # Default columns not to mask (leave untouched), UNLESS they are
 # directly specified in the above defaults or by the user to mask.
-DEFAULT_COLS_NO_MASK = [
+DEFAULT_COLS_NO_RENAME = [
     "daydiff",
-    "dcdate",
-    "dcdate_link",
     "dcstatus",
-    "instrid",
-    "instrid_link",
-    "link_date",
-    "link_id",
-    "pidn",
-    "pidn_link",
     "vtype",
 ]
 
-# Default columns to drop because they contain PHI or unnecessarily
-# risky data
+# Default columns to drop because they contain PHI or unnecessarily risky data
 DEFAULT_COLS_TO_DROP = ["ageatdc", "careid", "instrtype"]
 
 
@@ -153,10 +144,10 @@ def masker_params(func):
     )(func)
 
     func = click.option(
-        "--cols-no-mask",
+        "--cols-no-rename",
         multiple=True,
-        envvar="MACPIE_MASKER_COLS_NO_MASK",
-        default=DEFAULT_COLS_NO_MASK,
+        envvar="MACPIE_MASKER_COLS_NO_RENAME",
+        default=DEFAULT_COLS_NO_RENAME,
         callback=show_parameter_source,
         help=("Columns not to mask (leave untouched). Other options will override these columns."),
     )(func)
@@ -197,11 +188,10 @@ def masker(
     date_cols,
     id2_range,
     id2_cols,
-    cols_no_mask,
+    cols_no_rename,
     cols_to_drop,
     output_id_maps,
 ):
-    command_meta = ctx.obj
     results_dir = pathtools.create_dir_with_datetime(dir_name_prefix="results_")
 
     valid_filepaths, invalid_filepaths = mp.pathtools.validate_paths(input_path, allowed_path)
@@ -212,51 +202,46 @@ def masker(
     if len(valid_filepaths) < 1:
         raise click.UsageError("ERROR: No valid files.")
 
-    id_map_cols = IdMapCols.from_ids(
-        list(range(id_range[0], id_range[1])),
-        id_cols,
-        date_cols=date_cols,
-        random_seed=random_seed,
+    mask_map_1 = MaskMap.from_id_range(id_range[0], id_range[1], random_seed=random_seed)
+    mask_map_2 = MaskMap.from_id_range(
+        id2_range[0], id2_range[1], day_shift=False, random_seed=random_seed
     )
 
-    id2_map_cols = IdMapCols.from_ids(
-        list(range(id2_range[0], id2_range[1])), id2_cols, date_cols=False, random_seed=random_seed
-    )
-
-    masker = Masker(
-        [id_map_cols, id2_map_cols], cols_to_drop=cols_to_drop, cols_no_mask=cols_no_mask
-    )
+    masker = Masker(mask_map_1, id_cols, date_col_names=date_cols)
+    masker.add(mask_map_2, id2_cols)
 
     for file_path in valid_filepaths:
         click.echo(f"\nProcessing file: {file_path.resolve()}")
-        mask_file(masker, file_path, results_dir)
+        output_filepath = results_dir / file_path.name
+
+        if file_path.suffix == ".csv":
+            df = mp.pandas.file_to_dataframe(file_path)
+            try:
+                masker.mask_df(
+                    df, drop_cols=cols_to_drop, norename_cols=cols_no_rename, inplace=True
+                )
+                df.to_csv(output_filepath, index=False)
+            except Exception as err:
+                click.echo(err)
+        elif file_path.suffix == ".xlsx":
+            writer = pd.ExcelWriter(output_filepath)
+            sheets_dict = pd.read_excel(file_path, sheet_name=None)
+            for sheet_name, sheet_df in sheets_dict.items():
+                click.echo(f"\tProcessing worksheet: {sheet_name}")
+                try:
+                    masker.mask_df(
+                        sheet_df,
+                        drop_cols=cols_to_drop,
+                        norename_cols=cols_no_rename,
+                        inplace=True,
+                    )
+                    sheet_df.to_excel(excel_writer=writer, sheet_name=sheet_name, index=False)
+                except Exception as err:
+                    click.echo(err)
+            writer.close()
 
     if output_id_maps:
         if id_cols:
-            id_map.to_csv_file(results_dir / "id_map.csv")
+            mask_map_1.to_csv_file(results_dir / "mask_map_1.csv")
         if id2_cols:
-            id2_map.to_csv_file(results_dir / "id2_map.csv")
-
-
-def mask_file(masker, input_filepath, output_dir):
-    output_filepath = output_dir / input_filepath.name
-
-    if input_filepath.suffix == ".csv":
-        df = mp.pandas.file_to_dataframe(input_filepath)
-        try:
-            masked_df, _ = masker.mask_df(df)
-            masked_df.to_csv(output_filepath, index=False)
-        except Exception as err:
-            click.echo(err)
-
-    elif input_filepath.suffix == ".xlsx":
-        writer = pd.ExcelWriter(output_filepath)
-        sheets_dict = pd.read_excel(input_filepath, sheet_name=None)
-        for name, sheet in sheets_dict.items():
-            click.echo(f"\tProcessing worksheet: {name}")
-            try:
-                sheet_masked, _ = masker.mask_df(sheet)
-                sheet_masked.to_excel(excel_writer=writer, sheet_name=name, index=False)
-            except Exception as err:
-                click.echo(err)
-        writer.save()
+            mask_map_2.to_csv_file(results_dir / "mask_map_2.csv")

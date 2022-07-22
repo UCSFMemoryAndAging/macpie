@@ -14,9 +14,7 @@
    .. autosummary::
    
       ~Masker.__init__
-      ~Masker.add_mapper
-      ~Masker.get_mapper
-      ~Masker.get_mappers
+      ~Masker.add
       ~Masker.mask_df
    
    
@@ -27,9 +25,6 @@
 
    .. autosummary::
    
-      ~Masker.cols
-      ~Masker.date_cols
-      ~Masker.id_cols
-      ~Masker.mappers
+      ~Masker.day_shift_helper_col_prefix
    
    
