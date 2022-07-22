@@ -114,7 +114,7 @@ shelltools
 .. autosummary::
    :toctree: api/
 
-   copy_file
+   copy_file_same_dir
 
 
 strtools
