@@ -2,6 +2,7 @@
 Public testing utility functions.
 """
 
+import openpyxl as pyxl
 import pandas as pd
 
 from macpie import datetimetools
@@ -57,17 +58,19 @@ def assert_dfs_equal(
         assert False, f"\nrow_diffs: {row_diffs}"
 
 
-def assert_excels_equal(wb1, wb2):
+def assert_excels_equal(filepath_1, filepath_2):
     """
     For testing equality of :class:`openpyxl.workbook.workbook.Workbook` objects
 
     Parameters
     ----------
-    wb1 : Workbook
-        Left Workbook to compare
-    wb2 : Workbook
-        Right Workbook to compare
+    filepath_1 : Path
+        Path of left Excel file to compare
+    filepath_2 : Path
+        Path of right Excel file to compare
     """
+    wb1 = pyxl.load_workbook(filepath_1, read_only=True, data_only=True)
+    wb2 = pyxl.load_workbook(filepath_2, read_only=True, data_only=True)
 
     # same sheets?
     assert set(wb1.sheetnames) == set(wb2.sheetnames)
