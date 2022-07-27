@@ -49,7 +49,7 @@ import macpie as mp
 from macpie import pathtools
 from macpie.util import Masker, MaskMap
 
-from macpie.cli.common import allowed_path, show_parameter_source
+from macpie.cli.common import allowed_path
 
 # Note that pseudo-random number generation always produces the same output
 # given the same seed. So if the same seed and ID ranges are used, you should
@@ -85,9 +85,7 @@ def masker_params(func):
     func = click.option(
         "--random-seed",
         type=int,
-        envvar="MACPIE_MASKER_RANDOM_SEED",
         default=None,
-        callback=show_parameter_source,
         help="Random seed used to create masking data.",
     )(func)
 
@@ -95,21 +93,16 @@ def masker_params(func):
         "--id-cols",
         multiple=True,
         type=str,
-        envvar="MACPIE_MASKER_ID_COLS",
         default=DEFAULT_ID_COLS,
         required=True,
-        callback=show_parameter_source,
         help="ID columns to mask with first set of replacement IDs.",
     )(func)
 
     func = click.option(
         "--id-range",
         nargs=2,
-        type=int,
-        envvar="MACPIE_MASKER_ID_RANGE",
         default=DEFAULT_ID_RANGE,
         required=True,
-        callback=show_parameter_source,
         help="Length-2 tuple specifying range of IDs possible in --id-cols.",
     )(func)
 
@@ -117,9 +110,7 @@ def masker_params(func):
         "--date-cols",
         multiple=True,
         type=str,
-        envvar="MACPIE_MASKER_DATE_COLS",
         default=DEFAULT_DATE_COLS,
-        callback=show_parameter_source,
         help="Date columns to mask with first set of replacement IDs.",
     )(func)
 
@@ -127,9 +118,7 @@ def masker_params(func):
         "--id2-cols",
         multiple=True,
         type=str,
-        envvar="MACPIE_MASKER_ID2_COLS",
         default=DEFAULT_ID2_COLS,
-        callback=show_parameter_source,
         help="ID columns to mask with second set of replacement IDs.",
     )(func)
 
@@ -137,34 +126,27 @@ def masker_params(func):
         "--id2-range",
         nargs=2,
         type=int,
-        envvar="MACPIE_MASKER_ID2_RANGE",
         default=DEFAULT_ID2_RANGE,
-        callback=show_parameter_source,
         help="Length-2 tuple specifying range of IDs possible in --id2-cols.",
     )(func)
 
     func = click.option(
         "--cols-no-rename",
         multiple=True,
-        envvar="MACPIE_MASKER_COLS_NO_RENAME",
         default=DEFAULT_COLS_NO_RENAME,
-        callback=show_parameter_source,
         help=("Columns not to mask (leave untouched). Other options will override these columns."),
     )(func)
 
     func = click.option(
         "--cols-to-drop",
         multiple=True,
-        envvar="MACPIE_MASKER_COLS_TO_DROP",
         default=DEFAULT_COLS_TO_DROP,
-        callback=show_parameter_source,
         help="Columns to drop (e.g. because they contain PHI or unnecessarily risky data.)",
     )(func)
 
     func = click.option(
         "--output-id-maps",
         is_flag=True,
-        callback=show_parameter_source,
         help="Whether to output the ID maps to a file for later use.",
     )(func)
 
@@ -224,21 +206,21 @@ def masker(
             except Exception as err:
                 click.echo(err)
         elif file_path.suffix == ".xlsx":
-            writer = pd.ExcelWriter(output_filepath)
-            sheets_dict = pd.read_excel(file_path, sheet_name=None)
-            for sheet_name, sheet_df in sheets_dict.items():
-                click.echo(f"\tProcessing worksheet: {sheet_name}")
-                try:
-                    masker.mask_df(
-                        sheet_df,
-                        drop_cols=cols_to_drop,
-                        norename_cols=cols_no_rename,
-                        inplace=True,
-                    )
-                    sheet_df.to_excel(excel_writer=writer, sheet_name=sheet_name, index=False)
-                except Exception as err:
-                    click.echo(err)
-            writer.close()
+            with pd.ExcelWriter(output_filepath) as writer:
+                sheets_dict = pd.read_excel(file_path, sheet_name=None)
+                for sheet_name, sheet_df in sheets_dict.items():
+                    click.echo(f"\tProcessing worksheet: {sheet_name}")
+                    try:
+                        masker.mask_df(
+                            sheet_df,
+                            drop_cols=cols_to_drop,
+                            norename_cols=cols_no_rename,
+                            inplace=True,
+                        )
+                    except Exception as err:
+                        click.echo(err)
+                    else:
+                        sheet_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
     if output_id_maps:
         if id_cols:

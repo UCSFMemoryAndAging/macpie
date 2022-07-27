@@ -8,7 +8,6 @@ import pandas as pd
 from macpie import pathtools
 from macpie.util import MaskMap, Masker
 
-from macpie.cli.common import show_parameter_source
 from macpie.cli.macpie.masker import masker_params
 
 from .dbconnections import mysql_connector_connection, sqlalchemy_connection
@@ -20,7 +19,6 @@ from .helpers import execute_multiline_query, show_create_table, transform_table
 @click.option(
     "--masked-tablename",
     type=str,
-    callback=show_parameter_source,
     help="A masked name for the table.",
 )
 @click.argument("tablename", nargs=1)

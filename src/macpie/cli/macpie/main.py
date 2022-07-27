@@ -1,18 +1,19 @@
-import abc
-import collections
-import json
-import platform
-from pathlib import Path
-
 import click
 
-from macpie import __version__, pathtools, tablibtools, MACPieJSONEncoder
+from macpie import __version__
 from macpie._config import get_option
+
+from macpie.cli.helpers import get_load_dotenv, load_dotenv
 
 from ._common import CommandMeta
 
+if get_load_dotenv(command="MACPIE"):
+    load_dotenv(command="MACPIE")
 
-@click.group()
+CONTEXT_SETTINGS = dict(auto_envvar_prefix="MACPIE")
+
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
 @click.option("-i", "--id-col", default=get_option("dataset.id_col_name"), help="ID Column Header")
 @click.option(

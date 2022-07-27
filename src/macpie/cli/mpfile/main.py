@@ -1,7 +1,5 @@
 import click
 
-from macpie.cli.common import show_parameter_source
-
 from .compare import compare
 
 

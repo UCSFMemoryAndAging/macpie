@@ -2,8 +2,6 @@ import os
 
 import click
 
-from macpie.cli.common import show_parameter_source
-
 from .createproc import createproc
 from .createtable import createtable
 from .masktable import masktable
@@ -28,25 +26,19 @@ def validate_password(ctx, param, value):
 @click.option(
     "-h",
     "--host",
-    envvar="MYSQL_HOST",
     default="localhost",
-    callback=show_parameter_source,
     help="Host address of the database.",
 )
 @click.option(
     "-P",
     "--port",
-    envvar="MYSQL_TCP_PORT",
     default=3306,
-    callback=show_parameter_source,
     type=int,
     help="Port number to use for connection. Honors " "$MYSQL_TCP_PORT.",
 )
 @click.option(
     "-u",
     "--user",
-    envvar="MACPIE_MYSQL_USER",
-    callback=show_parameter_source,
     help="User name to connect to the database.",
 )
 @click.option(
