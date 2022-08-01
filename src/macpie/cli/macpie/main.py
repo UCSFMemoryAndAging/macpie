@@ -34,11 +34,13 @@ def main(ctx, verbose, id_col, date_col, id2_col):
     ctx.obj = command_meta
 
 
+from .envfile import envfile
 from .keepone import keepone
 from .link import link
 from .masker import masker
 from .merge import merge
 
+main.add_command(envfile)
 main.add_command(keepone)
 main.add_command(link)
 main.add_command(masker)
