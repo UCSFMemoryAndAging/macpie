@@ -4,6 +4,15 @@ import os
 import click
 
 
+def overwrite_envfile_option(func):
+    func = click.option(
+        "--overwrite",
+        is_flag=True,
+        help="Whether to overwrite existing env file if it exists.",
+    )(func)
+    return func
+
+
 def get_all_commands(ctx: click.Context):
     parent_cmd = ctx.parent.command
     sub_cmds = []
@@ -35,11 +44,13 @@ def get_auto_envvars(ctx: click.Context):
             yield (envvar_name, option)
 
 
-def create_envfile(ctx: click.Context):
+def create_envfile(ctx: click.Context, overwrite=False):
     env_filename = "." + ctx.parent.auto_envvar_prefix.lower() + "env"
     env_filepath = pathlib.Path(pathlib.Path.home() / env_filename)
-    if env_filepath.exists():
-        raise click.UsageError(f"ERROR: env file already exists: {env_filepath}")
+    if not overwrite and env_filepath.exists():
+        raise click.UsageError(
+            f"ERROR: env file already exists: {env_filepath}. Use '--overwrite' option to overwrite file."
+        )
 
     with open(env_filepath, "w") as f:
         for envvar_name, option in get_auto_envvars(ctx):
