@@ -19,10 +19,19 @@ Release notes
 Added
 ~~~~~
 
+- CLI
+
+  - `macpie envfile` command
+
 - Tools
 
+  - :func:`shelltools.copy_file_same_dir`
   - :func:`strtools.make_unique`
 
+Changed
+~~~~~~~
+- Refactored :ref:`Masker <util-masker>` classes
+- ResultsResource and output file names
 
 0.5 (2022-06-04)
 ----------------
