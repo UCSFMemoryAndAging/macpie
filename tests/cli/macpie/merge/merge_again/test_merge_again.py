@@ -45,7 +45,7 @@ def test_merge_again(tmp_path):
         assert results.exit_code == 0
 
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx"))
+        results_path = next(Path(".").glob("**/*.xlsx"))
 
         # copy file to current dir if you want to debug more
         if output_dir is not None:

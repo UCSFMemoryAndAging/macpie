@@ -13,7 +13,7 @@ def create_dir_with_datetime(dir_name_prefix="new_folder_", where=Path(".")):
     return create_subdir(new_dir_name, where=where)
 
 
-def create_subdir(subdir_name: str, where=Path(".")):
+def create_subdir(subdir_name: str, where=Path("."), exists_ok=False):
     """Creates a sub directory with the current date/time appended to
     the directory name.
 
@@ -28,7 +28,7 @@ def create_subdir(subdir_name: str, where=Path(".")):
                             Defaults to None, which will use "new_folder".
     """
     final_dir = where / subdir_name
-    final_dir.mkdir(exist_ok=False)
+    final_dir.mkdir(exist_ok=exists_ok)
     return final_dir
 
 

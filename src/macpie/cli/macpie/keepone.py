@@ -63,7 +63,7 @@ def keepone(results_resource, keep, primary):
 
         collection.append(dset)
 
-    with MACPieExcelWriter(results_resource.results_file) as writer:
+    with MACPieExcelWriter(results_resource.create_results_filepath()) as writer:
         collection.to_excel(writer)
         results_resource.get_command_info().to_excel(writer)
         get_client_system_info().to_excel(writer)

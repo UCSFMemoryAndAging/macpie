@@ -17,5 +17,5 @@ from macpie.cli.core import pass_results_resource
 def merge(results_resource, keep_original, primary):
     results = read_excel(primary, as_collection=True)
 
-    with MACPieExcelWriter(results_resource.results_file) as writer:
+    with MACPieExcelWriter(results_resource.create_results_filepath()) as writer:
         results.to_excel(writer, merge=True)

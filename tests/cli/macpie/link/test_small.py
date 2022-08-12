@@ -139,7 +139,7 @@ def test_small_no_link_id(tmp_path):
         assert results.exit_code == 0
 
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx"))
+        results_path = next(Path(".").glob("**/*.xlsx"))
 
         # copy file to current dir if you want to debug more
         if output_dir is not None:
@@ -191,7 +191,7 @@ def test_small_link_suffixes(tmp_path):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+        results_path = next(Path(".").glob("**/*.xlsx")).resolve()
 
         expected_result = pd.read_excel(
             current_dir / "small_link_suffixes_expected_result.xlsx",

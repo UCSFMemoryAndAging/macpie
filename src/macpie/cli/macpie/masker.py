@@ -189,9 +189,11 @@ def masker(
     masker = Masker(mask_map_1, id_cols, date_col_names=date_cols)
     masker.add(mask_map_2, id2_cols)
 
+    results_dir = results_resource.create_results_dir()
+
     for file_path in valid_filepaths:
         click.echo(f"\nProcessing file: {file_path.resolve()}")
-        output_filepath = results_resource.results_dir / file_path.name
+        output_filepath = results_dir / file_path.name
 
         if file_path.suffix == ".csv":
             df = mp.pandas.file_to_dataframe(file_path)
@@ -221,6 +223,6 @@ def masker(
 
     if output_id_maps:
         if id_cols:
-            mask_map_1.to_csv_file(results_resource.results_dir / "mask_map_1.csv")
+            mask_map_1.to_csv_file(results_dir / "mask_map_1.csv")
         if id2_cols:
-            mask_map_2.to_csv_file(results_resource.results_dir / "mask_map_2.csv")
+            mask_map_2.to_csv_file(results_dir / "mask_map_2.csv")

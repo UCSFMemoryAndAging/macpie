@@ -78,7 +78,6 @@ def link(
     """
     Link command
     """
-
     if not allowed_path(primary):
         raise click.UsageError(f"ERROR: Invalid primary file: {primary}")
 
@@ -149,7 +148,7 @@ def link(
                 click.echo(e)
                 raise (e)
 
-    with MACPieExcelWriter(results_resource.results_file) as writer:
+    with MACPieExcelWriter(results_resource.create_results_filepath()) as writer:
         collection.to_excel(writer, merge=merge_results)
         if results_resource.verbose:
             collection.get_dataset_history_info().to_excel(writer)

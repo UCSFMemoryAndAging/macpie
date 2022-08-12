@@ -41,7 +41,7 @@ def cli_link_small_with_merge(tmp_path_factory):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+        results_path = next(Path(".").glob("**/*.xlsx")).resolve()
 
     return results_path
 
@@ -76,7 +76,7 @@ def cli_link_small_no_merge(tmp_path_factory):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+        results_path = next(Path(".").glob("**/*.xlsx")).resolve()
 
     return results_path
 
@@ -111,7 +111,7 @@ def cli_link_full_no_merge(tmp_path_factory):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+        results_path = next(Path(".").glob("**/*.xlsx")).resolve()
 
     return results_path
 
@@ -145,6 +145,6 @@ def cli_link_small_with_dups(tmp_path_factory):
         results = runner.invoke(main, cli_args)
         assert results.exit_code == 0
         # get the results file
-        results_path = next(Path(".").glob("**/result*xlsx")).resolve()
+        results_path = next(Path(".").glob("**/*.xlsx")).resolve()
 
     return results_path

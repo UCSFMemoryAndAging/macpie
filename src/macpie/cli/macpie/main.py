@@ -6,13 +6,13 @@ from macpie._config import get_option
 from macpie.cli.core import ResultsResource
 from macpie.cli.env import get_load_dotenv, load_dotenv
 
-if get_load_dotenv(command="MACPIE"):
-    load_dotenv(command="MACPIE")
+COMMAND_NAME = "MACPIE"
 
-CONTEXT_SETTINGS = dict(auto_envvar_prefix="MACPIE")
+if get_load_dotenv(command=COMMAND_NAME):
+    load_dotenv(command=COMMAND_NAME)
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group(context_settings=dict(auto_envvar_prefix=COMMAND_NAME))
 @click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
 @click.option("-i", "--id-col", default=get_option("dataset.id_col_name"), help="ID Column Header")
 @click.option(

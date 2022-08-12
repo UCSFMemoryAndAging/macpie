@@ -15,7 +15,7 @@ def create_envfile(ctx: click.Context, overwrite=False):
         )
 
     with open(env_filepath, "w") as f:
-        for envvar_name, option in get_auto_envvars(ctx):
+        for envvar_name, option in get_auto_envvars(ctx.parent):
             opts, help = option.get_help_record(ctx)
 
             default_value = option.get_default(ctx, call=True)
@@ -33,13 +33,11 @@ def create_envfile(ctx: click.Context, overwrite=False):
 def get_auto_envvars(ctx: click.Context):
     parent_cmd, sub_cmds = get_all_commands(ctx)
     for option in get_command_option_params(parent_cmd):
-        envvar_name = "_".join([ctx.parent.auto_envvar_prefix, option.name]).upper()
+        envvar_name = "_".join([ctx.auto_envvar_prefix, option.name]).upper()
         yield (envvar_name, option)
     for sub_cmd in sub_cmds:
         for option in get_command_option_params(sub_cmd):
-            envvar_name = "_".join(
-                [ctx.parent.auto_envvar_prefix, sub_cmd.name, option.name]
-            ).upper()
+            envvar_name = "_".join([ctx.auto_envvar_prefix, sub_cmd.name, option.name]).upper()
             yield (envvar_name, option)
 
 
