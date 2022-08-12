@@ -46,10 +46,9 @@ import click
 import pandas as pd
 
 import macpie as mp
-from macpie import pathtools
 from macpie.util import Masker, MaskMap
 
-from macpie.cli.common import allowed_path
+from macpie.cli.core import allowed_path, pass_results_resource
 
 # Note that pseudo-random number generation always produces the same output
 # given the same seed. So if the same seed and ID ranges are used, you should
@@ -160,9 +159,9 @@ def masker_params(func):
     nargs=-1,
     type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
-@click.pass_context
+@pass_results_resource
 def masker(
-    ctx,
+    results_resource,
     input_path,
     random_seed,
     id_cols,
@@ -174,8 +173,6 @@ def masker(
     cols_to_drop,
     output_id_maps,
 ):
-    results_dir = pathtools.create_dir_with_datetime(dir_name_prefix="results_")
-
     valid_filepaths, invalid_filepaths = mp.pathtools.validate_paths(input_path, allowed_path)
 
     for i in invalid_filepaths:
@@ -194,7 +191,7 @@ def masker(
 
     for file_path in valid_filepaths:
         click.echo(f"\nProcessing file: {file_path.resolve()}")
-        output_filepath = results_dir / file_path.name
+        output_filepath = results_resource.results_dir / file_path.name
 
         if file_path.suffix == ".csv":
             df = mp.pandas.file_to_dataframe(file_path)
@@ -224,6 +221,6 @@ def masker(
 
     if output_id_maps:
         if id_cols:
-            mask_map_1.to_csv_file(results_dir / "mask_map_1.csv")
+            mask_map_1.to_csv_file(results_resource.results_dir / "mask_map_1.csv")
         if id2_cols:
-            mask_map_2.to_csv_file(results_dir / "mask_map_2.csv")
+            mask_map_2.to_csv_file(results_resource.results_dir / "mask_map_2.csv")

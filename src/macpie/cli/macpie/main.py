@@ -3,9 +3,8 @@ import click
 from macpie import __version__
 from macpie._config import get_option
 
-from macpie.cli.helpers import get_load_dotenv, load_dotenv
-
-from ._common import CommandMeta
+from macpie.cli.core import ResultsResource
+from macpie.cli.env import get_load_dotenv, load_dotenv
 
 if get_load_dotenv(command="MACPIE"):
     load_dotenv(command="MACPIE")
@@ -25,13 +24,7 @@ CONTEXT_SETTINGS = dict(auto_envvar_prefix="MACPIE")
 @click.version_option(__version__)
 @click.pass_context
 def main(ctx, verbose, id_col, date_col, id2_col):
-    command_meta = CommandMeta(ctx.info_name)
-    command_meta.add_opt("verbose", verbose)
-    command_meta.add_opt("id_col", id_col)
-    command_meta.add_opt("date_col", date_col)
-    command_meta.add_opt("id2_col", id2_col)
-
-    ctx.obj = command_meta
+    ctx.obj = ctx.with_resource(ResultsResource(ctx=ctx, verbose=verbose))
 
 
 from .envfile import envfile

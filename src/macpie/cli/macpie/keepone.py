@@ -4,9 +4,8 @@ import click
 
 from macpie import BasicList, Dataset, MACPieExcelWriter, pathtools
 from macpie._config import get_option
-from macpie.cli.common import allowed_path
-
-from ._common import _BaseCommand
+from macpie.cli.core import allowed_path, pass_results_resource
+from macpie.cli.helpers import get_client_system_info
 
 
 @click.command()
@@ -24,8 +23,8 @@ from ._common import _BaseCommand
     nargs=-1,
     type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
-@click.pass_context
-def keepone(ctx, keep, primary):
+@pass_results_resource
+def keepone(results_resource, keep, primary):
     """
     This command groups rows that have the same :option:`--id2-col` value, and
     allows you to keep only the earliest or latest row in each group as
@@ -36,62 +35,35 @@ def keepone(ctx, keep, primary):
         A file path
     """
 
-    command_meta = ctx.obj
-    command_meta.command_name = ctx.info_name
-    command_meta.add_opt("keep", keep)
-    command_meta.add_arg("primary", primary)
+    # validate
+    primary_valid, primary_invalid = pathtools.validate_paths(primary, allowed_path)
 
-    cmd = _KeepOneCommand(command_meta)
-    cmd.run_all()
+    for p in primary_invalid:
+        click.echo(f"WARNING: Ignoring invalid file: {p}")
 
+    if len(primary_valid) < 1:
+        raise click.UsageError("ERROR: No valid files.")
 
-class _KeepOneCommand(_BaseCommand):
-    def __init__(self, command_meta) -> None:
-        super().__init__(command_meta)
+    primary = primary_valid
 
-        self.verbose = command_meta.get_opt("verbose")
-        self.id_col = command_meta.get_opt("id_col")
-        self.date_col = command_meta.get_opt("date_col")
-        self.id2_col = command_meta.get_opt("id2_col")
-        self.keep = command_meta.get_opt("keep")
-        self.primary = command_meta.get_arg("primary")
+    collection = BasicList()
+    for filepath in primary:
+        dset = Dataset.from_file(
+            filepath,
+            id_col_name=results_resource.ctx.params["id_col"],
+            date_col_name=results_resource.ctx.params["date_col"],
+            id2_col_name=results_resource.ctx.params["id2_col"],
+            name=filepath.stem,
+        )
 
-        self._validate()
+        dset = dset.group_by_keep_one(keep=keep, drop_duplicates=False)
 
-    def execute(self):
-        collection = BasicList()
+        if get_option("column.system.duplicates") in dset.columns:
+            dset.add_tag(Dataset.tag_duplicates)
 
-        for filepath in self.primary:
-            dset = Dataset.from_file(
-                filepath,
-                id_col_name=self.id_col,
-                date_col_name=self.date_col,
-                id2_col_name=self.id2_col,
-                name=filepath.stem,
-            )
+        collection.append(dset)
 
-            dset = dset.group_by_keep_one(keep=self.keep, drop_duplicates=False)
-
-            if get_option("column.system.duplicates") in dset.columns:
-                dset.add_tag(Dataset.tag_duplicates)
-
-            collection.append(dset)
-
-        self.results = collection
-
-    def output_results(self):
-        with MACPieExcelWriter(self.results_file) as writer:
-            self.results.to_excel(writer)
-            self.command_meta.get_command_info().to_excel(writer)
-            self.command_meta.get_client_system_info().to_excel(writer)
-
-    def _validate(self):
-        primary_valid, primary_invalid = pathtools.validate_paths(self.primary, allowed_path)
-
-        for p in primary_invalid:
-            click.echo(f"WARNING: Ignoring invalid file: {p}")
-
-        if len(primary_valid) < 1:
-            raise click.UsageError("ERROR: No valid files.")
-
-        self.primary = primary_valid
+    with MACPieExcelWriter(results_resource.results_file) as writer:
+        collection.to_excel(writer)
+        results_resource.get_command_info().to_excel(writer)
+        get_client_system_info().to_excel(writer)

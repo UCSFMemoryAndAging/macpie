@@ -177,6 +177,12 @@ class TablibDataset:
         """
         return self.from_tlset(self.tlset.filter(tag))
 
+    def stack(self, other):
+        """Stack two instances together by joining at the row level,
+        and return new combined instance.
+        """
+        return self.from_tlset(self.tlset.stack(other.tlset))
+
     def to_excel(self, excel_writer):
         """Write to an excel file using an :class:`MACPieExcelWriter` instance."""
         excel_writer.write_tablib_dataset(self.tlset)

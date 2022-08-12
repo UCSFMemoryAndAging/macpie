@@ -48,7 +48,7 @@ def validate_password(ctx, param, value):
     callback=validate_password,
     help="Password to connect to the database.",
 )
-@click.argument("database", default="lava_mac_dev", nargs=1, callback=show_parameter_source)
+@click.argument("database", default="lava_mac_dev", nargs=1)
 @click.pass_context
 def main(ctx, host, port, user, password, database):
     ctx.obj = {
