@@ -295,18 +295,22 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
         tlset = self.parse_tablib_dataset(sheet_name)
         return tablibtools.DictLikeDataset.from_tlset(tlset)
 
+
+"""
     def load_workbook(self, filepath_or_buffer):
         # Closes an xlsx file in read-only mode
         # https://stackoverflow.com/questions/31416842/openpyxl-does-not-close-excel-workbook-in-read-only-mode
         import io
 
         if isinstance(filepath_or_buffer, io.BufferedReader):
+
             return super().load_workbook(filepath_or_buffer)
 
         with open(filepath_or_buffer, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
 
         return pyxl.load_workbook(in_mem_file, read_only=True, data_only=True, keep_links=False)
+"""
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):

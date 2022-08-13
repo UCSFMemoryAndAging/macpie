@@ -69,8 +69,8 @@ def assert_excels_equal(filepath_1, filepath_2):
     filepath_2 : Path
         Path of right Excel file to compare
     """
-    wb1 = pyxl.load_workbook(filepath_1, read_only=True, data_only=True)
-    wb2 = pyxl.load_workbook(filepath_2, read_only=True, data_only=True)
+    wb1 = pyxl.load_workbook(filepath_1)
+    wb2 = pyxl.load_workbook(filepath_2)
 
     # same sheets?
     assert set(wb1.sheetnames) == set(wb2.sheetnames)

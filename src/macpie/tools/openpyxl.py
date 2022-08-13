@@ -40,9 +40,8 @@ def get_column_index(ws, col_header: str = None):
 
 def get_sheet_names(filepath_or_buffer):
     """Get all sheet names from an Excel file."""
-    book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
+    book = pyxl.load_workbook(filepath_or_buffer)
     sheetnames = book.sheetnames
-    book.close()
     return sheetnames
 
 

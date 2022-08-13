@@ -77,7 +77,7 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path):
         if output_dir is not None:
             copy(results_path, current_dir)
 
-        results_wb = pyxl.load_workbook(results_path, read_only=True, data_only=True)
+        results_wb = pyxl.load_workbook(results_path)
         # expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
 
         expected_sheetnames = [

@@ -10,7 +10,7 @@ data_dir = Path("tests/data/").resolve()
 io_data_dir = Path("tests/io/data/").resolve()
 
 f = io_data_dir / "multi_index.xlsx"
-wb = pyxl.load_workbook(str(f), read_only=True, data_only=True)
+wb = pyxl.load_workbook(str(f))
 
 
 def test():

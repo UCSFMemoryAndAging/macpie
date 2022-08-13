@@ -71,7 +71,7 @@ def excel_to_dataframe(filepath_or_buffer, sheet_name=None, engine="openpyxl"): 
     """
 
     if engine == "openpyxl":
-        book = pyxl.load_workbook(filepath_or_buffer, read_only=True, data_only=True)
+        book = pyxl.load_workbook(filepath_or_buffer)
         if sheet_name is None:
             ws = book.active
         else:

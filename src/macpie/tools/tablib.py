@@ -271,5 +271,5 @@ class DictLikeDataset(TablibDataset):
 def read_excel(filepath, sheet_name=None, headers=True):
     """Returns a Tablib Dataset from an Excel file."""
 
-    wb = pyxl.load_workbook(filepath, read_only=True, data_only=True)
+    wb = pyxl.load_workbook(filepath)
     return openpyxltools.to_tablib_dataset(wb, sheet_name=sheet_name, headers=headers)
