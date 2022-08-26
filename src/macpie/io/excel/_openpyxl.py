@@ -24,7 +24,7 @@ class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelRead
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
         df = openpyxltools.to_df(ws)
         df = df.applymap(json.loads)
-        dld = tablibtools.DictLikeDataset.from_df(df)
+        dld = tablibtools.DictLikeTablibDataset.from_df(df)
         return dld.to_dict()
 
     def parse_tablib_dataset(
@@ -49,7 +49,7 @@ class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
         else:
             sheet_name = COLLECTION_SHEET_NAME
 
-        dld = tablibtools.DictLikeDataset.from_dict(excel_dict)
+        dld = tablibtools.DictLikeTablibDataset.from_dict(excel_dict)
 
         if sheet_name in self.book.sheetnames:
             ws = self.book[sheet_name]

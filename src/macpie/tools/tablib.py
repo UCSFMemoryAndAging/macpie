@@ -161,13 +161,10 @@ class MacpieTablibDataset(tl.Dataset):
         return read_excel(filepath, sheet_name, tablib_class=cls)
 
 
-class DictLikeDataset(MacpieTablibDataset):
+class DictLikeTablibDataset(MacpieTablibDataset):
     """Tabular representation of basic information using two columns
     only: a ``Key`` column and a ``Value`` column, using
     a :class:`macpie.tablibtools.MacpieTablibDataset`.
-
-    All ``Value``'s are encoded as JSON. But you can call the ``to_dict()`` method
-    to decode the JSON back to native Python objects.
 
     It is a subclass of :class:`macpie.tablibtools.MacpieTablibDataset`, and therefore
     can be initialized with data the same way.
@@ -195,7 +192,7 @@ class DictLikeDataset(MacpieTablibDataset):
         return dict(self.data)
 
     @classmethod
-    def from_dict(cls, dictionary, **kwargs) -> "DictLikeDataset":
+    def from_dict(cls, dictionary, **kwargs) -> "DictLikeTablibDataset":
         """Construct :class:`Info` from a Python dictionary."""
         tags = kwargs.pop("tags", [])
         instance = cls(**kwargs)

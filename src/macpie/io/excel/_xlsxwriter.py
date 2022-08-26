@@ -58,7 +58,7 @@ class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
         else:
             sheet_name = COLLECTION_SHEET_NAME
 
-        dld = tablibtools.DictLikeDataset.from_dict(excel_dict)
+        dld = tablibtools.DictLikeTablibDataset.from_dict(excel_dict)
 
         ws = self.book.get_worksheet_by_name(sheet_name)
 
