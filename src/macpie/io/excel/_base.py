@@ -3,6 +3,7 @@ import re
 
 import openpyxl as pyxl
 import pandas as pd
+from macpie.tools.tablib import MacpieTablibDataset
 import tablib as tl
 
 import macpie as mp
@@ -147,17 +148,16 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         collection_dict = self._reader.parse_excel_dict_sheet(COLLECTION_SHEET_NAME)
         return collection_dict
 
-    def parse_tablib_dataset(self, sheet_name=None, headers=True):
-        return self._reader.parse_tablib_dataset(sheet_name=sheet_name, headers=headers)
+    def parse_tablib_dataset(
+        self, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset
+    ):
+        return self._reader.parse_tablib_dataset(
+            sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
+        )
 
-    def parse_simple_dataset(self, sheet_name=None, headers=True):
-        tlset = self.parse_tablib_dataset(sheet_name=sheet_name, headers=headers)
-        return tablibtools.TablibDataset.from_tlset(tlset)
-
-    def parse_dictlike_dataset(self, sheet_name):
-        return self._reader.parse_dictlike_dataset(sheet_name)
-
-    def parse_tablib_datasets(self, sheet_name=None, headers=True):
+    def parse_tablib_datasets(
+        self, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset
+    ):
         ret_dict = False
 
         if isinstance(sheet_name, list):
@@ -177,7 +177,9 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
             else:
                 sheetname = self._reader.get_sheetname_by_index(asheetname)
 
-            tlset = self.parse_tablib_dataset(sheet_name=sheetname, headers=headers)
+            tlset = self.parse_tablib_dataset(
+                sheet_name=sheetname, headers=headers, tablib_class=tablib_class
+            )
             output[asheetname] = tlset
 
         if ret_dict:
@@ -185,17 +187,10 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         else:
             return output[asheetname]
 
-    def parse_simple_datasets(self, sheet_name=None, headers=True):
-        tlset = self.parse_tablib_datasets(sheet_name=sheet_name, headers=headers)
-        if type(tlset) is dict:
-            return {k: tablibtools.TablibDataset.from_tlset(v) for (k, v) in tlset.items()}
-        else:
-            return tablibtools.TablibDataset.from_tlset(tlset)
-
     def parse_dataset_fields(self, sheet_name):
-        sdset = self.parse_simple_dataset(sheet_name)
+        tldset = self.parse_tablib_dataset(sheet_name)
         dataset_fields = mp.DatasetFields()
-        sdset.df.apply(
+        tldset.df.apply(
             lambda x: dataset_fields.append_series(x, with_tags=True, tag_value="x"),
             axis="columns",
         )
@@ -284,33 +279,8 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
         pass
 
     @abc.abstractmethod
-    def parse_tablib_dataset(self, sheet_name, headers=True):
+    def parse_tablib_dataset(self, sheet_name, headers=True, tablib_class=MacpieTablibDataset):
         pass
-
-    def parse_simple_dataset(self, sheet_name):
-        tlset = self.parse_tablib_dataset(sheet_name)
-        return tablibtools.TablibDataset.from_tlset(tlset)
-
-    def parse_dictlike_dataset(self, sheet_name):
-        tlset = self.parse_tablib_dataset(sheet_name)
-        return tablibtools.DictLikeDataset.from_tlset(tlset)
-
-
-"""
-    def load_workbook(self, filepath_or_buffer):
-        # Closes an xlsx file in read-only mode
-        # https://stackoverflow.com/questions/31416842/openpyxl-does-not-close-excel-workbook-in-read-only-mode
-        import io
-
-        if isinstance(filepath_or_buffer, io.BufferedReader):
-
-            return super().load_workbook(filepath_or_buffer)
-
-        with open(filepath_or_buffer, "rb") as f:
-            in_mem_file = io.BytesIO(f.read())
-
-        return pyxl.load_workbook(in_mem_file, read_only=True, data_only=True, keep_links=False)
-"""
 
 
 class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
@@ -383,9 +353,6 @@ class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
     @abc.abstractmethod
     def sheet_names(self):
         pass
-
-    def write_simple_dataset(self, simple_dataset: tablibtools.TablibDataset):
-        self.write_tablib_dataset(simple_dataset.tlset)
 
     def finalized_sheet_order(self, sheetnames):
         try:

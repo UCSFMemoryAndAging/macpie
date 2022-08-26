@@ -18,7 +18,7 @@ def get_all_commands(ctx: click.Context):
 
 
 def get_client_system_info():
-    info = tablibtools.TablibDataset(title="_mp_system_info")
+    info = tablibtools.MacpieTablibDataset(title="_mp_system_info")
     info.headers = ("client_info_name", "client_info_value")
     info.append(("python_version", platform.python_version()))
     info.append(("platform", platform.platform()))
@@ -28,7 +28,7 @@ def get_client_system_info():
 
 
 def get_command_info(ctx: click.Context):
-    info = tablibtools.TablibDataset(title="_mp_command_info")
+    info = tablibtools.MacpieTablibDataset(title="_mp_command_info")
     info.headers = (
         "commmand",
         "parameter_name",

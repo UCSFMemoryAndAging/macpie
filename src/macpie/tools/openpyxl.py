@@ -143,13 +143,13 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
     return df
 
 
-def to_tablib_dataset(wb, sheet_name=None, headers=True, skip_lines=0):
+def to_tablib_dataset(wb, sheet_name=None, headers=True, skip_lines=0, tablib_class=tl.Dataset):
     if sheet_name is None:
         ws = wb.active
     else:
         ws = wb[sheet_name]
 
-    dset = tl.Dataset()
+    dset = tablib_class()
     dset.title = ws.title
 
     for i, row in enumerate(ws.rows):

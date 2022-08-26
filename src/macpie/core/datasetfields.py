@@ -10,11 +10,11 @@ class DatasetField(NamedTuple):
     field: str
 
 
-class DatasetFields(tablibtools.TablibDataset):
+class DatasetFields(tablibtools.MacpieTablibDataset):
     """A tabular representation of a set of :class:`macpie.Dataset` fields.
     First column is the Dataset name. Second column is the Dataset column name.
 
-    It is a subclass of :class:`macpie.tablibtools.TablibDataset`, and therefore
+    It is a subclass of :class:`macpie.tablibtools.MacpieTablibDataset`, and therefore
     can be initialized with data the same way.
     """
 
@@ -40,7 +40,7 @@ class DatasetFields(tablibtools.TablibDataset):
     @property
     def unique_datasets(self):
         """A list of unique :class:`macpie.Dataset` names."""
-        return list(set(self.tlset[self._col_header_dataset]))
+        return list(set(self[self._col_header_dataset]))
 
     def sort(self, collection):
         """Sort the Dataset fields according to the order they have in

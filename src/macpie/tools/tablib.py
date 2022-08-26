@@ -13,20 +13,8 @@ import tablib as tl
 from . import openpyxl as openpyxltools
 
 
-class TablibDataset:
-    """Wrap a :class:`tablib.Dataset` with extra functionality."""
-
-    def __init__(self, *args, **kwargs):
-        object.__setattr__(self, "_tlset", tl.Dataset(*args, **kwargs))
-
-    def __getattr__(self, attr):
-        # override to proxy the wrapped object
-        # this gets called when all other normal ways to supply attr fail
-        # (e.g. __dict__, slots, properties),
-        return getattr(self._tlset, attr)
-
-    def __len__(self):
-        return len(self._tlset)
+class MacpieTablibDataset(tl.Dataset):
+    """Extend :class:`tablib.Dataset` with extra functionality."""
 
     def __iter__(self):
         return (row for row in self.data)
@@ -35,46 +23,23 @@ class TablibDataset:
         try:
             return (
                 f"{self.__class__.__name__}("
-                f"title={self._tlset.title!r}, "
-                f"headers={self._tlset.headers!r}, "
-                f"col_count={self._tlset.length!r}, "
-                f"row_count={self._tlset.height!r})"
+                f"title={self.title!r}, "
+                f"headers={self.headers!r}, "
+                f"col_count={self.length!r}, "
+                f"row_count={self.height!r})"
             )
         except AttributeError:
-            return self._tlset.__repr__()
-
-    @property
-    def title(self):
-        """Title of Dataset."""
-        return self._tlset.title
-
-    @title.setter
-    def title(self, title):
-        self._tlset.title = title
-
-    @property
-    def headers(self):
-        """Headers of Dataset."""
-        return self._tlset.headers
-
-    @headers.setter
-    def headers(self, headers):
-        self._tlset.headers = headers
+            return super().__repr__()
 
     @property
     def data(self):
         """Data of Dataset."""
-        return self._tlset._data
-
-    @property
-    def tlset(self):
-        """The wrapped :class:`tablib.Dataset` object."""
-        return self._tlset
+        return self._data
 
     @property
     def df(self):
         """Get :class:`pandas.DataFrame` representation of data."""
-        return self.tlset.export("df")
+        return self.export("df")
 
     def append_col_fill(self, fill_value, header=None):
         """Adds a column to the Dataset with a specified `fill_value`.
@@ -87,8 +52,8 @@ class TablibDataset:
             Header for new column
         """
 
-        fill_values = [fill_value] * self._tlset.height
-        self.tlset.append_col(fill_values, header)
+        fill_values = [fill_value] * self.height
+        self.append_col(fill_values, header)
 
     def append_series(self, ser: pd.Series, with_tags: bool = True, tag_value: str = "x"):
         """Adds ``ser`` as a row to ``dset`` with tags derived
@@ -137,7 +102,7 @@ class TablibDataset:
         self.append(row, tags=tags)
 
     def compare(self, other):
-        """Compare this TablibDataset with another."""
+        """Compare this MacpieTablibDataset with another."""
         if self.headers != other.headers:
             raise ValueError("Can only compare datasets with matching headers.")
 
@@ -145,7 +110,7 @@ class TablibDataset:
             raise ValueError("Can only compare datasets with the same number of rows.")
 
         is_equal = True
-        results = TablibDataset(headers=self.headers)
+        results = MacpieTablibDataset(headers=self.headers)
         for i, self_row in enumerate(self):
             results_row = []
             for j, self_col in enumerate(self_row):
@@ -171,70 +136,40 @@ class TablibDataset:
         self.extend(rows, tags=tags)
         self.extend(other_rows)
 
-    def filter(self, tag):
-        """Returns a new instance, excluding any rows that
-        do not contain the given tag.
-        """
-        return self.from_tlset(self.tlset.filter(tag))
-
-    def stack(self, other):
-        """Stack two instances together by joining at the row level,
-        and return new combined instance.
-        """
-        return self.from_tlset(self.tlset.stack(other.tlset))
-
     def to_excel(self, excel_writer):
         """Write to an excel file using an :class:`MACPieExcelWriter` instance."""
-        excel_writer.write_tablib_dataset(self.tlset)
+        excel_writer.write_tablib_dataset(self)
 
     def wipe_data(self):
         """Removes all content (but not headers)."""
-        self.tlset._data = list()
+        self._data = list()
 
     def print(self):
         """Print a representation table suited to a terminal in grid format."""
         print(self.export("cli", tablefmt="grid"))
 
     @classmethod
-    def from_df(cls, df, title: str = None) -> "TablibDataset":
+    def from_df(cls, df, title: str = None) -> "MacpieTablibDataset":
         """Construct instance from a :class:`pandas.DataFrame`."""
         instance = cls(title=title)
-        instance.tlset.dict = df.to_dict(orient="records")
-
+        instance.dict = df.to_dict(orient="records")
         return instance
 
     @classmethod
-    def from_tlset(
-        cls,
-        tlset,
-    ) -> "TablibDataset":
-        """Construct instance from a :class:`tablib.Dataset`."""
-        instance = cls()
-        instance._tlset = tlset
-
-        return instance
-
-    @classmethod
-    def from_excel(cls, filepath, sheet_name=None) -> "TablibDataset":
+    def from_excel(cls, filepath, sheet_name=None) -> "MacpieTablibDataset":
         """Construct instance from an Excel sheet."""
-        loaded_tlset = read_excel(filepath, sheet_name)
-        loaded_tlset.title = sheet_name
-
-        instance = cls()
-        instance._tlset = loaded_tlset
-
-        return instance
+        return read_excel(filepath, sheet_name, tablib_class=cls)
 
 
-class DictLikeDataset(TablibDataset):
+class DictLikeDataset(MacpieTablibDataset):
     """Tabular representation of basic information using two columns
     only: a ``Key`` column and a ``Value`` column, using
-    a :class:`macpie.tablibtools.TablibDataset`.
+    a :class:`macpie.tablibtools.MacpieTablibDataset`.
 
     All ``Value``'s are encoded as JSON. But you can call the ``to_dict()`` method
     to decode the JSON back to native Python objects.
 
-    It is a subclass of :class:`macpie.tablibtools.TablibDataset`, and therefore
+    It is a subclass of :class:`macpie.tablibtools.MacpieTablibDataset`, and therefore
     can be initialized with data the same way.
     """
 
@@ -268,8 +203,10 @@ class DictLikeDataset(TablibDataset):
         return instance
 
 
-def read_excel(filepath, sheet_name=None, headers=True):
+def read_excel(filepath, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset):
     """Returns a Tablib Dataset from an Excel file."""
 
     wb = pyxl.load_workbook(filepath)
-    return openpyxltools.to_tablib_dataset(wb, sheet_name=sheet_name, headers=headers)
+    return openpyxltools.to_tablib_dataset(
+        wb, sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
+    )

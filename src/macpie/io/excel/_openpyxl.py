@@ -1,6 +1,7 @@
 import json
 
 import pandas as pd
+from macpie.tools.tablib import MacpieTablibDataset
 import tablib as tl
 
 from macpie._config import get_option
@@ -26,8 +27,12 @@ class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelRead
         dld = tablibtools.DictLikeDataset.from_df(df)
         return dld.to_dict()
 
-    def parse_tablib_dataset(self, sheet_name=None, headers=True):
-        return openpyxltools.to_tablib_dataset(self.book, sheet_name=sheet_name, headers=headers)
+    def parse_tablib_dataset(
+        self, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset
+    ):
+        return openpyxltools.to_tablib_dataset(
+            self.book, sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
+        )
 
 
 class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):

@@ -298,7 +298,7 @@ class MergeableAnchoredList(AnchoredList):
         available_fields = self.get_available_fields()
         available_fields.append_col_fill(None, header=self.to_merge_column_name)
 
-        excel_writer.write_simple_dataset(available_fields)
+        excel_writer.write_tablib_dataset(available_fields)
 
         if write_excel_dict:
             excel_writer.write_excel_dict(self.to_excel_dict())

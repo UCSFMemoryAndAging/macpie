@@ -198,10 +198,10 @@ def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs, sort_co
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
     with mp.MACPieExcelFile(left_file) as reader:
-        left_tlsets_dict = reader.parse_simple_datasets(sheet_name=left_sheets)
+        left_tlsets_dict = reader.parse_tablib_datasets(sheet_name=left_sheets)
 
     with mp.MACPieExcelFile(right_file) as reader:
-        right_tlsets_dict = reader.parse_simple_datasets(sheet_name=right_sheets)
+        right_tlsets_dict = reader.parse_tablib_datasets(sheet_name=right_sheets)
 
     tlsets_results = collections.OrderedDict()
     for sheet_pair in sheet_pairs:
@@ -214,8 +214,8 @@ def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs, sort_co
 
         if sort_col:
             try:
-                left_tlset = mp.tablibtools.TablibDataset.from_tlset(left_tlset.sort(sort_col))
-                right_tlset = mp.tablibtools.TablibDataset.from_tlset(right_tlset.sort(sort_col))
+                left_tlset = left_tlset.sort(sort_col)
+                right_tlset = right_tlset.sort(sort_col)
             except KeyError:
                 click.secho(
                     f"{result_sheetname}|Warning: No column '{sort_col}'. Cannot sort.",
