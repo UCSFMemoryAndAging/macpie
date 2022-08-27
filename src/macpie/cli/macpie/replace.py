@@ -1,54 +1,28 @@
 import pathlib
+import re
 
 import click
 import openpyxl as pyxl
-import pandas as pd
+from pandas.core.dtypes.common import is_re_compilable
+from tabulate import tabulate
 
-from pandas.core.dtypes.common import (
-    ensure_object,
-    ensure_platform_int,
-    ensure_str,
-    is_bool,
-    is_bool_dtype,
-    is_datetime64_any_dtype,
-    is_datetime64tz_dtype,
-    is_dict_like,
-    is_dtype_equal,
-    is_extension_array_dtype,
-    is_float,
-    is_list_like,
-    is_number,
-    is_numeric_dtype,
-    is_re_compilable,
-    is_scalar,
-    is_timedelta64_dtype,
-    pandas_dtype,
-)
-
-import macpie as mp
-from macpie import BasicList, Dataset, MACPieExcelWriter, openpyxltools, pathtools
-from macpie._config import get_option
+from macpie import openpyxltools, pathtools
 from macpie.cli.core import pass_results_resource
-from macpie.cli.helpers import get_client_system_info
 
 
 @click.command()
 @click.option("-r", "--to-replace", required=True)
 @click.option("-v", "--value", required=True)
-@click.option("--regex", is_flag=True)
 @click.option("--ignorecase", is_flag=True)
-@click.option("--multiline", is_flag=True)
+@click.option("--regex", is_flag=True)
+@click.option("--re-multiline", is_flag=True)
 @click.argument(
     "files",
     nargs=-1,
     type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
 @pass_results_resource
-def replace(results_resource, to_replace, value, regex, ignorecase, multiline, files):
-    # validate
-    if regex and not is_re_compilable(to_replace):
-        raise TypeError("Could not compile 'to_replace' to regex.")
-
+def replace(results_resource, to_replace, value, ignorecase, regex, re_multiline, files):
     valid_files, invalid_files = pathtools.validate_paths(files, allowed_path)
 
     for f in invalid_files:
@@ -59,24 +33,37 @@ def replace(results_resource, to_replace, value, regex, ignorecase, multiline, f
 
     results_dir = results_resource.create_results_dir()
 
-    for file_path in valid_files:
-        click.echo(f"\nProcessing file: {file_path.resolve()}.")
+    flags = 0
+    if regex:
+        if not is_re_compilable(to_replace):
+            raise TypeError("Could not compile 'to_replace' to regex.")
+        if re_multiline:
+            flags |= re.MULTILINE
 
+    for file_path in valid_files:
         output_filepath = results_dir / file_path.name
 
         wb = pyxl.load_workbook(file_path)
         for sheet in wb.sheetnames:
-            click.echo(f"\tProcessing sheet: {sheet}. Number of replacements: ", nl=False)
+            click.secho(f"\nProcessing: {file_path.resolve()} - {sheet}", fg="green")
+
             ws = wb[sheet]
-            count = openpyxltools.replace(
+            counter = openpyxltools.replace(
                 ws,
                 to_replace=to_replace,
                 value=value,
-                regex=regex,
                 ignorecase=ignorecase,
-                multiline=multiline,
+                regex=regex,
+                flags=flags,
             )
-            click.echo(f"{count}")
+
+            if counter:
+                freq = counter.most_common()
+                freq.append(("Total", sum(counter.values())))
+                click.echo(tabulate(freq, headers=["Replaced", "Count"], tablefmt="pretty"))
+            else:
+                click.echo("NO REPLACEMENTS")
+
         wb.save(output_filepath)
 
 

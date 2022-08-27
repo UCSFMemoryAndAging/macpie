@@ -96,7 +96,25 @@ def iter_rows_with_column_value(ws, column: str, value):
                 yield cell.row
 
 
-def replace(ws, to_replace, value, regex=False, ignorecase=False, multiline=False):
+def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
+    """Replace values given in `to_replace` with `value`.
+
+    Parameters
+    ----------
+    ws : :class:`openpyxl.worksheet.worksheet.Worksheet`
+        Worksheet to replace values in
+    to_replace : str or uncompiled regex
+        String can be a character sequence or regular expression.
+    value : str
+        Replacement string. Will be coerced into same type as original cell value
+    ignorecase : bool, default False
+        Determines if replace is case sensitive:
+    regex : bool, default False
+        Determines if the passed-in pattern in ``to_replace`` is a regular expression.
+    flags : int, default 0 (no flags)
+        Regex module flags, e.g. re.IGNORECASE.
+    """
+
     def cells_by_column():
         for col in ws.iter_cols(min_col=1, min_row=1, max_col=ws.max_column, max_row=ws.max_row):
             for cell in col:
@@ -104,14 +122,15 @@ def replace(ws, to_replace, value, regex=False, ignorecase=False, multiline=Fals
 
     counter = collections.Counter()
     if regex:
-        regex_flags = re.IGNORECASE if ignorecase else 0 | re.MULTILINE if multiline else 0
+        if ignorecase:
+            flags |= re.IGNORECASE
         for cell in cells_by_column():
             cell_value = str(cell.value)
-            found_match = re.search(to_replace, cell_value, flags=regex_flags)
+            found_match = re.search(to_replace, cell_value, flags=flags)
             if found_match:
                 counter[cell.value] += 1
                 orig_data_type = type(cell.value)
-                new_value = re.sub(to_replace, value, cell_value, flags=regex_flags)
+                new_value = re.sub(to_replace, value, cell_value, flags=flags)
                 try:
                     cell.value = orig_data_type(new_value)
                 except TypeError:
