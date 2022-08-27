@@ -6,8 +6,7 @@ CLI Reference
 Installing MACPie also installs a number of command line tools. The main
 command line tool is called ``macpie``, and it provides commands that you
 can use to analyze data contained in Excel and/or CSV/text files. Other
-commands include ``mpsql`` and ``mpfile``, commands that work with SQL
-databases and files, respectively.
+commands include ``mpsql``, commands that work with SQL databases, respectively.
 
 All commands should be executed inside your activated virtual environment
 (or conda environment) that you created in the :ref:`installation` section.
@@ -57,5 +56,4 @@ Command Summary
 
   macpie <cli_reference/macpie/index>
   mpsql <cli_reference/mpsql/index>
-  mpfile <cli_reference/mpfile/index>
   

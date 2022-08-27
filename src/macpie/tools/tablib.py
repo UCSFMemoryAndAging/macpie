@@ -193,7 +193,7 @@ class DictLikeTablibDataset(MacpieTablibDataset):
 
     @classmethod
     def from_dict(cls, dictionary, **kwargs) -> "DictLikeTablibDataset":
-        """Construct :class:`Info` from a Python dictionary."""
+        """Construct :class:`DictLikeTablibDataset` from a Python dictionary."""
         tags = kwargs.pop("tags", [])
         instance = cls(**kwargs)
         instance.append_dict(dictionary, tags=tags)

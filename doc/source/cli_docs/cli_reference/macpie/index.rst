@@ -3,7 +3,7 @@
 
 .. program:: macpie
 
-Commands for analyzing data contained in Excel and/or CSV/text files.
+Commands for manipulating and analyzing data contained in Excel and/or CSV/text files.
 
 
 .. _macpie-main-options:
@@ -46,3 +46,5 @@ If they are not specified using these options, then defaults (as described below
 .. include:: ./link.inc
 
 .. include:: ./merge.inc
+
+.. include:: ./compare.inc

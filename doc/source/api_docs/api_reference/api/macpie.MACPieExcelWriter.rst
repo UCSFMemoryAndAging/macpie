@@ -23,7 +23,6 @@
       ~MACPieExcelWriter.sheet_names
       ~MACPieExcelWriter.write_cells
       ~MACPieExcelWriter.write_excel_dict
-      ~MACPieExcelWriter.write_simple_dataset
       ~MACPieExcelWriter.write_tablib_dataset
    
    

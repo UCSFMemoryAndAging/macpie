@@ -149,8 +149,8 @@ tablibtools
 .. autosummary::
    :toctree: api/
 
-   TablibDataset
-   DictLikeDataset
+   MacpieTablibDataset
+   DictLikeTablibDataset
    read_excel
 
 

@@ -37,7 +37,7 @@ numpydoc_show_class_members = False
 def setup(app):
     # these modules are actually module aliases, so need
     # to fake the python module system here, otherwise
-    # autodoc can't document these modules properlyu
+    # autodoc can't document these modules properly
     sys.modules["macpie.datetimetools"] = macpie.datetimetools
     sys.modules["macpie.itertools"] = macpie.itertools
     sys.modules["macpie.lltools"] = macpie.lltools
