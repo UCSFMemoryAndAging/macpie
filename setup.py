@@ -1,15 +1,14 @@
 from setuptools import setup
 
 # cli packages
-mpsql = ["mysql-connector-python >= 8.0", "python-dotenv >= 0.20", "SQLAlchemy >= 1.3"]
-mpfile = ["tabulate >= 0.8"]
-cli = mpsql + mpfile
+mpsql_cli = ["mysql-connector-python >= 8.0", "SQLAlchemy >= 1.3"]
+all_cli = mpsql_cli
 
 # misc packages
 misc = ["matplotlib >= 3.5", "networkx >= 2.8"]
 
 # all packages
-all = cli + misc
+all = all_cli + misc
 
 setup(
     name="macpie",
@@ -17,8 +16,10 @@ setup(
         "click >= 8.0",
         "openpyxl >= 3.0",
         "pandas >= 1.3",
+        "python-dotenv >= 0.20",
         "tablib >= 3.0",
+        "tabulate >= 0.8",
         "XlsxWriter >= 3.0",
     ],
-    extras_require={"mpsql": mpsql, "mpfile": mpfile, "cli": cli, "all": all},
+    extras_require={"mpsql": mpsql_cli, "all_cli": all_cli, "all": all},
 )
