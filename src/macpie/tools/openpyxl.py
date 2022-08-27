@@ -76,6 +76,31 @@ def is_row_empty(ws, row_index, delete_if_empty=False):
     return False
 
 
+def iter_cells(
+    ws, min_row=None, max_row=None, min_col=None, max_col=None, values_only=False, by="column"
+):
+    if by == "column":
+        for col in ws.iter_cols(
+            min_row=min_row,
+            max_row=max_row,
+            min_col=min_col,
+            max_col=max_col,
+            values_only=values_only,
+        ):
+            for cell in col:
+                yield cell
+    else:
+        for col in ws.iter_rows(
+            min_row=min_row,
+            max_row=max_row,
+            min_col=min_col,
+            max_col=max_col,
+            values_only=values_only,
+        ):
+            for cell in col:
+                yield cell
+
+
 def iter_rows_with_column_value(ws, column: str, value):
     col_index = get_column_index(ws, column)
 
@@ -114,17 +139,11 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
     flags : int, default 0 (no flags)
         Regex module flags, e.g. re.IGNORECASE.
     """
-
-    def cells_by_column():
-        for col in ws.iter_cols(min_col=1, min_row=1, max_col=ws.max_column, max_row=ws.max_row):
-            for cell in col:
-                yield cell
-
     counter = collections.Counter()
     if regex:
         if ignorecase:
             flags |= re.IGNORECASE
-        for cell in cells_by_column():
+        for cell in iter_cells(ws):
             cell_value = str(cell.value)
             found_match = re.search(to_replace, cell_value, flags=flags)
             if found_match:
@@ -139,7 +158,7 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
                         f"type of original value '{orig_data_type}'."
                     )
     else:
-        for cell in cells_by_column():
+        for cell in iter_cells(ws):
             cell_value = str(cell.value)
             if strtools.str_equals(cell_value, to_replace, case_sensitive=not ignorecase):
                 counter[cell.value] += 1

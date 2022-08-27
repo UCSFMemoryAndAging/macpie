@@ -6,6 +6,7 @@ import openpyxl as pyxl
 import pandas as pd
 
 from macpie import datetimetools
+from macpie.tools.openpyxl import iter_cells
 
 
 def assert_dfs_equal(
@@ -75,17 +76,28 @@ def assert_excels_equal(filepath_1, filepath_2):
     # same sheets?
     assert set(wb1.sheetnames) == set(wb2.sheetnames)
 
-    # each sheet has same range of data?
     for sheet in wb1.sheetnames:
-        assert wb1[sheet].max_column == wb2[sheet].max_column
-        assert wb1[sheet].max_row == wb2[sheet].max_row
+        assert_excel_worksheet_equal(wb1[sheet], wb2[sheet])
 
-    # each sheet has same data in each cell?
-    for sheet in wb1.sheetnames:
-        ws1 = wb1[sheet]
-        ws2 = wb2[sheet]
-        for x in range(1, ws1.max_row + 1):
-            for y in range(1, ws1.max_column + 1):
-                c1 = ws1.cell(row=x, column=y)
-                c2 = ws2.cell(row=x, column=y)
-                assert c1.value == c2.value, f"{sheet}.{c1.coordinate}: {c1.value} != {c2.value}"
+
+def assert_excel_worksheet_equal(left_ws, right_ws):
+    """
+    For testing equality of :class:`openpyxl.worksheet.worksheet.Worksheet` objects
+
+    Parameters
+    ----------
+    left_ws : Worksheet
+    right_ws : Worksheet
+    """
+
+    # same range of data?
+    assert left_ws.max_column == right_ws.max_column
+    assert left_ws.max_row == right_ws.max_row
+
+    # same data in each cell?
+    for left_cell in iter_cells(left_ws):
+        right_cell = right_ws[left_cell.coordinate]
+        assert left_cell.value == right_cell.value, (
+            f"'{left_ws.title}'.{left_cell.coordinate} [{left_cell.value}] != "
+            f"'{right_ws.title}'.{right_cell.coordinate} [{right_cell.value}]"
+        )
