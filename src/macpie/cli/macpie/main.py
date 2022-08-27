@@ -32,9 +32,11 @@ from .keepone import keepone
 from .link import link
 from .masker import masker
 from .merge import merge
+from .replace import replace
 
 main.add_command(envfile)
 main.add_command(keepone)
 main.add_command(link)
 main.add_command(masker)
 main.add_command(merge)
+main.add_command(replace)

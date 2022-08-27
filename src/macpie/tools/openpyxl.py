@@ -1,9 +1,12 @@
+import collections
 import itertools
+import re
 
 import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
+from . import string as strtools
 
 YELLOW = "00FFFF00"
 
@@ -91,6 +94,39 @@ def iter_rows_with_column_value(ws, column: str, value):
             cell = row[0]
             if predicate(cell.value):
                 yield cell.row
+
+
+def replace(ws, to_replace, value, regex=False, ignorecase=False, multiline=False):
+    def cells_by_column():
+        for col in ws.iter_cols(min_col=1, min_row=1, max_col=ws.max_column, max_row=ws.max_row):
+            for cell in col:
+                yield cell
+
+    counter = collections.Counter()
+    if regex:
+        regex_flags = re.IGNORECASE if ignorecase else 0 | re.MULTILINE if multiline else 0
+        for cell in cells_by_column():
+            cell_value = str(cell.value)
+            found_match = re.search(to_replace, cell_value, flags=regex_flags)
+            if found_match:
+                counter[cell.value] += 1
+                orig_data_type = type(cell.value)
+                new_value = re.sub(to_replace, value, cell_value, flags=regex_flags)
+                try:
+                    cell.value = orig_data_type(new_value)
+                except TypeError:
+                    raise TypeError(
+                        f"Can't cast replacement value '{new_value}' to same "
+                        f"type of original value '{orig_data_type}'."
+                    )
+    else:
+        for cell in cells_by_column():
+            cell_value = str(cell.value)
+            if strtools.str_equals(cell_value, to_replace, case_sensitive=not ignorecase):
+                counter[cell.value] += 1
+                cell.value = value
+
+    return counter
 
 
 def to_df(ws, num_header: int = 1, num_idx: int = 0):
