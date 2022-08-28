@@ -15,14 +15,14 @@ from macpie.cli.core import pass_results_resource
 @click.option("-v", "--value", required=True)
 @click.option("--ignorecase", is_flag=True)
 @click.option("--regex", is_flag=True)
-@click.option("--re-multiline", is_flag=True)
+@click.option("--re-dotall", is_flag=True)
 @click.argument(
     "files",
     nargs=-1,
     type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
 @pass_results_resource
-def replace(results_resource, to_replace, value, ignorecase, regex, re_multiline, files):
+def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, files):
     valid_files, invalid_files = pathtools.validate_paths(files, allowed_path)
 
     for f in invalid_files:
@@ -37,8 +37,8 @@ def replace(results_resource, to_replace, value, ignorecase, regex, re_multiline
     if regex:
         if not is_re_compilable(to_replace):
             raise TypeError("Could not compile 'to_replace' to regex.")
-        if re_multiline:
-            flags |= re.MULTILINE
+        if re_dotall:
+            flags |= re.DOTALL
 
     for file_path in valid_files:
         output_filepath = results_dir / file_path.name

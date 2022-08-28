@@ -122,7 +122,7 @@ def iter_rows_with_column_value(ws, column: str, value):
 
 
 def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
-    """Replace values given in `to_replace` with `value`.
+    """For a given Worksheet, replace values given in `to_replace` with `value`.
 
     Parameters
     ----------
@@ -145,16 +145,15 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
             flags |= re.IGNORECASE
         for cell in iter_cells(ws):
             cell_value = str(cell.value)
-            found_match = re.search(to_replace, cell_value, flags=flags)
-            if found_match:
-                counter[cell.value] += 1
+            match = re.fullmatch(to_replace, cell_value, flags=flags)
+            if match:
+                counter[match.group(0)] += 1
                 orig_data_type = type(cell.value)
-                new_value = re.sub(to_replace, value, cell_value, flags=flags)
                 try:
-                    cell.value = orig_data_type(new_value)
+                    cell.value = orig_data_type(value)
                 except TypeError:
                     raise TypeError(
-                        f"Can't cast replacement value '{new_value}' to same "
+                        f"Can't cast replacement value '{value}' to same "
                         f"type of original value '{orig_data_type}'."
                     )
     else:
@@ -163,7 +162,6 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
             if strtools.str_equals(cell_value, to_replace, case_sensitive=not ignorecase):
                 counter[cell.value] += 1
                 cell.value = value
-
     return counter
 
 

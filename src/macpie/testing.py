@@ -97,7 +97,10 @@ def assert_excel_worksheet_equal(left_ws, right_ws):
     # same data in each cell?
     for left_cell in iter_cells(left_ws):
         right_cell = right_ws[left_cell.coordinate]
+        # convert None to empty string
+        left_cell.value = "" if left_cell.value is None else left_cell.value
+        right_cell.value = "" if right_cell.value is None else right_cell.value
         assert left_cell.value == right_cell.value, (
-            f"'{left_ws.title}'.{left_cell.coordinate} [{left_cell.value}] != "
-            f"'{right_ws.title}'.{right_cell.coordinate} [{right_cell.value}]"
+            f"'{left_ws.title}'.{left_cell.coordinate} [{repr(left_cell.value)}] != "
+            f"'{right_ws.title}'.{right_cell.coordinate} [{repr(right_cell.value)}]"
         )
