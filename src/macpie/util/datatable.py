@@ -1,7 +1,7 @@
 import collections
 import itertools
 
-from macpie.tools.listlike import make_same_length
+from macpie.lltools import make_same_length
 
 
 class DataTable(collections.UserList):

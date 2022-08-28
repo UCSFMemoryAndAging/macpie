@@ -2,7 +2,7 @@ import collections
 from typing import NamedTuple
 
 from macpie._config import get_option
-from macpie.tools import tablib as tablibtools
+from macpie import tablibtools
 
 
 class DatasetField(NamedTuple):

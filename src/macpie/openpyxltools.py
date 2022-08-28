@@ -6,7 +6,7 @@ import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
-from . import string as strtools
+import macpie.strtools
 
 YELLOW = "00FFFF00"
 
@@ -159,7 +159,7 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
     else:
         for cell in iter_cells(ws):
             cell_value = str(cell.value)
-            if strtools.str_equals(cell_value, to_replace, case_sensitive=not ignorecase):
+            if macpie.strtools.str_equals(cell_value, to_replace, case_sensitive=not ignorecase):
                 counter[cell.value] += 1
                 cell.value = value
     return counter

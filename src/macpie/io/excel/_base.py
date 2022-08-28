@@ -1,9 +1,7 @@
 import abc
 import re
 
-import openpyxl as pyxl
 import pandas as pd
-from macpie.tools.tablib import MacpieTablibDataset
 import tablib as tl
 
 import macpie as mp
@@ -149,14 +147,14 @@ class MACPieExcelFile(pd.io.excel._base.ExcelFile):
         return collection_dict
 
     def parse_tablib_dataset(
-        self, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset
+        self, sheet_name=None, headers=True, tablib_class=tablibtools.MacpieTablibDataset
     ):
         return self._reader.parse_tablib_dataset(
             sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
         )
 
     def parse_tablib_datasets(
-        self, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset
+        self, sheet_name=None, headers=True, tablib_class=tablibtools.MacpieTablibDataset
     ):
         ret_dict = False
 
@@ -279,7 +277,9 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
         pass
 
     @abc.abstractmethod
-    def parse_tablib_dataset(self, sheet_name, headers=True, tablib_class=MacpieTablibDataset):
+    def parse_tablib_dataset(
+        self, sheet_name, headers=True, tablib_class=tablibtools.MacpieTablibDataset
+    ):
         pass
 
 

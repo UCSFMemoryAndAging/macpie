@@ -1,6 +1,6 @@
 import itertools
 
-from . import string as strtools
+import macpie.strtools
 
 
 def chunks(seq, chunk_size=None):
@@ -87,7 +87,7 @@ def list_like_str_equal(a, b, case_sensitive=True):
     """
     if len(a) == len(b):
         for strs in zip(a, b):
-            if not strtools.str_equals(strs[0], strs[1], case_sensitive=case_sensitive):
+            if not macpie.strtools.str_equals(strs[0], strs[1], case_sensitive=case_sensitive):
                 return False
         return True
     return False

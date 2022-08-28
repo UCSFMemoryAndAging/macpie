@@ -10,7 +10,7 @@ import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
-from . import openpyxl as openpyxltools
+import macpie.openpyxltools
 
 
 class MacpieTablibDataset(tl.Dataset):
@@ -204,6 +204,6 @@ def read_excel(filepath, sheet_name=None, headers=True, tablib_class=MacpieTabli
     """Returns a Tablib Dataset from an Excel file."""
 
     wb = pyxl.load_workbook(filepath)
-    return openpyxltools.to_tablib_dataset(
+    return macpie.openpyxltools.to_tablib_dataset(
         wb, sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
     )

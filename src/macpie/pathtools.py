@@ -3,13 +3,13 @@
 from pathlib import Path
 from typing import Callable, List, Tuple
 
-from . import datetime as datetimetools
-from . import iterator as itertools
+import macpie.datetimetools
+import macpie.itertools
 
 
 def create_dir_with_datetime(dir_name_prefix="new_folder_", where=Path(".")):
     """Create a new directory with the current datetime appended."""
-    new_dir_name = dir_name_prefix + datetimetools.current_datetime_str()
+    new_dir_name = dir_name_prefix + macpie.datetimetools.current_datetime_str()
     return create_subdir(new_dir_name, where=where)
 
 
@@ -80,7 +80,7 @@ def validate_paths(
         else:
             to_validate.append(p.resolve())
 
-    to_validate = itertools.remove_duplicates(to_validate, preserve_order=True)
+    to_validate = macpie.itertools.remove_duplicates(to_validate, preserve_order=True)
     for p in to_validate:
         if p.stem.startswith(".") and ignore_dot:
             continue
