@@ -1,8 +1,14 @@
 /* colors */
 
-:root {
-    --pst-color-primary: 0, 114, 66;
-    --pst-color-active-navigation: 0, 114, 66;
+html[data-theme="light"] {
+    --pst-color-primary: rgb(0, 114, 66);
+    --pst-color-active-navigation: rgb(0, 114, 66);
+    --pst-color-h2: var(--color-text-base);
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: rgb(0, 114, 66);
+    --pst-color-active-navigation: rgb(0, 114, 66);
     --pst-color-h2: var(--color-text-base);
 }
 
