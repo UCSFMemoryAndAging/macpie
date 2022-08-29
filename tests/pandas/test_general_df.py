@@ -203,11 +203,17 @@ def test_filter_labels():
         "col6": [10, "11", 12],
     }
     df = pd.DataFrame(data=d)
+    assert df.mac.filter_labels(items=["col2", "col1"]) == ["col1", "col2"]
+    assert df.mac.filter_labels(items=["col1", "col2"], invert=True) == [
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
     assert df.mac.filter_labels(like="ol") == ["col1", "col2", "col3", "col6"]
-    assert df.mac.filter_labels(not_like="ol") == ["date", "misc"]
+    assert df.mac.filter_labels(like="ol", invert=True) == ["date", "misc"]
     assert df.mac.filter_labels(regex="^da") == ["date"]
-    assert df.mac.filter_labels(not_regex="^col") == ["date", "misc"]
-    assert df.mac.filter_labels(not_items=["col1", "col2"]) == ["col3", "date", "misc", "col6"]
+    assert df.mac.filter_labels(regex="^col", invert=True) == ["date", "misc"]
 
 
 def test_filter_labels_mi():
@@ -219,7 +225,19 @@ def test_filter_labels_mi():
     df = pd.DataFrame(data=d)
     df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
 
-    assert df.mac.filter_labels(regex=re.compile("pidn", re.IGNORECASE)) == [("CDR", "PIDN")]
+    assert df.mac.filter_labels(regex=re.compile("cdr", re.IGNORECASE), level=0) == [
+        ("CDR", "PIDN"),
+        ("CDR", "DCDate"),
+        ("CDR", "InstrID"),
+    ]
+    assert df.mac.filter_labels(regex=re.compile("id", re.IGNORECASE)) == [
+        ("CDR", "PIDN"),
+        ("CDR", "InstrID"),
+    ]
+    assert df.mac.filter_labels(regex=re.compile("id", re.IGNORECASE), invert=True) == [
+        ("CDR", "DCDate")
+    ]
+    assert df.mac.filter_labels(regex=re.compile("id$", re.IGNORECASE)) == [("CDR", "InstrID")]
 
 
 def test_get_col_name():

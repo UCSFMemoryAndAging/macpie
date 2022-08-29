@@ -76,17 +76,11 @@ class MacDataFrameAccessor:
         )
 
     def filter_labels(
-        self, like=None, not_like=None, regex=None, not_regex=None, not_items=None, axis=None
+        self, items=None, like=None, regex=None, invert=False, axis=None, level=None
     ):
         """see :meth:`macpie.pandas.filter_labels`"""
         return general_df.filter_labels(
-            self._df,
-            like=like,
-            not_like=not_like,
-            regex=regex,
-            not_regex=not_regex,
-            not_items=not_items,
-            axis=axis,
+            self._df, items=items, like=like, regex=regex, invert=invert, axis=axis, level=level
         )
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):

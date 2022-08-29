@@ -298,47 +298,51 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_igno
 
 
 def filter_labels(
-    df: pd.DataFrame,
-    like=None,
-    not_like=None,
-    regex=None,
-    not_regex=None,
-    not_items=None,
-    axis=None,
+    df: pd.DataFrame, items=None, like=None, regex=None, invert=False, axis=None, level=None
 ):
     """
     Filter dataframe row or column labels.
 
     Parameters
     ----------
+    items : list-like
+        Keep labels from axis which are in `items`.
     like : str
         Keep labels from axis for which "like in label == True".
-    not_like : str
-        Keep labels from axis for which "like in label == False".
     regex : str (regular expression)
         Keep labels from axis for which re.search(regex, label) == True.
-    not_regex : str (regular expression)
-        Keep labels from axis for which re.search(regex, label) == False.
-    not_items : list-like
-        Keep labels from axis which are not in `not_items`.
+    invert : bool, default False
+        Whether to invert the result (i.e. discard labels returned by
+        `items`, `like`, or `regex`)
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
+    level : str or int, optional
+        For a MultiIndex, level (name or number) to use for
+        filtering. Default is the highest level
+
+    Returns
+    -------
+    List of labels
+
+    See Also
+    --------
+    DataFrame.filter : Subset the dataframe rows or columns according
+    to the specified index labels.
 
     Notes
     -----
-    The ``like``, ``not_like``, ``regex``, ``not_regex``, and ``not_items``,
+    The ``items``, ``like``, and ``regex``
     parameters are enforced to be mutually exclusive.
     ``axis`` defaults to the info axis that is used when indexing
     with ``[]``.
     """
 
-    nkw = com.count_not_none(like, not_like, regex, not_regex, not_items)
+    nkw = com.count_not_none(items, like, regex)
     if nkw > 1:
         raise TypeError(
-            "Keyword arguments `like`, `not_like`, `regex`, `not_regex`, `not_item` "
-            " are mutually exclusive"
+            "Keyword arguments `items`, `like`, and `not_like`" " are mutually exclusive"
         )
 
     if axis is None:
@@ -346,30 +350,41 @@ def filter_labels(
 
     labels = df._get_axis(axis)
 
-    if not_items is not None:
-        return [label for label in labels if label not in not_items]
+    mi_labels = None
+    if isinstance(labels, pd.MultiIndex):
+        if level is None:
+            level = labels.nlevels - 1
+        mi_labels = labels.copy()
+        labels = mi_labels.get_level_values(level)
+
+    if items is not None:
+        result_idxs = [idx for (idx, label) in enumerate(labels) if label in items]
     elif like:
-        return [label for label in labels if like in pd.core.dtypes.common.ensure_str(label)]
-    elif not_like:
-        return [
-            label for label in labels if not not_like in pd.core.dtypes.common.ensure_str(label)
+        result_idxs = [
+            idx
+            for (idx, label) in enumerate(labels)
+            if like in pd.core.dtypes.common.ensure_str(label)
         ]
     elif regex:
-        return [
-            label
-            for label in labels
+        result_idxs = [
+            idx
+            for (idx, label) in enumerate(labels)
             if re.search(regex, pd.core.dtypes.common.ensure_str(label)) is not None
-        ]
-    elif not_regex:
-        return [
-            label
-            for label in labels
-            if re.search(not_regex, pd.core.dtypes.common.ensure_str(label)) is None
         ]
     else:
         raise TypeError(
             "Must pass either `like`, `not_like`, `regex`, `not_regex`, or `not_items`"
         )
+
+    if invert:
+        result_idxs = [idx for (idx, _) in enumerate(labels) if idx not in result_idxs]
+
+    if mi_labels is not None:
+        result = [mi_labels[idx] for idx in result_idxs]
+    else:
+        result = [labels[idx] for idx in result_idxs]
+
+    return result
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
