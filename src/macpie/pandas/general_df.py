@@ -1,12 +1,13 @@
+import re
 from collections import defaultdict
-import dateutil
 from typing import List
 
 import numpy as np
 import pandas as pd
 
+import macpie.core.common as com
 from macpie._config import get_option
-from macpie import itertools, lltools, strtools
+from macpie import lltools, strtools
 
 
 def add_diff_days(
@@ -294,6 +295,81 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_igno
         pass
 
     return left.equals(right)
+
+
+def filter_labels(
+    df: pd.DataFrame,
+    like=None,
+    not_like=None,
+    regex=None,
+    not_regex=None,
+    not_items=None,
+    axis=None,
+):
+    """
+    Filter dataframe row or column labels.
+
+    Parameters
+    ----------
+    like : str
+        Keep labels from axis for which "like in label == True".
+    not_like : str
+        Keep labels from axis for which "like in label == False".
+    regex : str (regular expression)
+        Keep labels from axis for which re.search(regex, label) == True.
+    not_regex : str (regular expression)
+        Keep labels from axis for which re.search(regex, label) == False.
+    not_items : list-like
+        Keep labels from axis which are not in `not_items`.
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to filter labels on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
+
+    Notes
+    -----
+    The ``like``, ``not_like``, ``regex``, ``not_regex``, and ``not_items``,
+    parameters are enforced to be mutually exclusive.
+    ``axis`` defaults to the info axis that is used when indexing
+    with ``[]``.
+    """
+
+    nkw = com.count_not_none(like, not_like, regex, not_regex, not_items)
+    if nkw > 1:
+        raise TypeError(
+            "Keyword arguments `like`, `not_like`, `regex`, `not_regex`, `not_item` "
+            " are mutually exclusive"
+        )
+
+    if axis is None:
+        axis = df._info_axis_name
+
+    labels = df._get_axis(axis)
+
+    if not_items is not None:
+        return [label for label in labels if label not in not_items]
+    elif like:
+        return [label for label in labels if like in pd.core.dtypes.common.ensure_str(label)]
+    elif not_like:
+        return [
+            label for label in labels if not not_like in pd.core.dtypes.common.ensure_str(label)
+        ]
+    elif regex:
+        return [
+            label
+            for label in labels
+            if re.search(regex, pd.core.dtypes.common.ensure_str(label)) is not None
+        ]
+    elif not_regex:
+        return [
+            label
+            for label in labels
+            if re.search(not_regex, pd.core.dtypes.common.ensure_str(label)) is None
+        ]
+    else:
+        raise TypeError(
+            "Must pass either `like`, `not_like`, `regex`, `not_regex`, or `not_items`"
+        )
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):

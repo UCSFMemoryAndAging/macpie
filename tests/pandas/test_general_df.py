@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 import dateutil
@@ -190,6 +191,35 @@ def test_diff_rows_2():
 
     with pytest.raises(KeyError):
         df1.mac.diff_rows(df2)
+
+
+def test_filter_labels():
+    d = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df = pd.DataFrame(data=d)
+    assert df.mac.filter_labels(like="ol") == ["col1", "col2", "col3", "col6"]
+    assert df.mac.filter_labels(not_like="ol") == ["date", "misc"]
+    assert df.mac.filter_labels(regex="^da") == ["date"]
+    assert df.mac.filter_labels(not_regex="^col") == ["date", "misc"]
+    assert df.mac.filter_labels(not_items=["col1", "col2"]) == ["col3", "date", "misc", "col6"]
+
+
+def test_filter_labels_mi():
+    d = {
+        "PIDN": [2, 2, 3],
+        "DCDate": [datetime(2001, 3, 2), datetime(2001, 3, 2), datetime(2001, 8, 1)],
+        "InstrID": [7, 8, 9],
+    }
+    df = pd.DataFrame(data=d)
+    df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
+
+    assert df.mac.filter_labels(regex=re.compile("pidn", re.IGNORECASE)) == [("CDR", "PIDN")]
 
 
 def test_get_col_name():
