@@ -4,7 +4,6 @@ import re
 
 import openpyxl as pyxl
 
-from macpie.pandas.io import file_to_dataframe
 from macpie.testing import assert_excel_worksheet_equal
 
 from macpie import openpyxltools

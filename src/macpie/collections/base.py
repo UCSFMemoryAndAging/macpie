@@ -47,7 +47,7 @@ class BaseCollection(collections.abc.Collection):
         return {"class_name": self.__class__.__name__}
 
     def get_dataset_history_info(self):
-        """Contruct and return an :class:`macpie.core.DictLikeTablibDataset` object containing
+        """Contruct and return an :class:`macpie.DictLikeTablibDataset` object containing
         all :attr:`macpie.Dataset.history` information.
         """
         info = tablibtools.DictLikeTablibDataset(title="_mp_dsets_history")

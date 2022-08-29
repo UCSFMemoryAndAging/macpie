@@ -229,7 +229,7 @@ class MergeableAnchoredList(AnchoredList):
     def get_available_fields(self):
         """Get all "available" fields in this collection.
 
-        :return: :class:`macpie.util.DatasetFields`
+        :return: :class:`macpie.DatasetFields`
         """
         available_fields = DatasetFields.from_collection(
             self,
