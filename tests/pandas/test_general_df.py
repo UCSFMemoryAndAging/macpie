@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import macpie as mp
 from macpie._config import get_option
 
 
@@ -112,6 +113,30 @@ def test_assimilate():
     assert df1["col3"].dtype == df2["col3"].dtype
 
 
+def test_compare():
+    d1 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df2 = pd.DataFrame(data=d2)
+
+    diffs = df1.mac.compare(df2, ignore_cols=mp.pandas.filter_labels(regex="^col"))
+
+
 def test_diff_cols_equality():
     d1 = {
         "col1": [1, 2, 3],
@@ -203,6 +228,14 @@ def test_filter_labels():
         "col6": [10, "11", 12],
     }
     df = pd.DataFrame(data=d)
+    assert df.mac.filter_labels(all_labels=True) == [
+        "col1",
+        "col2",
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
     assert df.mac.filter_labels(items=["col2", "col1"]) == ["col1", "col2"]
     assert df.mac.filter_labels(items=["col1", "col2"], invert=True) == [
         "col3",
@@ -225,6 +258,13 @@ def test_filter_labels_mi():
     df = pd.DataFrame(data=d)
     df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
 
+    assert df.mac.filter_labels(all_labels=True, result_level=0) == ["CDR", "CDR", "CDR"]
+    assert df.mac.filter_labels(all_labels=True, result_level=1) == ["PIDN", "DCDate", "InstrID"]
+    assert df.mac.filter_labels(all_labels=True) == [
+        ("CDR", "PIDN"),
+        ("CDR", "DCDate"),
+        ("CDR", "InstrID"),
+    ]
     assert df.mac.filter_labels(regex=re.compile("cdr", re.IGNORECASE), level=0) == [
         ("CDR", "PIDN"),
         ("CDR", "DCDate"),
@@ -238,6 +278,55 @@ def test_filter_labels_mi():
         ("CDR", "DCDate")
     ]
     assert df.mac.filter_labels(regex=re.compile("id$", re.IGNORECASE)) == [("CDR", "InstrID")]
+
+
+def test_filter_labels_pair():
+    d1 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc1": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc2": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df2 = pd.DataFrame(data=d2)
+
+    with pytest.raises(TypeError):
+        df1.mac.filter_labels_pair(df2)
+
+    assert df1.mac.filter_labels_pair(df2, labels_intersection=True) == (
+        (["col1", "col2", "col3", "date", "col6"], ["misc1"]),
+        (["col1", "col2", "col3", "date", "col6"], ["misc2"]),
+    )
+
+    assert df1.mac.filter_labels_pair(df2, left_filter_labels_kwargs={"like": "col"}) == (
+        (["col1", "col2", "col3", "col6"], ["date", "misc1"]),
+        (["col1", "col2", "col3", "date", "misc2", "col6"], []),
+    )
+
+    assert df1.mac.filter_labels_pair(
+        df2, both_filter_labels_kwargs={"regex": "^col", "invert": True}
+    ) == (
+        (["date", "misc1"], ["col1", "col2", "col3", "col6"]),
+        (["date", "misc2"], ["col1", "col2", "col3", "col6"]),
+    )
+
+    assert df1.mac.filter_labels_pair(
+        df2, both_filter_labels_kwargs={"regex": "^col", "invert": True}, labels_intersection=True
+    ) == (
+        (["date"], ["col1", "col2", "col3", "misc1", "col6"]),
+        (["date"], ["col1", "col2", "col3", "misc2", "col6"]),
+    )
 
 
 def test_get_col_name():

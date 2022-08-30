@@ -8,6 +8,8 @@ from .general_df import (
     drop_cols,
     drop_suffix,
     equals,
+    filter_labels,
+    filter_labels_pair,
     flatten_multiindex,
     get_col_name,
     get_col_names,

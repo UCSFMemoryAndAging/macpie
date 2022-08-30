@@ -25,8 +25,8 @@ def chunks(seq, chunk_size=None):
 
 
 def common_members(a, b):
-    a_set = set(a) if a else set()
-    b_set = set(b) if b else set()
+    a_set = set(a) if a is not None else set()
+    b_set = set(b) if b is not None else set()
 
     return list(a_set.intersection(b_set))
 
@@ -173,6 +173,13 @@ def move_item_to(l, item, item_to_move_to, offset=0):
         l.insert(item_to_move_to_idx - 1, l.pop(item_idx))
     else:
         l.insert(item_to_move_to_idx, l.pop(item_idx))
+
+
+def remove_duplicates(seq):
+    """
+    Remove duplicates from a sequence while preserving order.
+    """
+    return list(dict.fromkeys(seq))
 
 
 def rtrim(seq, predicate=None):

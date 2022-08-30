@@ -12,3 +12,10 @@ def count_not_none(*args) -> int:
     From: https://github.com/pandas-dev/pandas/blob/9757d1f93faaa517161fd719e884be7344c18b62/pandas/core/common.py#L213-L217
     """
     return sum(x is not None for x in args)
+
+
+def count_bool_true(*args) -> int:
+    """
+    Returns the count of arguments that are falsy.
+    """
+    return sum(bool(x) is True for x in args)

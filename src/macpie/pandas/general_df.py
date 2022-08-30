@@ -1,3 +1,4 @@
+import itertools
 import re
 from collections import defaultdict
 from typing import List
@@ -114,7 +115,77 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     return right
 
 
-def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+def compare(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    ignore_cols=None,
+    left_ignore_cols=None,
+    right_ignore_cols=None,
+    cols_intersection=False,
+    **kwargs,
+):
+    """
+    Compare to another DataFrame and show the differences.
+
+    Parameters
+    ----------
+    left : DataFrame
+        DataFrame to compare.
+    right : DataFrame
+        DataFrame to compare with.
+    ignore_cols : list-like,
+        Columns to ignore in either left or right DataFrame
+    left_ignore_cols : list-like
+        Columns to ignore in left DataFrame
+    right_ignore_cols : list-like
+        Columns to ignore in right DataFrame
+    cols_intersection : bool, default False
+        Whether to only compare the columns common to both, after
+        ignoring any columns specifed in the *ignore_cols params.
+    **kwargs
+        All keyword arguments are passed through to the underlying
+        :meth:`pandas.DataFrame.compare` method.
+
+    Returns
+    -------
+    DataFrame
+        Showing differences.
+    """
+    left_ignore_cols, right_ignore_cols = filter_labels_pair(
+        left,
+        right,
+        ignore_cols=ignore_cols,
+        left_ignore_cols=left_ignore_cols,
+        right_ignore_cols=right_ignore_cols,
+        cols_intersection=cols_intersection,
+    )
+
+    left = left.drop(columns=left_ignore_cols, errors="ignore")
+    right = right.drop(columns=right_ignore_cols, errors="ignore")
+
+    try:
+        diffs = left.compare(right, **kwargs)
+        if diffs.empty:
+            return None
+        return diffs
+    except ValueError:  # if dfs don't have identical labels or shape
+        # first compare columns
+        (left_only_cols, right_only_cols) = left.mac.diff_cols(right)
+        if left_only_cols != set() or right_only_cols != set():
+            col_diffs = pd.DataFrame()
+            col_diffs["Left_Only_Cols"] = list(left_only_cols)
+            col_diffs["Right_Only_Cols"] = list(right_only_cols)
+            return col_diffs
+
+        # then compare rows
+        else:
+            row_diffs = left.mac.diff_rows(right)
+            if row_diffs.empty:
+                return None
+            return row_diffs
+
+
+def diff_cols(left: pd.DataFrame, right: pd.DataFrame, ignore_cols=None):
     """
     Find the column differences between two DataFrames.
 
@@ -122,11 +193,8 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     ----------
     left : DataFrame
     right : DataFrame
-    cols_ignore : list-like, optional
+    ignore_cols : list-like, optional
         Columns to ignore
-    cols_ignore_pat : Regular expression. Default is ``$^``
-        Column names that match will be ignored. Default pattern is ``$^``
-        which matches nothing so no columns are ignored.
 
     Returns
     -------
@@ -134,15 +202,13 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
         First element is the set of columns that exist in ``left``,
         and the second element is the set of columns that only exist in ``right``.
     """
+    if ignore_cols is None:
+        ignore_cols = []
+    else:
+        ignore_cols = set(ignore_cols)
 
-    left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
-    right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
-
-    left_columns = set(left.columns)
-    right_columns = set(right.columns)
-
-    left_columns = left_columns - set(cols_ignore)
-    right_columns = right_columns - set(cols_ignore)
+    left_columns = set(left.columns) - ignore_cols
+    right_columns = set(right.columns) - ignore_cols
 
     left_only_cols = left_columns - right_columns
     right_only_cols = right_columns - left_columns
@@ -150,7 +216,7 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     return (left_only_cols, right_only_cols)
 
 
-def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+def diff_rows(left: pd.DataFrame, right: pd.DataFrame, ignore_cols=None):
     """
     If ``left`` and ``right`` share the same columns, returns a DataFrame
     containing rows that differ.
@@ -159,16 +225,16 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_i
     ----------
     left : DataFrame
     right : DataFrame
-    cols_ignore : list-like, optional
+    ignore_cols : list-like, optional
         Columns to ignore
-    cols_ignore_pat : Regular expression. Default is ``$^``
-        Column names that match will be ignored. Default pattern is ``$^``
-        which matches nothing so no columns are ignored.
 
     Returns
     -------
     DataFrame
     """
+
+    left = left.drop(columns=left_ignore_cols, errors="ignore")
+    right = right.drop(columns=right_ignore_cols, errors="ignore")
 
     left = drop_cols(left, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
     right = drop_cols(right, cols_list=cols_ignore, cols_pat=cols_ignore_pat)
@@ -298,7 +364,16 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, cols_ignore=set(), cols_igno
 
 
 def filter_labels(
-    df: pd.DataFrame, items=None, like=None, regex=None, invert=False, axis=None, level=None
+    *dfs: pd.DataFrame,
+    items=None,
+    like=None,
+    regex=None,
+    all_labels=None,
+    invert=False,
+    axis=None,
+    level=None,
+    result_level=None,
+    result_type="single_list",
 ):
     """
     Filter dataframe row or column labels.
@@ -306,14 +381,17 @@ def filter_labels(
     Parameters
     ----------
     items : list-like
-        Keep labels from axis which are in `items`.
+        Get labels from axis which are in `items`.
     like : str
-        Keep labels from axis for which "like in label == True".
+        Get labels from axis for which "like in label == True".
     regex : str (regular expression)
-        Keep labels from axis for which re.search(regex, label) == True.
+        Get labels from axis for which re.search(regex, label) == True.
+    all_labels : bool, default None
+        If True, will get all labels from axis. The `level` parameter
+        will be ignored.
     invert : bool, default False
         Whether to invert the result (i.e. discard labels returned by
-        `items`, `like`, or `regex`)
+        `items`, `like`, `regex`, or `all_labels`)
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
@@ -321,10 +399,18 @@ def filter_labels(
     level : str or int, optional
         For a MultiIndex, level (name or number) to use for
         filtering. Default is the highest level
+    result_level : str or int, optional
+        For a MultiIndex, return the labels at the requested
+        level (name or number). Default is returning all levels.
+    result_type : {'single_list', 'single_list_no_dups', 'list_of_lists'}, default 'single_list_no_dups'
+        Indicates how results should be returned.
+        * single_list: Results are flattened into a single list
+        * single_list_no_dups: Results are flattened into a single list with duplicates removed
+        * list_of_lists: List of lists.
 
     Returns
     -------
-    List of labels
+    List of labels. See ``result_type`` parameter.
 
     See Also
     --------
@@ -333,58 +419,158 @@ def filter_labels(
 
     Notes
     -----
-    The ``items``, ``like``, and ``regex``
+    The ``items``, ``like``, ``regex`` and ``all_labels``
     parameters are enforced to be mutually exclusive.
     ``axis`` defaults to the info axis that is used when indexing
     with ``[]``.
     """
 
-    nkw = com.count_not_none(items, like, regex)
+    if result_type not in ["single_list", "single_list_no_dups", "list_of_lists"]:
+        raise ValueError(
+            "invalid value for result_type, must be one "
+            "of {'single_list', 'single_list_no_dups', 'list_of_lists'}"
+        )
+
+    if all_labels is not True:
+        all_labels = None
+
+    nkw = com.count_not_none(items, like, regex, all_labels)
     if nkw > 1:
         raise TypeError(
-            "Keyword arguments `items`, `like`, and `not_like`" " are mutually exclusive"
+            "Keyword arguments `items`, `like`, `not_like` and `all_labels` are mutually exclusive"
         )
 
     if axis is None:
-        axis = df._info_axis_name
+        axis = dfs[0]._info_axis_name
 
-    labels = df._get_axis(axis)
+    final_result = []
+    for df in dfs:
+        labels = df._get_axis(axis)
 
-    mi_labels = None
-    if isinstance(labels, pd.MultiIndex):
-        if level is None:
-            level = labels.nlevels - 1
-        mi_labels = labels.copy()
-        labels = mi_labels.get_level_values(level)
+        mi_labels = None
+        if isinstance(labels, pd.MultiIndex):
+            if level is None:
+                mi_level = labels.nlevels - 1
+            else:
+                mi_level = level
+            mi_labels = labels.copy()
+            labels = mi_labels.get_level_values(mi_level)
 
-    if items is not None:
-        result_idxs = [idx for (idx, label) in enumerate(labels) if label in items]
-    elif like:
-        result_idxs = [
-            idx
-            for (idx, label) in enumerate(labels)
-            if like in pd.core.dtypes.common.ensure_str(label)
-        ]
-    elif regex:
-        result_idxs = [
-            idx
-            for (idx, label) in enumerate(labels)
-            if re.search(regex, pd.core.dtypes.common.ensure_str(label)) is not None
-        ]
-    else:
+        if all_labels is not None:
+            result_idxs = list(range(len(labels)))
+        elif items is not None:
+            result_idxs = [idx for (idx, label) in enumerate(labels) if label in items]
+        elif like:
+            result_idxs = [
+                idx
+                for (idx, label) in enumerate(labels)
+                if like in pd.core.dtypes.common.ensure_str(label)
+            ]
+        elif regex:
+            result_idxs = [
+                idx
+                for (idx, label) in enumerate(labels)
+                if re.search(regex, pd.core.dtypes.common.ensure_str(label)) is not None
+            ]
+        else:
+            raise TypeError("Must pass either `items`, `like`, `regex`, or `all_labels`")
+
+        if invert:
+            result_idxs = [idx for (idx, _) in enumerate(labels) if idx not in result_idxs]
+
+        if mi_labels is not None:
+            result = [mi_labels[idx] for idx in result_idxs]
+            if result_level is not None:
+                result_level = mi_labels._get_level_number(result_level)
+                result = list(list(zip(*result))[result_level])
+        else:
+            result = [labels[idx] for idx in result_idxs]
+
+        final_result.append(result)
+
+    if result_type == "single_list" or result_type == "single_list_no_dups":
+        final_result = list(itertools.chain.from_iterable(final_result))
+        if result_type == "single_list_no_dups":
+            final_result = lltools.remove_duplicates(final_result)
+
+    return final_result
+
+
+def filter_labels_pair(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    left_filter_labels_kwargs={},
+    right_filter_labels_kwargs={},
+    both_filter_labels_kwargs={},
+    labels_intersection=None,
+):
+    """
+    Filter row or column labels of a pair of dataframes.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    left_filter_labels_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        to be applied to left DataFrame.
+    right_filter_labels_kwargs : list-like
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        to be applied to right DataFrame.
+    both_filter_labels_kwargs : list-like
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        to be applied to both DataFrames.
+    labels_intersection : bool, default False
+        Whether to only return the labels common to both, after
+        filtering any labels specifed in the *filter_labels_kwargs params.
+
+    Returns
+    -------
+    Length-2 Tuple of Length-2 Tuples
+        ((left_labels_returned, left_labels_discarded), (right_labels_returned, right_labels_discarded))
+    """
+    nkw = com.count_bool_true(
+        left_filter_labels_kwargs,
+        right_filter_labels_kwargs,
+        both_filter_labels_kwargs,
+        labels_intersection,
+    )
+
+    if nkw == 0:
         raise TypeError(
-            "Must pass either `like`, `not_like`, `regex`, `not_regex`, or `not_items`"
+            "Must pass at least one of `left_filter_labels_kwargs`, "
+            "`right_filter_labels_kwargs`, `both_filter_labels_kwargs`, or `labels_intersection`"
         )
 
-    if invert:
-        result_idxs = [idx for (idx, _) in enumerate(labels) if idx not in result_idxs]
+    left_labels = (
+        [] if not left_filter_labels_kwargs else filter_labels(left, **left_filter_labels_kwargs)
+    )
+    right_labels = (
+        []
+        if not right_filter_labels_kwargs
+        else filter_labels(right, **right_filter_labels_kwargs)
+    )
+    if both_filter_labels_kwargs:
+        left_labels += filter_labels(left, **both_filter_labels_kwargs)
+        right_labels += filter_labels(right, **both_filter_labels_kwargs)
 
-    if mi_labels is not None:
-        result = [mi_labels[idx] for idx in result_idxs]
-    else:
-        result = [labels[idx] for idx in result_idxs]
+    # if no filtering is done, return all labels
+    if not left_filter_labels_kwargs and not both_filter_labels_kwargs:
+        left_labels = filter_labels(left, all_labels=True)
+    if not right_filter_labels_kwargs and not both_filter_labels_kwargs:
+        right_labels = filter_labels(right, all_labels=True)
 
-    return result
+    if labels_intersection:
+        common_labels = lltools.common_members(left_labels, right_labels)
+        left_labels = common_labels
+        right_labels = common_labels
+
+    left_keep_labels = filter_labels(left, items=left_labels)
+    left_ignore_labels = filter_labels(left, items=left_labels, invert=True)
+    right_keep_labels = filter_labels(right, items=right_labels)
+    right_ignore_labels = filter_labels(right, items=right_labels, invert=True)
+
+    return ((left_keep_labels, left_ignore_labels), (right_keep_labels, right_ignore_labels))
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):

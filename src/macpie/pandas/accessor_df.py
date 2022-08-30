@@ -49,11 +49,9 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.num_cols`"""
         return len(self._df.columns)
 
-    def diff_cols(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+    def diff_cols(self, right: pd.DataFrame, ignore_cols=None):
         """see :meth:`macpie.pandas.diff_cols`"""
-        return general_df.diff_cols(
-            self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
-        )
+        return general_df.diff_cols(self._df, right, ignore_cols=ignore_cols)
 
     def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
         """see :meth:`macpie.pandas.diff_rows`"""
@@ -76,11 +74,47 @@ class MacDataFrameAccessor:
         )
 
     def filter_labels(
-        self, items=None, like=None, regex=None, invert=False, axis=None, level=None
+        self,
+        items=None,
+        like=None,
+        regex=None,
+        all_labels=None,
+        invert=False,
+        axis=None,
+        level=None,
+        result_level=None,
+        result_type="single_list",
     ):
         """see :meth:`macpie.pandas.filter_labels`"""
         return general_df.filter_labels(
-            self._df, items=items, like=like, regex=regex, invert=invert, axis=axis, level=level
+            self._df,
+            items=items,
+            like=like,
+            regex=regex,
+            all_labels=all_labels,
+            invert=invert,
+            axis=axis,
+            level=level,
+            result_level=result_level,
+            result_type=result_type,
+        )
+
+    def filter_labels_pair(
+        self,
+        right: pd.DataFrame,
+        left_filter_labels_kwargs=None,
+        right_filter_labels_kwargs=None,
+        both_filter_labels_kwargs=None,
+        labels_intersection=False,
+    ):
+        """see :meth:`macpie.pandas.filter_labels_pair`"""
+        return general_df.filter_labels_pair(
+            self._df,
+            right,
+            left_filter_labels_kwargs=left_filter_labels_kwargs,
+            right_filter_labels_kwargs=right_filter_labels_kwargs,
+            both_filter_labels_kwargs=both_filter_labels_kwargs,
+            labels_intersection=labels_intersection,
         )
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):
