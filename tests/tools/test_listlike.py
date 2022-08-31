@@ -26,10 +26,10 @@ def test_common_members():
     assert lltools.common_members(l1, l2) == [2, 3]
 
 
-def test_diff():
+def test_difference():
     l1 = [1, 2, 6, 8]
     l2 = [2, 3, 5, 8]
-    assert lltools.diff(l1, l2) == [1, 6]
+    assert lltools.difference(l1, l2) == [1, 6]
 
 
 def test_is_disjoint():

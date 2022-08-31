@@ -10,25 +10,6 @@ import macpie as mp
 from macpie._config import get_option
 
 
-def test_equals():
-    d1 = {
-        "col1": ["a", "b", "c"],
-        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
-        "col3": [7, 8, 9],
-        "col4": [7, 8, 9],
-    }
-    df1 = pd.DataFrame(data=d1)
-
-    d2 = {
-        "col1": ["a", "b", "c"],
-        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
-        "col3": ["7", "8", "9"],
-    }
-    df2 = pd.DataFrame(data=d2)
-
-    assert df1.mac.equals(df2, cols_ignore=["col4"])
-
-
 def test_add_diff_days():
     d = {
         "col1": ["a", "b", "c"],
@@ -134,7 +115,12 @@ def test_compare():
     }
     df2 = pd.DataFrame(data=d2)
 
-    diffs = df1.mac.compare(df2, ignore_cols=mp.pandas.filter_labels(regex="^col"))
+    diffs = df1.mac.compare(
+        df2,
+        filter_kwargs={
+            "both_filter_labels_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}
+        },
+    )
 
 
 def test_diff_cols_equality():
@@ -160,8 +146,8 @@ def test_diff_cols_equality():
 
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2)
 
-    assert set() == left_only_cols
-    assert set() == right_only_cols
+    assert [] == left_only_cols
+    assert [] == right_only_cols
 
 
 def test_diff_cols_different():
@@ -173,8 +159,8 @@ def test_diff_cols_different():
 
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2)
 
-    assert {"col2", "col3"} == left_only_cols
-    assert {"col4"} == right_only_cols
+    assert ["col2", "col3"] == left_only_cols
+    assert ["col4"] == right_only_cols
 
 
 def test_diff_cols_ignore():
@@ -184,19 +170,31 @@ def test_diff_cols_ignore():
     d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
 
-    ignore_cols = ["col2", "col3", "col4"]
-    (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, ignore_cols)
-    assert set() == left_only_cols
-    assert set() == right_only_cols
+    filter_kwargs = {
+        "both_filter_labels_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}
+    }
+    (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
+    assert [] == left_only_cols
+    assert [] == right_only_cols
 
-    ignore_cols = ["col2"]
-    (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, ignore_cols)
-    assert {"col3"} == left_only_cols
-    assert {"col4"} == right_only_cols
+    filter_kwargs = {"both_filter_labels_kwargs": {"items": ["col2"], "invert": True}}
+    (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
+    assert ["col3"] == left_only_cols
+    assert ["col4"] == right_only_cols
 
 
 def test_diff_rows():
     d1 = {"col1": [1, 2, 3], "col2": [4, "5", 6], "col3": [7, 8, 9]}
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
+    df2 = pd.DataFrame(data=d2)
+
+    with pytest.raises(KeyError):
+        df1.mac.diff_rows(df2)
+
+    # same number of columns but different columns
+    d1 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df1 = pd.DataFrame(data=d1)
 
     d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
@@ -211,11 +209,40 @@ def test_diff_rows_2():
     d1 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df1 = pd.DataFrame(data=d1)
 
-    d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
+    d2 = {"col1": [1, 2, 4], "col3": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
 
-    with pytest.raises(KeyError):
-        df1.mac.diff_rows(df2)
+    expected_data = {
+        "col1": [3, 4],
+        "col3": [9, 9],
+        "_mp_diff_rows_merge": ["left_only", "right_only"],
+    }
+    expected_result = pd.DataFrame(data=expected_data, index=[2, 3])
+
+    result = df1.mac.diff_rows(df2)
+    assert result.compare(expected_result).empty
+
+
+def test_equals():
+    d1 = {
+        "col1": ["a", "b", "c"],
+        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
+        "col3": [7, 8, 9],
+        "col4": [4, 5, 6],
+    }
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {
+        "col1": ["a", "b", "c"],
+        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
+        "col3": [7, 8, 9],
+        "col4": [7, 8, 9],
+    }
+    df2 = pd.DataFrame(data=d2)
+
+    assert df1.mac.equals(
+        df2, filter_kwargs={"both_filter_labels_kwargs": {"items": ["col4"], "invert": True}}
+    )
 
 
 def test_filter_labels():
@@ -257,6 +284,8 @@ def test_filter_labels_mi():
     }
     df = pd.DataFrame(data=d)
     df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
+
+    assert df.mac.filter_labels(items=[("CDR", "PIDN")]) == [("CDR", "PIDN")]
 
     assert df.mac.filter_labels(all_labels=True, result_level=0) == ["CDR", "CDR", "CDR"]
     assert df.mac.filter_labels(all_labels=True, result_level=1) == ["PIDN", "DCDate", "InstrID"]

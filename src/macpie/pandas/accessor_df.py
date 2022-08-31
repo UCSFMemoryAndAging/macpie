@@ -46,32 +46,27 @@ class MacDataFrameAccessor:
         return general_df.assimilate(self._df, right)
 
     def col_count(self):
-        """see :meth:`macpie.pandas.num_cols`"""
         return len(self._df.columns)
 
-    def diff_cols(self, right: pd.DataFrame, ignore_cols=None):
+    def compare(self, right: pd.DataFrame, filter_kwargs={}, **kwargs):
+        """see :meth:`macpie.pandas.compare`"""
+        return general_df.compare(self._df, right, filter_kwargs=filter_kwargs, **kwargs)
+
+    def diff_cols(self, right: pd.DataFrame, filter_kwargs={}):
         """see :meth:`macpie.pandas.diff_cols`"""
-        return general_df.diff_cols(self._df, right, ignore_cols=ignore_cols)
+        return general_df.diff_cols(self._df, right, filter_kwargs=filter_kwargs)
 
-    def diff_rows(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+    def diff_rows(self, right: pd.DataFrame, filter_kwargs={}):
         """see :meth:`macpie.pandas.diff_rows`"""
-        return general_df.diff_rows(
-            self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
-        )
-
-    def drop_cols(self, cols_list=set(), cols_pat=None):
-        """see :meth:`macpie.pandas.drop_cols`"""
-        return general_df.drop_cols(self._df, cols_list=cols_list, cols_pat=cols_pat)
+        return general_df.diff_rows(self._df, right, filter_kwargs=filter_kwargs)
 
     def drop_suffix(self, suffix: str):
         """see :meth:`macpie.pandas.drop_suffix`"""
         return general_df.drop_suffix(self._df, suffix)
 
-    def equals(self, right: pd.DataFrame, cols_ignore=set(), cols_ignore_pat="$^"):
+    def equals(self, right: pd.DataFrame, filter_kwargs={}):
         """see :meth:`macpie.pandas.equals`"""
-        return general_df.equals(
-            self._df, right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
-        )
+        return general_df.equals(self._df, right, filter_kwargs=filter_kwargs)
 
     def filter_labels(
         self,
@@ -102,13 +97,31 @@ class MacDataFrameAccessor:
     def filter_labels_pair(
         self,
         right: pd.DataFrame,
-        left_filter_labels_kwargs=None,
-        right_filter_labels_kwargs=None,
-        both_filter_labels_kwargs=None,
+        left_filter_labels_kwargs={},
+        right_filter_labels_kwargs={},
+        both_filter_labels_kwargs={},
         labels_intersection=False,
     ):
         """see :meth:`macpie.pandas.filter_labels_pair`"""
         return general_df.filter_labels_pair(
+            self._df,
+            right,
+            left_filter_labels_kwargs=left_filter_labels_kwargs,
+            right_filter_labels_kwargs=right_filter_labels_kwargs,
+            both_filter_labels_kwargs=both_filter_labels_kwargs,
+            labels_intersection=labels_intersection,
+        )
+
+    def filter_pair(
+        self,
+        right: pd.DataFrame,
+        left_filter_labels_kwargs={},
+        right_filter_labels_kwargs={},
+        both_filter_labels_kwargs={},
+        labels_intersection=False,
+    ):
+        """see :meth:`macpie.pandas.filter_pair`"""
+        return general_df.filter_pair(
             self._df,
             right,
             left_filter_labels_kwargs=left_filter_labels_kwargs,
@@ -153,7 +166,6 @@ class MacDataFrameAccessor:
         return general_df.replace_suffix(self._df, old_suffix, new_suffix)
 
     def row_count(self):
-        """see :meth:`macpie.pandas.num_rows`"""
         return len(self._df.index)
 
     def to_datetime(self, date_col_name):

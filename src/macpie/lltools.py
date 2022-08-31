@@ -31,9 +31,9 @@ def common_members(a, b):
     return list(a_set.intersection(b_set))
 
 
-def diff(a, b):
+def difference(a, b):
     """Return list of items in ``a`` that are not in ``b``,
-    like ``a`` - ``b``. ::
+    like ``a`` - ``b``, while preserving order. ::
 
         >>> l1 = [1, 2, 6, 8]
         >>> l2 = [2, 3, 5, 8]

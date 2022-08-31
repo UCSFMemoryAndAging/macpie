@@ -159,7 +159,7 @@ class Masker:
                     cols_not_to_rename = masked_cols
                 else:
                     cols_not_to_rename = set().union(masked_cols, norename_cols)
-                rename_cols = lltools.diff(result.columns.tolist(), cols_not_to_rename)
+                rename_cols = lltools.difference(result.columns.tolist(), cols_not_to_rename)
             for num, col_to_rename in enumerate(rename_cols):
                 col_rename_dict[col_to_rename] = "Col" + str(num + 1)
             result.rename(columns=col_rename_dict, inplace=True)

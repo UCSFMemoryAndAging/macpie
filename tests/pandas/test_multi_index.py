@@ -35,7 +35,10 @@ def test_diff_rows_multiindex():
     df2 = pd.DataFrame(data=d2)
     df2.columns = pd.MultiIndex.from_product([["CDR"], df2.columns])
 
-    result = df1.mac.diff_rows(df2, cols_ignore=[("CDR", "col2")])
+    result = df1.mac.diff_rows(
+        df2,
+        filter_kwargs={"both_filter_labels_kwargs": {"items": [("CDR", "col2")], "invert": True}},
+    )
     assert result.empty
 
 
