@@ -77,8 +77,9 @@ def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
 
 def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     """
-    Assimilate ``right`` to look like ``left`` by casting column data types in ``right``
-    to the data types in ``left`` where the column name is the same.
+    Assimilate ``right`` to look like ``left`` by ordering the columns in ``right``
+    as close to the order of the columns in ``left``, and by casting column data types
+    in ``right`` to the column data types in ``left`` where the column name is the same.
 
     Parameters
     ----------
@@ -90,21 +91,18 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
     DataFrame
         The assimilated ``right`` DataFrame
     """
-    left_columns = set(left.columns)
-    right_columns = set(right.columns)
 
-    left_dtypes_dict = left.dtypes.to_dict()
+    # 1. Order the right columns as close to the order of the left columns
+    ((left_labels_returned, _), (_, right_labels_discarded)) = filter_labels_pair(
+        left, right, labels_intersection=True
+    )
+    common_columns = left_labels_returned
+    right_columns_reordered = common_columns + right_labels_discarded
+    right = right.reindex(right_columns_reordered, axis="columns")
 
-    # find columns that are only in left but not in right
-    left_only_cols = left_columns.difference(right_columns)
-    for col in left_only_cols:
-        del left_dtypes_dict[col]
-
-    for col_name, dtype in left_dtypes_dict.items():
-        try:
-            right = right.astype({col_name: dtype})
-        except pd.errors.IntCastingNaNError:
-            pass
+    # 2. Cast column data types in right to be the same as those in left
+    for col in common_columns:
+        right[col] = right[col].astype(left[col].dtypes.name)
 
     return right
 
@@ -123,7 +121,7 @@ def compare(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}, **kwargs)
         Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
         to pre-filter columns before comparison.
     **kwargs
-        All keyword arguments are passed through to the underlying
+        All remaining keyword arguments are passed through to the underlying
         :meth:`pandas.DataFrame.compare` method.
 
     Returns
@@ -301,7 +299,7 @@ def filter_labels(
         'index' for Series, 'columns' for DataFrame.
     level : str or int, optional
         For a MultiIndex, level (name or number) to use for
-        filtering. -1 is highest level.
+        filtering. Supports negative indexing (i.e. -1 is highest level).
     result_level : str or int, optional
         For a MultiIndex, return the labels at the requested
         level (name or number). Default is returning all levels.
@@ -427,7 +425,7 @@ def filter_labels_pair(
     labels_intersection=None,
 ):
     """
-    Filter row or column labels of a pair of dataframes.
+    Filter row or column labels on a pair of dataframes.
 
     Parameters
     ----------
@@ -784,6 +782,25 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     """
     df[get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
     return df
+
+
+def imitate_sort(left: pd.DataFrame, right: pd.DataFrame, left_kwargs={}, right_kwargs={}):
+    """
+    Sort the pair of DataFrames using their common columns.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    **kwargs
+        All keyword arguments are passed through to the underlying
+        :meth:`pandas.DataFrame.sort_values` method.
+    """
+    ((common_columns, _), (_, _)) = filter_labels_pair(left, right, labels_intersection=True)
+    left = left.sort_values(by=common_columns, **left_kwargs)
+    right = right.sort_values(by=common_columns, **right_kwargs)
+
+    return (left, right)
 
 
 def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):

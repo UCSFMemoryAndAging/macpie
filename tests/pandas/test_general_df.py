@@ -80,8 +80,8 @@ def test_assimilate():
 
     d2 = {
         "col1": ["a", "b", "c"],
-        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
         "col3": ["7", "8", "9"],
+        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
     }
     df2 = pd.DataFrame(data=d2)
 
@@ -95,32 +95,14 @@ def test_assimilate():
 
 
 def test_compare():
-    d1 = {
-        "col1": [1, 2, 3],
-        "col2": [4, "5", 6],
-        "col3": [7, 8, 9],
-        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
-        "misc": ["john", "paul", "mary"],
-        "col6": [10, "11", 12],
-    }
+    d1 = {"col1": [1, 2, 3], "col2": [4, 5, 6], "col3": [7, 8, 9]}
     df1 = pd.DataFrame(data=d1)
 
-    d2 = {
-        "col1": [1, 2, 3],
-        "col2": [4, "5", 6],
-        "col3": [7, 8, 9],
-        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
-        "misc": ["john", "paul", "mary"],
-        "col6": [10, "11", 12],
-    }
+    d2 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
-
-    diffs = df1.mac.compare(
-        df2,
-        filter_kwargs={
-            "both_filter_labels_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}
-        },
-    )
+    assert df1.mac.compare(
+        df2, filter_kwargs={"left_filter_labels_kwargs": {"items": ["col2"], "invert": True}}
+    ).empty
 
 
 def test_diff_cols_equality():
@@ -205,7 +187,6 @@ def test_diff_rows():
 
 
 def test_diff_rows_2():
-    # same number of columns but different columns
     d1 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df1 = pd.DataFrame(data=d1)
 
@@ -286,7 +267,6 @@ def test_filter_labels_mi():
     df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
 
     assert df.mac.filter_labels(items=[("CDR", "PIDN")]) == [("CDR", "PIDN")]
-
     assert df.mac.filter_labels(all_labels=True, result_level=0) == ["CDR", "CDR", "CDR"]
     assert df.mac.filter_labels(all_labels=True, result_level=1) == ["PIDN", "DCDate", "InstrID"]
     assert df.mac.filter_labels(all_labels=True) == [

@@ -158,40 +158,12 @@ def compare_files_as_dataframes(left_file, right_file, sheet_pairs, sort_col=Non
                     fg="black",
                 )
 
-        comparison_result_df = compare_dataframes(left_df, right_df)
+        diffs_df = left_df.mac.compare(right_df)
 
-        if comparison_result_df is not None:
-            dfs_results[result_sheetname] = comparison_result_df
+        if not diffs_df.empty:
+            dfs_results[result_sheetname] = diffs_df
 
     return dfs_results
-
-
-def compare_dataframes(left_df, right_df):
-    try:
-        diffs = left_df.compare(right_df)
-        if diffs.empty:
-            return None
-        return diffs
-
-    except ValueError:
-        # if dfs don't have identical labels or shape
-
-        # first compare columns
-        (left_only_cols, right_only_cols) = left_df.mac.diff_cols(right_df)
-        if left_only_cols != set() or right_only_cols != set():
-            col_diffs = pd.DataFrame()
-            if left_only_cols != set():
-                col_diffs["Left_Only_Cols"] = list(left_only_cols)
-            if right_only_cols != set():
-                col_diffs["Right_Only_Cols"] = list(right_only_cols)
-            return col_diffs
-
-        # then compare rows
-        else:
-            row_diffs = left_df.mac.diff_rows(right_df)
-            if row_diffs.empty:
-                return None
-            return row_diffs
 
 
 def compare_files_as_tablib_datasets(left_file, right_file, sheet_pairs, sort_col=None):

@@ -26,7 +26,14 @@ def test_keep_earliest_csv():
 
     expected_result = file_to_dataframe(data_dir / "instr1_primaryearliest.csv")
 
-    assert_dfs_equal(result, expected_result, cols_ignore=cols_ignore, output_dir=output_dir)
+    assert_dfs_equal(
+        result,
+        expected_result,
+        filter_kwargs={"both_filter_labels_kwargs": {"items": cols_ignore, "invert": True}},
+        assimilate=True,
+        sort=True,
+        output_dir=output_dir,
+    )
 
 
 @pytest.mark.slow

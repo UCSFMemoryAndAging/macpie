@@ -4,16 +4,18 @@ Public testing utility functions related to pandas.
 
 import pandas as pd
 
-import macpie.datetimetools
-import macpie.openpyxltools
+import macpie as mp
 
 
 def assert_dfs_equal(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    cols_ignore=set(),
-    cols_ignore_pat="$^",
+    filter_kwargs={},
+    assimilate=False,
+    sort=False,
+    compare_kwargs={},
     output_dir=None,
+    **kwargs,
 ):
     """For testing equality of :class:`pandas.DataFrame` objects
 
@@ -21,38 +23,39 @@ def assert_dfs_equal(
     ----------
     left : DataFrame
     right : DataFrame
-    cols_ignore : list-like, optional
-        Columns to ignore
-    cols_ignore_pat : Regular expression. Default is ``$^``
-        Column names that match will be ignored. Default pattern is ``$^``
-        which matches nothing so no columns are ignored.
+    filter_kwargs : dict, optional
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        to pre-filter columns before comparing data.
+    assimilate : bool, default is False
+        Whether to :func:`macpie.pandas.assimilate` the ``right`` into ``left``
+        before comparing data.
+    sort : bool, default is False
+        Whether to :func:`macpie.pandas.imitate_sort` both DataFrames before
+        comparing data.
+    compare_kwargs : dict, optional
+        Keyword arguments to pass to the underling :meth:`macpie.pandas.compare`
     output_dir : Path, optional
-        Directory to write row difference results to
+        Directory to write col or row difference results to
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`pandas.testing.assert_frame_equal` function.
     """
+    if filter_kwargs:
+        (left, right) = mp.pandas.filter_pair(left, right, **filter_kwargs)
 
-    if left.mac.equals(right, cols_ignore, cols_ignore_pat):
-        return True
+    if assimilate:
+        right = left.mac.assimilate(right)
 
-    right = left.mac.assimilate(right)
+    if sort:
+        (left, right) = mp.pandas.imitate_sort(
+            left, right, left_kwargs={"ignore_index": True}, right_kwargs={"ignore_index": True}
+        )
 
-    # check columns
-    (left_only_cols, right_only_cols) = left.mac.diff_cols(
-        right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat
-    )
-
-    if left_only_cols != set() or right_only_cols != set():
-        assert False, f"\nleft_only_cols: {left_only_cols}\nright_only_cols: {right_only_cols}"
-
-    # check rows
-    pd.testing.assert_index_equal(left.index, right.index)
-
-    row_diffs = left.mac.diff_rows(right, cols_ignore=cols_ignore, cols_ignore_pat=cols_ignore_pat)
-
-    if row_diffs.mac.row_count() > 0:
+    diffs = left.mac.compare(right, **compare_kwargs)
+    if not diffs.empty:
         if output_dir is not None:
-            row_diffs_filename = (
-                "row_diffs_" + macpie.datetimetools.current_datetime_str(ms=True) + ".xlsx"
-            )
-            row_diffs.to_excel(output_dir / row_diffs_filename, index=False)
+            diffs_filename = "diffs_" + mp.datetimetools.current_datetime_str(ms=True) + ".xlsx"
+            diffs.to_excel(output_dir / diffs_filename, index=True)
+        assert False, f"\ndiffs: {diffs}"
 
-        assert False, f"\nrow_diffs: {row_diffs}"
+    pd.testing.assert_frame_equal(left, right, **kwargs)

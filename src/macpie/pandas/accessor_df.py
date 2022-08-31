@@ -146,6 +146,12 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.get_cols_by_prefixes`"""
         return general_df.get_cols_by_prefixes(self._df, prefixes, one_match_only=one_match_only)
 
+    def imitate_sort(self, right, left_kwargs={}, right_kwargs={}):
+        """see :meth:`macpie.pandas.imitate_sort`"""
+        return general_df.imitate_sort(
+            self._df, right, left_kwargs=left_kwargs, right_kwargs=right_kwargs
+        )
+
     def insert(self, col_name, col_value, allow_duplicates=False):
         """see :meth:`macpie.pandas.insert`"""
         return general_df.insert(self._df, col_name, col_value, allow_duplicates=allow_duplicates)
