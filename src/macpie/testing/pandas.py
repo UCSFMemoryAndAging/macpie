@@ -1,6 +1,7 @@
 """
 Public testing utility functions related to pandas.
 """
+import pathlib
 
 import pandas as pd
 
@@ -53,7 +54,8 @@ def assert_dfs_equal(
 
     diffs = left.mac.compare(right, **compare_kwargs)
     if not diffs.empty:
-        if output_dir is not None:
+        if isinstance(output_dir, pathlib.PurePath):
+            output_dir.mkdir(parents=True, exist_ok=True)
             diffs_filename = "diffs_" + mp.datetimetools.current_datetime_str(ms=True) + ".xlsx"
             diffs.to_excel(output_dir / diffs_filename, index=True)
         assert False, f"\ndiffs: {diffs}"

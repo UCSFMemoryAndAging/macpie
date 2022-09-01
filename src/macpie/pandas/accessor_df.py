@@ -73,10 +73,9 @@ class MacDataFrameAccessor:
         items=None,
         like=None,
         regex=None,
-        all_labels=None,
         invert=False,
         axis=None,
-        level=None,
+        filter_level=None,
         result_level=None,
         result_type="single_list",
     ):
@@ -86,10 +85,9 @@ class MacDataFrameAccessor:
             items=items,
             like=like,
             regex=regex,
-            all_labels=all_labels,
             invert=invert,
             axis=axis,
-            level=level,
+            filter_level=filter_level,
             result_level=result_level,
             result_type=result_type,
         )
@@ -97,37 +95,39 @@ class MacDataFrameAccessor:
     def filter_labels_pair(
         self,
         right: pd.DataFrame,
-        left_filter_labels_kwargs={},
-        right_filter_labels_kwargs={},
-        both_filter_labels_kwargs={},
-        labels_intersection=False,
+        filter_kwargs={},
+        left_filter_kwargs={},
+        right_filter_kwargs={},
+        intersection=False,
     ):
         """see :meth:`macpie.pandas.filter_labels_pair`"""
         return general_df.filter_labels_pair(
             self._df,
             right,
-            left_filter_labels_kwargs=left_filter_labels_kwargs,
-            right_filter_labels_kwargs=right_filter_labels_kwargs,
-            both_filter_labels_kwargs=both_filter_labels_kwargs,
-            labels_intersection=labels_intersection,
+            filter_kwargs=filter_kwargs,
+            left_filter_kwargs=left_filter_kwargs,
+            right_filter_kwargs=right_filter_kwargs,
+            intersection=intersection,
         )
 
     def filter_pair(
         self,
         right: pd.DataFrame,
-        left_filter_labels_kwargs={},
-        right_filter_labels_kwargs={},
-        both_filter_labels_kwargs={},
-        labels_intersection=False,
+        filter_kwargs={},
+        left_filter_kwargs={},
+        right_filter_kwargs={},
+        intersection=False,
+        axis=None,
     ):
         """see :meth:`macpie.pandas.filter_pair`"""
         return general_df.filter_pair(
             self._df,
             right,
-            left_filter_labels_kwargs=left_filter_labels_kwargs,
-            right_filter_labels_kwargs=right_filter_labels_kwargs,
-            both_filter_labels_kwargs=both_filter_labels_kwargs,
-            labels_intersection=labels_intersection,
+            filter_kwargs=filter_kwargs,
+            left_filter_kwargs=left_filter_kwargs,
+            right_filter_kwargs=right_filter_kwargs,
+            intersection=intersection,
+            axis=axis,
         )
 
     def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):

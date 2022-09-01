@@ -1,6 +1,10 @@
 import itertools
+import re
 
-import macpie.strtools
+import pandas as pd
+
+import macpie as mp
+import macpie.core.common as com
 
 
 def chunks(seq, chunk_size=None):
@@ -28,7 +32,7 @@ def common_members(a, b):
     a_set = set(a) if a is not None else set()
     b_set = set(b) if b is not None else set()
 
-    return list(a_set.intersection(b_set))
+    return a_set.intersection(b_set)
 
 
 def difference(a, b):
@@ -46,6 +50,174 @@ def difference(a, b):
     """
     b = set(b)
     return [item for item in a if item not in b]
+
+
+def filter_seq(seq, items=None, like=None, regex=None, pred=None, invert=False):
+    """
+    Filter dataframe row or column labels. The options ``items``, ``like``,
+    and ``regex`` are additive and can be used in conjunction with one another.
+
+    Parameters
+    ----------
+    seq : list-like
+        Sequence object to filter
+    items : list-like
+        Get elements from `seq` which are in `items`.
+    like : str
+        Get elements from `seq`` for which "`like` in `seq_element` == True".
+    regex : str (regular expression)
+        Get elements from `seq`` for which re.search(`regex`, `seq_element`) == True.
+    pred : Boolean-valued function
+        Get elements from `seq`` for which `pred`(`seq_element`) == True.
+    invert : bool, default False
+        Whether to invert the result (i.e. filter out elements returned by
+        `items`, `like`, or `regex`)
+
+    Returns
+    -------
+    Tuple[List[str], List[int]]
+        (filtered_elements, filtered_element_indexes)
+
+    See Also
+    --------
+    filter_seq_pair
+    """
+    nkw = com.count_not_none(items, like, regex, pred)
+    if nkw == 0:
+        raise TypeError("Must pass at least one of `items`, `like`, `regex`, or `pred`")
+
+    def check_sub_seq(pred):
+        def f(elem):
+            if mp.lltools.is_list_like(elem):
+                for sub_elem in elem:
+                    if pred(sub_elem):
+                        return True
+            else:
+                if pred(elem):
+                    return True
+            return False
+
+        return f
+
+    result_idxs = []
+    if items is not None:
+
+        def items_pred(elem):
+            return elem in items
+
+        result_idxs += [idx for _, idx in mp.itertools.filter_get_index(items_pred, seq)]
+
+    if like is not None:
+
+        def like_pred(elem):
+            return like in pd.core.dtypes.common.ensure_str(elem)
+
+        result_idxs += [
+            idx for _, idx in mp.itertools.filter_get_index(check_sub_seq(like_pred), seq)
+        ]
+
+    if regex is not None:
+
+        def regex_pred(elem):
+            return re.search(regex, pd.core.dtypes.common.ensure_str(elem)) is not None
+
+        result_idxs += [
+            idx for _, idx in mp.itertools.filter_get_index(check_sub_seq(regex_pred), seq)
+        ]
+
+    if pred is not None:
+        result_idxs += [idx for _, idx in mp.itertools.filter_get_index(check_sub_seq(pred), seq)]
+
+    result_idxs = list(remove_duplicates(result_idxs))
+    result_idxs.sort()
+
+    if invert:
+        result_idxs = [idx for (idx, _) in enumerate(seq) if idx not in result_idxs]
+
+    result_labels = [seq[idx] for idx in result_idxs]
+
+    return result_labels, result_idxs
+
+
+def filter_seq_pair(
+    left,
+    right,
+    filter_kwargs={},
+    left_filter_kwargs={},
+    right_filter_kwargs={},
+    intersection=None,
+):
+    """
+    Filter row or column labels on a pair of dataframes.
+
+    Parameters
+    ----------
+    left : list-like
+        Left sequence to filter
+    right : list-like
+        Right sequence to filter
+    filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`filter_seq`
+        to be applied to both sequences.
+    left_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`filter_seq`
+        to be applied to left sequences.
+    right_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`filter_seq`
+        to be applied to right sequences.
+    intersection : bool, default False
+        Whether to only return the items common to both, after excluding
+        any values filtered out by the *filter_kwargs params.
+
+    Returns
+    -------
+    Tuple[Tuple[str, str], Tuple[str, str]]
+        ((left_items_kept, right_items_kept), (left_items_discarded, right_items_discarded))
+
+    See Also
+    --------
+    filter_seq
+    """
+    nkw = mp.core.common.count_bool_true(
+        filter_kwargs,
+        left_filter_kwargs,
+        right_filter_kwargs,
+        intersection,
+    )
+    if nkw == 0:
+        raise TypeError(
+            "Must pass at least one of `filter_kwargs`, `left_filter_kwargs`, "
+            "`right_filter_kwargs`, or `labels_intersection`"
+        )
+
+    left_items = []
+    right_items = []
+
+    # if no filtering is done, return all items
+    if not filter_kwargs and not left_filter_kwargs:
+        left_items = left
+    if not filter_kwargs and not right_filter_kwargs:
+        right_items = right
+
+    if filter_kwargs:
+        left_items += filter_seq(left, **filter_kwargs)[0]
+        right_items += filter_seq(right, **filter_kwargs)[0]
+
+    if left_filter_kwargs:
+        left_items += filter_seq(left, **left_filter_kwargs)[0]
+
+    if right_filter_kwargs:
+        right_items += filter_seq(right, **right_filter_kwargs)[0]
+
+    if intersection:
+        left_items = right_items = list(common_members(left_items, right_items))
+
+    left_items_kept = filter_seq(left, items=left_items)[0]
+    left_items_discarded = filter_seq(left, items=left_items_kept, invert=True)[0]
+    right_items_kept = filter_seq(right, items=right_items)[0]
+    right_items_discarded = filter_seq(right, items=right_items_kept, invert=True)[0]
+
+    return ((left_items_kept, right_items_kept), (left_items_discarded, right_items_discarded))
 
 
 def is_disjoint(a, b):
@@ -87,7 +259,7 @@ def list_like_str_equal(a, b, case_sensitive=True):
     """
     if len(a) == len(b):
         for strs in zip(a, b):
-            if not macpie.strtools.str_equals(strs[0], strs[1], case_sensitive=case_sensitive):
+            if not mp.strtools.str_equals(strs[0], strs[1], case_sensitive=case_sensitive):
                 return False
         return True
     return False
@@ -175,11 +347,22 @@ def move_item_to(l, item, item_to_move_to, offset=0):
         l.insert(item_to_move_to_idx, l.pop(item_idx))
 
 
-def remove_duplicates(seq):
+def remove_duplicates(seq, preserve_order=True):
     """
     Remove duplicates from a sequence while preserving order.
+
+    Parameters
+    ----------
+    seq : list-like
+        Sequence to remove duplicates from
+    preserve_order : bool, default is True
+        If order does not need to be preserved, set to False
+        for performance gains.
     """
-    return list(dict.fromkeys(seq))
+    if preserve_order:
+        return (key for key in dict.fromkeys(seq))
+    else:
+        return (item for item in set(seq))
 
 
 def rtrim(seq, predicate=None):

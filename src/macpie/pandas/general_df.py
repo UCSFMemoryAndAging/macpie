@@ -1,14 +1,11 @@
 import itertools
-import re
 from collections import defaultdict
 from typing import List
 
 import numpy as np
 import pandas as pd
 
-import macpie.core.common as com
-from macpie._config import get_option
-from macpie import lltools, strtools
+import macpie as mp
 
 
 def add_diff_days(
@@ -36,7 +33,7 @@ def add_diff_days(
     """
 
     if diff_days_col is None:
-        diff_days_col = get_option("column.system.diff_days")
+        diff_days_col = mp.get_option("column.system.diff_days")
 
     if col_start == col_end:
         raise KeyError("date columns have the same name: {col_start}=={col_end}")
@@ -94,7 +91,7 @@ def assimilate(left: pd.DataFrame, right: pd.DataFrame):
 
     # 1. Order the right columns as close to the order of the left columns
     ((left_labels_returned, _), (_, right_labels_discarded)) = filter_labels_pair(
-        left, right, labels_intersection=True
+        left, right, intersection=True
     )
     common_columns = left_labels_returned
     right_columns_reordered = common_columns + right_labels_discarded
@@ -166,16 +163,16 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
         and second element is the list of columns that exist only in ``right``.
     """
     if filter_kwargs:
-        ((left_cols, _), (right_cols, _)) = filter_labels_pair(left, right, **filter_kwargs)
+        ((left_cols, right_cols), _) = filter_labels_pair(left, right, **filter_kwargs)
     else:
         left_cols = left.columns
         right_cols = right.columns
 
-    left_cols = lltools.remove_duplicates(left_cols)
-    right_cols = lltools.remove_duplicates(right_cols)
+    left_cols = list(mp.lltools.remove_duplicates(left_cols))
+    right_cols = list(mp.lltools.remove_duplicates(right_cols))
 
-    left_only_cols = lltools.difference(left_cols, right_cols)
-    right_only_cols = lltools.difference(right_cols, left_cols)
+    left_only_cols = mp.lltools.difference(left_cols, right_cols)
+    right_only_cols = mp.lltools.difference(right_cols, left_cols)
 
     return (left_only_cols, right_only_cols)
 
@@ -204,7 +201,7 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     right_cols = right.columns
 
     if set(left_cols) == set(right_cols):
-        indicator_col_name = get_option("column.system.prefix") + "_diff_rows_merge"
+        indicator_col_name = mp.get_option("column.system.prefix") + "_diff_rows_merge"
         if isinstance(left.columns, pd.MultiIndex) or isinstance(right.columns, pd.MultiIndex):
             # TODO: Doing a pd.merge() on MultiIndex dataframes with indicator
             # set to True/string resulted in the following error:
@@ -236,7 +233,7 @@ def drop_suffix(df: pd.DataFrame, suffix):
         DataFrame with renamed columns.
     """
 
-    return df.rename(columns=lambda x: strtools.strip_suffix(x, suffix))
+    return df.rename(columns=lambda x: mp.strtools.strip_suffix(x, suffix))
 
 
 def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
@@ -269,15 +266,15 @@ def filter_labels(
     items=None,
     like=None,
     regex=None,
-    all_labels=None,
     invert=False,
     axis=None,
-    level=None,
+    filter_level=None,
     result_level=None,
     result_type="single_list",
 ):
     """
-    Filter dataframe row or column labels.
+    Filter dataframe row or column labels. The options ``items``, ``like``,
+    and ``regex`` are additive and can be used in conjunction with one another.
 
     Parameters
     ----------
@@ -287,17 +284,14 @@ def filter_labels(
         Get labels from axis for which "like in label == True".
     regex : str (regular expression)
         Get labels from axis for which re.search(regex, label) == True.
-    all_labels : bool, default None
-        If True, will get all labels from axis. The `level` parameter
-        will be ignored.
     invert : bool, default False
         Whether to invert the result (i.e. discard labels returned by
-        `items`, `like`, `regex`, or `all_labels`)
+        `items`, `like`, or `regex`)
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
-    level : str or int, optional
+    filter_level : str or int, optional
         For a MultiIndex, level (name or number) to use for
         filtering. Supports negative indexing (i.e. -1 is highest level).
     result_level : str or int, optional
@@ -317,28 +311,12 @@ def filter_labels(
     --------
     DataFrame.filter : Subset the dataframe rows or columns according
     to the specified index labels.
-
-    Notes
-    -----
-    The ``items``, ``like``, ``regex`` and ``all_labels``
-    parameters are enforced to be mutually exclusive.
-    ``axis`` defaults to the info axis that is used when indexing
-    with ``[]``.
     """
 
     if result_type not in ["single_list", "single_list_no_dups", "list_of_lists"]:
         raise ValueError(
             "invalid value for result_type, must be one "
             "of {'single_list', 'single_list_no_dups', 'list_of_lists'}"
-        )
-
-    if all_labels is not True:
-        all_labels = None
-
-    nkw = com.count_not_none(items, like, regex, all_labels)
-    if nkw > 1:
-        raise TypeError(
-            "Keyword arguments `items`, `like`, `not_like` and `all_labels` are mutually exclusive"
         )
 
     if axis is None:
@@ -351,67 +329,32 @@ def filter_labels(
         mi_labels = None
         if isinstance(labels, pd.MultiIndex):
             mi_labels = labels.copy()
-            if level is not None:
-                if level < 0:
+            if filter_level is not None:
+                if filter_level < 0:
                     # mimics negative indexing (i.e. -1 is the highest level)
-                    mi_level = labels.nlevels + level
+                    mi_level = labels.nlevels + filter_level
                 else:
-                    mi_level = level
+                    mi_level = filter_level
                 labels = mi_labels.get_level_values(mi_level)
 
-        if all_labels is not None:
-            result_idxs = list(range(len(labels)))
-        elif items is not None:
-            result_idxs = [idx for (idx, label) in enumerate(labels) if label in items]
-        elif like:
-
-            def f(label):
-                if lltools.is_list_like(label):  # handle multiindex
-                    for level_label in label:
-                        if like in pd.core.dtypes.common.ensure_str(level_label):
-                            return True
-                else:
-                    if like in pd.core.dtypes.common.ensure_str(label):
-                        return True
-                return False
-
-            result_idxs = [idx for (idx, label) in enumerate(labels) if f(label)]
-        elif regex:
-
-            def f(label):
-                if lltools.is_list_like(label):  # handle multiindex
-                    for level_label in label:
-                        if (
-                            re.search(regex, pd.core.dtypes.common.ensure_str(level_label))
-                            is not None
-                        ):
-                            return True
-                else:
-                    if re.search(regex, pd.core.dtypes.common.ensure_str(label)) is not None:
-                        return True
-                return False
-
-            result_idxs = [idx for (idx, label) in enumerate(labels) if f(label)]
-        else:
-            raise TypeError("Must pass either `items`, `like`, `regex`, or `all_labels`")
-
-        if invert:
-            result_idxs = [idx for (idx, _) in enumerate(labels) if idx not in result_idxs]
+        _, filtered_idxs = mp.lltools.filter_seq(
+            labels, items=items, like=like, regex=regex, invert=invert
+        )
 
         if mi_labels is not None:
-            result = [mi_labels[idx] for idx in result_idxs]
+            result = [mi_labels[idx] for idx in filtered_idxs]
             if result_level is not None:
                 result_level = mi_labels._get_level_number(result_level)
                 result = list(list(zip(*result))[result_level])
         else:
-            result = [labels[idx] for idx in result_idxs]
+            result = [labels[idx] for idx in filtered_idxs]
 
         final_result.append(result)
 
     if result_type == "single_list" or result_type == "single_list_no_dups":
         final_result = list(itertools.chain.from_iterable(final_result))
         if result_type == "single_list_no_dups":
-            final_result = lltools.remove_duplicates(final_result)
+            final_result = list(mp.lltools.remove_duplicates(final_result))
 
     return final_result
 
@@ -419,10 +362,11 @@ def filter_labels(
 def filter_labels_pair(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    left_filter_labels_kwargs={},
-    right_filter_labels_kwargs={},
-    both_filter_labels_kwargs={},
-    labels_intersection=None,
+    filter_kwargs={},
+    left_filter_kwargs={},
+    right_filter_kwargs={},
+    intersection=False,
+    axis=None,
 ):
     """
     Filter row or column labels on a pair of dataframes.
@@ -431,74 +375,53 @@ def filter_labels_pair(
     ----------
     left : DataFrame
     right : DataFrame
-    left_filter_labels_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
-        to be applied to left DataFrame.
-    right_filter_labels_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
-        to be applied to right DataFrame.
-    both_filter_labels_kwargs : dict
+    filter_kwargs : dict
         Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
         to be applied to both DataFrames.
-    labels_intersection : bool, default False
-        Whether to only return the labels common to both, after
-        filtering any labels specifed in the *filter_labels_kwargs params.
+    left_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        to be applied to left DataFrame.
+    right_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        to be applied to right DataFrame.
+    intersection : bool, default False
+        Whether to only return the labels common to both, after excluding
+        any labels filtered out by the *filter_kwargs params.
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to filter labels on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
 
     Returns
     -------
-    Length-2 Tuple of Length-2 Tuples
-        ((left_labels_returned, left_labels_discarded), (right_labels_returned, right_labels_discarded))
+    Tuple[Tuple[str, str], Tuple[str, str]]
+        ((left_labels_kept, right_labels_kept), (left_labels_discarded, right_labels_discarded))
     """
-    nkw = com.count_bool_true(
-        left_filter_labels_kwargs,
-        right_filter_labels_kwargs,
-        both_filter_labels_kwargs,
-        labels_intersection,
+
+    if axis is None:
+        axis = left._info_axis_name
+
+    left_labels = left._get_axis(axis)
+    right_labels = right._get_axis(axis)
+
+    return mp.lltools.filter_seq_pair(
+        left_labels,
+        right_labels,
+        filter_kwargs=filter_kwargs,
+        left_filter_kwargs=left_filter_kwargs,
+        right_filter_kwargs=right_filter_kwargs,
+        intersection=intersection,
     )
-    if nkw == 0:
-        raise TypeError(
-            "Must pass at least one of `left_filter_labels_kwargs`, "
-            "`right_filter_labels_kwargs`, `both_filter_labels_kwargs`, or `labels_intersection`"
-        )
-
-    left_labels = (
-        [] if not left_filter_labels_kwargs else filter_labels(left, **left_filter_labels_kwargs)
-    )
-    right_labels = (
-        []
-        if not right_filter_labels_kwargs
-        else filter_labels(right, **right_filter_labels_kwargs)
-    )
-    if both_filter_labels_kwargs:
-        left_labels += filter_labels(left, **both_filter_labels_kwargs)
-        right_labels += filter_labels(right, **both_filter_labels_kwargs)
-
-    # if no filtering is done, return all labels
-    if not left_filter_labels_kwargs and not both_filter_labels_kwargs:
-        left_labels = filter_labels(left, all_labels=True)
-    if not right_filter_labels_kwargs and not both_filter_labels_kwargs:
-        right_labels = filter_labels(right, all_labels=True)
-
-    if labels_intersection:
-        common_labels = lltools.common_members(left_labels, right_labels)
-        left_labels = common_labels
-        right_labels = common_labels
-
-    left_keep_labels = filter_labels(left, items=left_labels)
-    left_ignore_labels = filter_labels(left, items=left_labels, invert=True)
-    right_keep_labels = filter_labels(right, items=right_labels)
-    right_ignore_labels = filter_labels(right, items=right_labels, invert=True)
-
-    return ((left_keep_labels, left_ignore_labels), (right_keep_labels, right_ignore_labels))
 
 
 def filter_pair(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    left_filter_labels_kwargs={},
-    right_filter_labels_kwargs={},
-    both_filter_labels_kwargs={},
-    labels_intersection=None,
+    filter_kwargs={},
+    left_filter_kwargs={},
+    right_filter_kwargs={},
+    intersection=None,
+    axis=None,
 ):
     """
     Subset rows or columns of a pair of dataframes according to filtered labels.
@@ -507,34 +430,44 @@ def filter_pair(
     ----------
     left : DataFrame
     right : DataFrame
-    left_filter_labels_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to left DataFrame.
-    right_filter_labels_kwargs : list-like
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to right DataFrame.
-    both_filter_labels_kwargs : list-like
+    filter_kwargs : list-like
         Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
         to be applied to both DataFrames.
-    labels_intersection : bool, default False
-        Whether to only return the labels common to both, after
-        filtering any labels specifed in the *filter_labels_kwargs params.
+    left_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+        to be applied to left DataFrame.
+    right_filter_kwargs : list-like
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+        to be applied to right DataFrame.
+    intersection : bool, default False
+        Whether to only return the labels common to both, after excluding
+        any labels filtered out by the *filter_kwargs params.
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to filter labels on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
 
     Returns
     -------
-    Length-2 Tuple
+    Tuple[DataFrame, DataFrame]
         (subsetted left dataframe, subsetted right dataframe)
     """
-    ((_, left_cols_drop), (_, right_cols_drop)) = filter_labels_pair(
+    if axis is None:
+        axis = left._info_axis_name
+
+    (_, (left_labels_to_drop, right_labels_to_drop)) = filter_labels_pair(
         left,
         right,
-        left_filter_labels_kwargs=left_filter_labels_kwargs,
-        right_filter_labels_kwargs=right_filter_labels_kwargs,
-        both_filter_labels_kwargs=both_filter_labels_kwargs,
-        labels_intersection=labels_intersection,
+        filter_kwargs=filter_kwargs,
+        left_filter_kwargs=left_filter_kwargs,
+        right_filter_kwargs=right_filter_kwargs,
+        intersection=intersection,
+        axis=axis,
     )
-    left = left.drop(columns=left_cols_drop, errors="ignore")
-    right = right.drop(columns=right_cols_drop, errors="ignore")
+
+    left = left.drop(labels=left_labels_to_drop, axis=axis)
+    right = right.drop(labels=right_labels_to_drop, axis=axis)
+
     return (left, right)
 
 
@@ -604,16 +537,16 @@ def get_col_name(df: pd.DataFrame, col_name):
     if col_name is None:
         raise KeyError("column to get is 'None'")
 
-    if lltools.is_list_like(col_name):
+    if mp.lltools.is_list_like(col_name):
         # handle MultiIndex
         for col in df.columns:
-            if lltools.list_like_str_equal(col, col_name, case_sensitive=False):
+            if mp.lltools.list_like_str_equal(col, col_name, case_sensitive=False):
                 return col
         raise KeyError(f"column not found: {col_name}")
 
     if isinstance(col_name, str):
         for col in df.columns:
-            if strtools.str_equals(col, col_name, case_sensitive=False):
+            if mp.strtools.str_equals(col, col_name, case_sensitive=False):
                 return col
 
     raise KeyError(f"column not found: {col_name}")
@@ -723,7 +656,7 @@ def get_cols_by_prefixes(df: pd.DataFrame, prefixes, one_match_only=True):
 
     results = defaultdict(list)
 
-    prefixes = set(lltools.maybe_make_list(prefixes))
+    prefixes = set(mp.lltools.maybe_make_list(prefixes))
     for prefix in prefixes:
         matched_cols = list(
             filter(lambda df_col: df_col.lower().startswith(prefix.lower()), df.columns)
@@ -780,7 +713,7 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     cols : list-like
         Only consider these columns for identifiying duplicates
     """
-    df[get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
+    df[mp.get_option("column.system.duplicates")] = df.duplicated(subset=cols, keep=False)
     return df
 
 
@@ -796,7 +729,7 @@ def imitate_sort(left: pd.DataFrame, right: pd.DataFrame, left_kwargs={}, right_
         All keyword arguments are passed through to the underlying
         :meth:`pandas.DataFrame.sort_values` method.
     """
-    ((common_columns, _), (_, _)) = filter_labels_pair(left, right, labels_intersection=True)
+    ((common_columns, _), _) = filter_labels_pair(left, right, intersection=True)
     left = left.sort_values(by=common_columns, **left_kwargs)
     right = right.sort_values(by=common_columns, **right_kwargs)
 
