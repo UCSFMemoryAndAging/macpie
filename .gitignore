@@ -1,7 +1,5 @@
-# locally created result files and directories
-results_*.xls*
-results_*/
-row_diffs_*.xls*
+# locally created test output
+test_output/
 
 # tox and pytest and pyenv
 .tox/
@@ -18,7 +16,6 @@ dist/
 build/
 *.egg
 *.egg-info/
-
 
 # everything else
 .DS_Store
