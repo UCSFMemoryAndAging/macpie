@@ -55,7 +55,6 @@ class MacDataFrameAccessor:
         dtypes=False,
         index_order=False,
         values_order=False,
-        values_order_sort_kwargs={},
     ):
         """see :meth:`macpie.pandas.conform`"""
         return general_df.conform(
@@ -65,7 +64,6 @@ class MacDataFrameAccessor:
             dtypes=dtypes,
             index_order=index_order,
             values_order=values_order,
-            values_order_sort_kwargs=values_order_sort_kwargs,
         )
 
     def diff_cols(self, right: pd.DataFrame, filter_kwargs={}):
@@ -174,9 +172,9 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.mark_duplicates_by_cols`"""
         return general_df.mark_duplicates_by_cols(self._df, cols)
 
-    def mimic_dtypes(self, right: pd.DataFrame):
+    def mimic_dtypes(self, right: pd.DataFrame, categorical=True):
         """see :meth:`macpie.pandas.mimic_dtypes`"""
-        return general_df.mimic_dtypes(self._df, right)
+        return general_df.mimic_dtypes(self._df, right, categorical=categorical)
 
     def mimic_index_order(self, right, axis=None):
         """see :meth:`macpie.pandas.mimic_index_order`"""
@@ -192,7 +190,7 @@ class MacDataFrameAccessor:
     def row_count(self):
         return len(self._df.index)
 
-    def sort_values_pair(self, right, right_only=False, axis=None, **kwargs):
+    def sort_values_pair(self, right, right_only=False, axis="index", **kwargs):
         """see :meth:`macpie.pandas.sort_values_pair`"""
         return general_df.sort_values_pair(
             self._df, right, right_only=right_only, axis=axis, **kwargs

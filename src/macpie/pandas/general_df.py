@@ -125,7 +125,6 @@ def conform(
     dtypes=False,
     index_order=False,
     values_order=False,
-    values_order_sort_kwargs={},
     axis=None,
 ):
     """
@@ -145,10 +144,7 @@ def conform(
     index_order : bool, default is False
         Whether ``right`` should be modified to mimic the index order of ``left``
     values_order : bool, default is False
-        Whether ``right`` should be modified to mimic the values order of ``left``
-    values_order_sort_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`pandas.DataFrame.sort_values`
-        if ``values_order`` is True
+        Whether both DataFrames should be sorted by their common labels.
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to conform on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
@@ -172,7 +168,8 @@ def conform(
         right = mimic_index_order(left, right, axis=axis)
 
     if values_order:
-        (left, right) = sort_values_pair(left, right, axis=axis, **values_order_sort_kwargs)
+        values_order_axis = "index" if left._get_axis_name(axis) == "columns" else "columns"
+        (left, right) = sort_values_pair(left, right, axis=values_order_axis, ignore_index=True)
 
     return (left, right)
 
@@ -749,7 +746,7 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     return df
 
 
-def mimic_dtypes(left: pd.DataFrame, right: pd.DataFrame):
+def mimic_dtypes(left: pd.DataFrame, right: pd.DataFrame, categorical=True):
     """
     Cast column data types in ``right`` to be the same as those in ``left``
     where the column name is the same.
@@ -758,6 +755,8 @@ def mimic_dtypes(left: pd.DataFrame, right: pd.DataFrame):
     ----------
     left : DataFrame
     right : DataFrame
+    categorical : bool, default is True
+        Whether to also ensure categorial data type internals are the same.
 
     Returns
     -------
@@ -772,6 +771,12 @@ def mimic_dtypes(left: pd.DataFrame, right: pd.DataFrame):
     for col in common_columns:
         if right[col].dtype != left[col].dtype:
             right[col] = right[col].astype(left[col].dtypes.name)
+            if categorical and pd.core.dtypes.common.is_categorical_dtype(left[col]):
+                right[col] = right[col].astype(
+                    pd.api.types.CategoricalDtype(
+                        categories=left[col].cat.categories, ordered=left[col].cat.ordered
+                    )
+                )
 
     return right
 
@@ -827,7 +832,7 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
 
 
 def sort_values_pair(
-    left: pd.DataFrame, right: pd.DataFrame, right_only=False, axis=None, **kwargs
+    left: pd.DataFrame, right: pd.DataFrame, right_only=False, axis="index", **kwargs
 ):
     """
     Sort the pair of DataFrames using their common labels.
@@ -838,16 +843,14 @@ def sort_values_pair(
     right : DataFrame
     right_only : bool, default is False
         Whether to only sort the values of ``right``
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
-        The axis to filter labels on, expressed either as an index (int)
-        or axis name (str). By default this is the info axis,
-        'index' for Series, 'columns' for DataFrame.
+    axis : {0 or ‘index’, 1 or ‘columns’}, default 'index'
+        Axis to be sorted.
     **kwargs
         All keyword arguments are passed through to the underlying
         :meth:`pandas.DataFrame.sort_values` method.
     """
-    axis = kwargs.pop(axis, left._info_axis_name)
-    ((common_labels, _), _) = filter_labels_pair(left, right, intersection=True, axis=axis)
+    filter_axis = "columns" if axis == "index" else "columns"
+    ((common_labels, _), _) = filter_labels_pair(left, right, intersection=True, axis=filter_axis)
     if not right_only:
         left = left.sort_values(by=common_labels, axis=axis, **kwargs)
     right = right.sort_values(by=common_labels, axis=axis, **kwargs)
