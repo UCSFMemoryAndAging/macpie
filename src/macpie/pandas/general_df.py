@@ -1,5 +1,6 @@
 import itertools
 from collections import defaultdict
+from operator import index
 from typing import List
 
 import numpy as np
@@ -72,39 +73,12 @@ def any_duplicates(df: pd.DataFrame, col: str, ignore_nan: bool = False):
     return df[col].duplicated().any()
 
 
-def assimilate(left: pd.DataFrame, right: pd.DataFrame):
-    """
-    Assimilate ``right`` to look like ``left`` by ordering the columns in ``right``
-    as close to the order of the columns in ``left``, and by casting column data types
-    in ``right`` to the column data types in ``left`` where the column name is the same.
-
-    Parameters
-    ----------
-    left : DataFrame
-    right : DataFrame
-
-    Returns
-    -------
-    DataFrame
-        The assimilated ``right`` DataFrame
-    """
-
-    # 1. Order the right columns as close to the order of the left columns
-    ((left_labels_returned, _), (_, right_labels_discarded)) = filter_labels_pair(
-        left, right, intersection=True
-    )
-    common_columns = left_labels_returned
-    right_columns_reordered = common_columns + right_labels_discarded
-    right = right.reindex(right_columns_reordered, axis="columns")
-
-    # 2. Cast column data types in right to be the same as those in left
-    for col in common_columns:
-        right[col] = right[col].astype(left[col].dtypes.name)
-
-    return right
-
-
-def compare(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}, **kwargs):
+def compare(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    filter_kwargs={},
+    **kwargs,
+):
     """
     Compare to another DataFrame and show the differences.
 
@@ -133,7 +107,7 @@ def compare(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}, **kwargs)
         return left.compare(right, **kwargs)
     except ValueError:  # if dfs don't have identical labels or shape
         # first compare columns
-        (left_only_cols, right_only_cols) = left.mac.diff_cols(right)
+        (left_only_cols, right_only_cols) = diff_cols(left, right)
         if left_only_cols or right_only_cols:
             col_diffs = pd.DataFrame()
             col_diffs["Left_Only_Cols"] = left_only_cols
@@ -141,7 +115,66 @@ def compare(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}, **kwargs)
             return col_diffs
         else:
             # then compare rows
-            return left.mac.diff_rows(right)
+            return diff_rows(left, right)
+
+
+def conform(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    filter_kwargs={},
+    dtypes=False,
+    index_order=False,
+    values_order=False,
+    values_order_sort_kwargs={},
+    axis=None,
+):
+    """
+    Compare to another DataFrame and show the differences.
+
+    Parameters
+    ----------
+    left : DataFrame
+        DataFrame to compare.
+    right : DataFrame
+        DataFrame to compare with.
+    filter_kwargs : dict, optional
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        to pre-filter columns before comparison.
+    dtypes : bool, default is False
+        Whether ``right`` should be modified to mimic the dtypes of ``left``
+    index_order : bool, default is False
+        Whether ``right`` should be modified to mimic the index order of ``left``
+    values_order : bool, default is False
+        Whether ``right`` should be modified to mimic the values order of ``left``
+    values_order_sort_kwargs : dict, optional
+        Keyword arguments to pass to underlying :meth:`pandas.DataFrame.sort_values`
+        if ``values_order`` is True
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to conform on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
+
+    Returns
+    -------
+    Tuple[DataFrame, DataFrame]
+        ``left`` and ``right`` conformed to each other.
+    """
+    if axis is None:
+        axis = left._info_axis_name
+
+    if filter_kwargs:
+        (left, right) = filter_pair(left, right, axis=axis, **filter_kwargs)
+
+    if dtypes:
+        right = mimic_dtypes(left, right)
+
+    if index_order:
+        right = mimic_index_order(left, right, axis=axis)
+
+    if values_order:
+        (left, right) = sort_values_pair(left, right, axis=axis, **values_order_sort_kwargs)
+
+    return (left, right)
 
 
 def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
@@ -397,7 +430,6 @@ def filter_labels_pair(
     Tuple[Tuple[str, str], Tuple[str, str]]
         ((left_labels_kept, right_labels_kept), (left_labels_discarded, right_labels_discarded))
     """
-
     if axis is None:
         axis = left._info_axis_name
 
@@ -717,23 +749,63 @@ def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):
     return df
 
 
-def imitate_sort(left: pd.DataFrame, right: pd.DataFrame, left_kwargs={}, right_kwargs={}):
+def mimic_dtypes(left: pd.DataFrame, right: pd.DataFrame):
     """
-    Sort the pair of DataFrames using their common columns.
+    Cast column data types in ``right`` to be the same as those in ``left``
+    where the column name is the same.
 
     Parameters
     ----------
     left : DataFrame
     right : DataFrame
-    **kwargs
-        All keyword arguments are passed through to the underlying
-        :meth:`pandas.DataFrame.sort_values` method.
-    """
-    ((common_columns, _), _) = filter_labels_pair(left, right, intersection=True)
-    left = left.sort_values(by=common_columns, **left_kwargs)
-    right = right.sort_values(by=common_columns, **right_kwargs)
 
-    return (left, right)
+    Returns
+    -------
+    DataFrame
+        The modified ``right`` DataFrame
+    """
+
+    ((common_columns, _), _) = mp.pandas.filter_labels_pair(
+        left, right, intersection=True, axis="columns"
+    )
+
+    for col in common_columns:
+        if right[col].dtype != left[col].dtype:
+            right[col] = right[col].astype(left[col].dtypes.name)
+
+    return right
+
+
+def mimic_index_order(left: pd.DataFrame, right: pd.DataFrame, axis=None):
+    """
+    Order the ``right`` labels as close as possible to the order of the ``left`` labels.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to mimic on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
+
+    Returns
+    -------
+    DataFrame
+        The modified ``right`` DataFrame
+    """
+    if axis is None:
+        axis = left._info_axis_name
+
+    ((left_labels_returned, _), (_, right_labels_discarded)) = mp.pandas.filter_labels_pair(
+        left, right, intersection=True, axis=axis
+    )
+    common_labels = left_labels_returned
+    right_labels_reordered = common_labels + right_labels_discarded
+    if right._get_axis(axis).to_list() != right_labels_reordered:
+        right = right.reindex(right_labels_reordered, axis=axis)
+
+    return right
 
 
 def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
@@ -752,6 +824,35 @@ def replace_suffix(df: pd.DataFrame, old_suffix, new_suffix):
     return df.rename(
         columns=lambda x: x[: -len(old_suffix)] + new_suffix if x.endswith(old_suffix) else x
     )
+
+
+def sort_values_pair(
+    left: pd.DataFrame, right: pd.DataFrame, right_only=False, axis=None, **kwargs
+):
+    """
+    Sort the pair of DataFrames using their common labels.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    right_only : bool, default is False
+        Whether to only sort the values of ``right``
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to filter labels on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
+    **kwargs
+        All keyword arguments are passed through to the underlying
+        :meth:`pandas.DataFrame.sort_values` method.
+    """
+    axis = kwargs.pop(axis, left._info_axis_name)
+    ((common_labels, _), _) = filter_labels_pair(left, right, intersection=True, axis=axis)
+    if not right_only:
+        left = left.sort_values(by=common_labels, axis=axis, **kwargs)
+    right = right.sort_values(by=common_labels, axis=axis, **kwargs)
+
+    return (left, right)
 
 
 def to_datetime(df: pd.DataFrame, date_col_name, **kwargs):

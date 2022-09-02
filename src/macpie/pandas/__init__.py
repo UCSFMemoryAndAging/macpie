@@ -2,7 +2,6 @@
 from .general_df import (
     add_diff_days,
     any_duplicates,
-    assimilate,
     compare,
     diff_cols,
     diff_rows,
@@ -15,11 +14,13 @@ from .general_df import (
     get_col_name,
     get_col_names,
     get_cols_by_prefixes,
-    imitate_sort,
     insert,
     is_date_col,
     mark_duplicates_by_cols,
+    mimic_dtypes,
+    mimic_index_order,
     replace_suffix,
+    sort_values_pair,
     to_datetime,
 )
 

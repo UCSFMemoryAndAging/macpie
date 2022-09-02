@@ -41,16 +41,32 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.any_duplicates`"""
         return general_df.any_duplicates(self._df, col, ignore_nan=ignore_nan)
 
-    def assimilate(self, right: pd.DataFrame):
-        """see :meth:`macpie.pandas.assimilate`"""
-        return general_df.assimilate(self._df, right)
-
     def col_count(self):
         return len(self._df.columns)
 
     def compare(self, right: pd.DataFrame, filter_kwargs={}, **kwargs):
         """see :meth:`macpie.pandas.compare`"""
         return general_df.compare(self._df, right, filter_kwargs=filter_kwargs, **kwargs)
+
+    def conform(
+        self,
+        right: pd.DataFrame,
+        filter_kwargs={},
+        dtypes=False,
+        index_order=False,
+        values_order=False,
+        values_order_sort_kwargs={},
+    ):
+        """see :meth:`macpie.pandas.conform`"""
+        return general_df.conform(
+            self._df,
+            right,
+            filter_kwargs=filter_kwargs,
+            dtypes=dtypes,
+            index_order=index_order,
+            values_order=values_order,
+            values_order_sort_kwargs=values_order_sort_kwargs,
+        )
 
     def diff_cols(self, right: pd.DataFrame, filter_kwargs={}):
         """see :meth:`macpie.pandas.diff_cols`"""
@@ -146,12 +162,6 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.get_cols_by_prefixes`"""
         return general_df.get_cols_by_prefixes(self._df, prefixes, one_match_only=one_match_only)
 
-    def imitate_sort(self, right, left_kwargs={}, right_kwargs={}):
-        """see :meth:`macpie.pandas.imitate_sort`"""
-        return general_df.imitate_sort(
-            self._df, right, left_kwargs=left_kwargs, right_kwargs=right_kwargs
-        )
-
     def insert(self, col_name, col_value, allow_duplicates=False):
         """see :meth:`macpie.pandas.insert`"""
         return general_df.insert(self._df, col_name, col_value, allow_duplicates=allow_duplicates)
@@ -164,6 +174,14 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.mark_duplicates_by_cols`"""
         return general_df.mark_duplicates_by_cols(self._df, cols)
 
+    def mimic_dtypes(self, right: pd.DataFrame):
+        """see :meth:`macpie.pandas.mimic_dtypes`"""
+        return general_df.mimic_dtypes(self._df, right)
+
+    def mimic_index_order(self, right, axis=None):
+        """see :meth:`macpie.pandas.mimic_index_order`"""
+        return general_df.mimic_index_order(self._df, right, axis=axis)
+
     def prepend_multi_index_level(self, level_name: str, axis: int = 0):
         return multi_index.prepend_multi_index_level(self._df, level_name, axis=axis)
 
@@ -173,6 +191,12 @@ class MacDataFrameAccessor:
 
     def row_count(self):
         return len(self._df.index)
+
+    def sort_values_pair(self, right, right_only=False, axis=None, **kwargs):
+        """see :meth:`macpie.pandas.sort_values_pair`"""
+        return general_df.sort_values_pair(
+            self._df, right, right_only=right_only, axis=axis, **kwargs
+        )
 
     def to_datetime(self, date_col_name):
         """see :meth:`macpie.pandas.to_datetime`"""

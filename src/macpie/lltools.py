@@ -54,12 +54,12 @@ def difference(a, b):
 
 def filter_seq(seq, items=None, like=None, regex=None, pred=None, invert=False):
     """
-    Filter dataframe row or column labels. The options ``items``, ``like``,
+    Filter sequence of strings. The options ``items``, ``like``,
     and ``regex`` are additive and can be used in conjunction with one another.
 
     Parameters
     ----------
-    seq : list-like
+    seq : list-like of strings
         Sequence object to filter
     items : list-like
         Get elements from `seq` which are in `items`.
@@ -71,7 +71,7 @@ def filter_seq(seq, items=None, like=None, regex=None, pred=None, invert=False):
         Get elements from `seq`` for which `pred`(`seq_element`) == True.
     invert : bool, default False
         Whether to invert the result (i.e. filter out elements returned by
-        `items`, `like`, or `regex`)
+        `items`, `like`, `regex`, or `pred`)
 
     Returns
     -------
@@ -148,13 +148,13 @@ def filter_seq_pair(
     intersection=None,
 ):
     """
-    Filter row or column labels on a pair of dataframes.
+    Filter pair of sequences of strings.
 
     Parameters
     ----------
-    left : list-like
+    left : list-like of strings
         Left sequence to filter
-    right : list-like
+    right : list-like of strings
         Right sequence to filter
     filter_kwargs : dict
         Keyword arguments to pass to underlying :meth:`filter_seq`
@@ -187,7 +187,7 @@ def filter_seq_pair(
     if nkw == 0:
         raise TypeError(
             "Must pass at least one of `filter_kwargs`, `left_filter_kwargs`, "
-            "`right_filter_kwargs`, or `labels_intersection`"
+            "`right_filter_kwargs`, or `intersection`"
         )
 
     left_items = []
