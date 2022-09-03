@@ -9,7 +9,6 @@ from .general_df import (
     equals,
     filter_labels,
     filter_labels_pair,
-    filter_pair,
     flatten_multiindex,
     get_col_name,
     get_col_names,
@@ -21,6 +20,7 @@ from .general_df import (
     mimic_index_order,
     replace_suffix,
     sort_values_pair,
+    subset_pair,
     to_datetime,
 )
 

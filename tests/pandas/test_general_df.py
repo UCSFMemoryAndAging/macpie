@@ -317,34 +317,6 @@ def test_filter_labels_pair():
     )
 
 
-def test_filter_pair():
-    d1 = {
-        "col1": [1, 2, 3],
-        "col2": [4, "5", 6],
-        "col3": [7, 8, 9],
-        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
-        "misc1": ["john", "paul", "mary"],
-        "col6": [10, "11", 12],
-    }
-    df1 = pd.DataFrame(data=d1, index=["zero", "one", "two"])
-
-    d2 = {
-        "col1": [1, 2, 3],
-        "col2": [4, "5", 6],
-        "col3": [7, 8, 9],
-        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
-        "misc2": ["john", "paul", "mary"],
-        "col6": [10, "11", 12],
-    }
-    df2 = pd.DataFrame(data=d2, index=["one", "two", "three"])
-
-    expected_df1 = df1.drop(columns="misc1")
-    expected_df2 = df2.drop(columns="misc2")
-    result_df1, result_df2 = df1.mac.filter_pair(df2, axis=1, intersection=True)
-    assert result_df1.equals(expected_df1)
-    assert result_df2.equals(expected_df2)
-
-
 def test_get_col_name():
     d = {
         "col1": [1, 2, 3],
@@ -494,4 +466,32 @@ def test_mimic_index_order():
     }
     expected_df2 = pd.DataFrame(data=expected_d2, index=[1, 2, 3])
 
+    assert result_df2.equals(expected_df2)
+
+
+def test_subset_pair():
+    d1 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc1": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df1 = pd.DataFrame(data=d1, index=["zero", "one", "two"])
+
+    d2 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc2": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df2 = pd.DataFrame(data=d2, index=["one", "two", "three"])
+
+    expected_df1 = df1.drop(columns="misc1")
+    expected_df2 = df2.drop(columns="misc2")
+    result_df1, result_df2 = df1.mac.subset_pair(df2, axis=1, intersection=True)
+    assert result_df1.equals(expected_df1)
     assert result_df2.equals(expected_df2)

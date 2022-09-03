@@ -89,7 +89,7 @@ def compare(
     right : DataFrame
         DataFrame to compare with.
     filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
     **kwargs
         All remaining keyword arguments are passed through to the underlying
@@ -101,7 +101,7 @@ def compare(
         Showing differences.
     """
     if filter_kwargs:
-        (left, right) = filter_pair(left, right, **filter_kwargs)
+        (left, right) = subset_pair(left, right, **filter_kwargs)
 
     try:
         return left.compare(right, **kwargs)
@@ -137,7 +137,7 @@ def conform(
     right : DataFrame
         DataFrame to compare with.
     filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
     dtypes : bool, default is False
         Whether ``right`` should be modified to mimic the dtypes of ``left``
@@ -159,7 +159,7 @@ def conform(
         axis = left._info_axis_name
 
     if filter_kwargs:
-        (left, right) = filter_pair(left, right, axis=axis, **filter_kwargs)
+        (left, right) = subset_pair(left, right, axis=axis, **filter_kwargs)
 
     if dtypes:
         right = mimic_dtypes(left, right)
@@ -217,7 +217,7 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     left : DataFrame
     right : DataFrame
     filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
 
     Returns
@@ -225,7 +225,7 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     DataFrame
     """
     if filter_kwargs:
-        (left, right) = filter_pair(left, right, **filter_kwargs)
+        (left, right) = subset_pair(left, right, **filter_kwargs)
 
     left_cols = left.columns
     right_cols = right.columns
@@ -277,7 +277,7 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     right : DataFrame
         right DataFrame to compare
     filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_pair`
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
 
     Returns
@@ -287,7 +287,7 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
         are the same in both objects, False otherwise.
     """
     if filter_kwargs:
-        (left, right) = filter_pair(left, right, **filter_kwargs)
+        (left, right) = subset_pair(left, right, **filter_kwargs)
     return left.equals(right)
 
 
@@ -441,63 +441,6 @@ def filter_labels_pair(
         right_filter_kwargs=right_filter_kwargs,
         intersection=intersection,
     )
-
-
-def filter_pair(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=None,
-    axis=None,
-):
-    """
-    Subset rows or columns of a pair of dataframes according to filtered labels.
-
-    Parameters
-    ----------
-    left : DataFrame
-    right : DataFrame
-    filter_kwargs : list-like
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to both DataFrames.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to left DataFrame.
-    right_filter_kwargs : list-like
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to right DataFrame.
-    intersection : bool, default False
-        Whether to only return the labels common to both, after excluding
-        any labels filtered out by the *filter_kwargs params.
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
-        The axis to filter labels on, expressed either as an index (int)
-        or axis name (str). By default this is the info axis,
-        'index' for Series, 'columns' for DataFrame.
-
-    Returns
-    -------
-    Tuple[DataFrame, DataFrame]
-        (subsetted left dataframe, subsetted right dataframe)
-    """
-    if axis is None:
-        axis = left._info_axis_name
-
-    (_, (left_labels_to_drop, right_labels_to_drop)) = filter_labels_pair(
-        left,
-        right,
-        filter_kwargs=filter_kwargs,
-        left_filter_kwargs=left_filter_kwargs,
-        right_filter_kwargs=right_filter_kwargs,
-        intersection=intersection,
-        axis=axis,
-    )
-
-    left = left.drop(labels=left_labels_to_drop, axis=axis)
-    right = right.drop(labels=right_labels_to_drop, axis=axis)
-
-    return (left, right)
 
 
 def flatten_multiindex(df: pd.DataFrame, axis: int = 0, delimiter: str = "_"):
@@ -854,6 +797,63 @@ def sort_values_pair(
     if not right_only:
         left = left.sort_values(by=common_labels, axis=axis, **kwargs)
     right = right.sort_values(by=common_labels, axis=axis, **kwargs)
+
+    return (left, right)
+
+
+def subset_pair(
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    filter_kwargs={},
+    left_filter_kwargs={},
+    right_filter_kwargs={},
+    intersection=None,
+    axis=None,
+):
+    """
+    Subset rows or columns of a pair of dataframes according to filtered labels.
+
+    Parameters
+    ----------
+    left : DataFrame
+    right : DataFrame
+    filter_kwargs : list-like
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+        to be applied to both DataFrames.
+    left_filter_kwargs : dict
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+        to be applied to left DataFrame.
+    right_filter_kwargs : list-like
+        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+        to be applied to right DataFrame.
+    intersection : bool, default False
+        Whether to only return the labels common to both, after excluding
+        any labels filtered out by the *filter_kwargs params.
+    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+        The axis to filter labels on, expressed either as an index (int)
+        or axis name (str). By default this is the info axis,
+        'index' for Series, 'columns' for DataFrame.
+
+    Returns
+    -------
+    Tuple[DataFrame, DataFrame]
+        (subsetted left dataframe, subsetted right dataframe)
+    """
+    if axis is None:
+        axis = left._info_axis_name
+
+    (_, (left_labels_to_drop, right_labels_to_drop)) = filter_labels_pair(
+        left,
+        right,
+        filter_kwargs=filter_kwargs,
+        left_filter_kwargs=left_filter_kwargs,
+        right_filter_kwargs=right_filter_kwargs,
+        intersection=intersection,
+        axis=axis,
+    )
+
+    left = left.drop(labels=left_labels_to_drop, axis=axis)
+    right = right.drop(labels=right_labels_to_drop, axis=axis)
 
     return (left, right)
 

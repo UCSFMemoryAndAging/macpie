@@ -124,26 +124,6 @@ class MacDataFrameAccessor:
             intersection=intersection,
         )
 
-    def filter_pair(
-        self,
-        right: pd.DataFrame,
-        filter_kwargs={},
-        left_filter_kwargs={},
-        right_filter_kwargs={},
-        intersection=False,
-        axis=None,
-    ):
-        """see :meth:`macpie.pandas.filter_pair`"""
-        return general_df.filter_pair(
-            self._df,
-            right,
-            filter_kwargs=filter_kwargs,
-            left_filter_kwargs=left_filter_kwargs,
-            right_filter_kwargs=right_filter_kwargs,
-            intersection=intersection,
-            axis=axis,
-        )
-
     def flatten_multiindex(self, axis: int = 0, delimiter: str = "_"):
         """see :meth:`macpie.pandas.flatten_multiindex`"""
         return general_df.flatten_multiindex(self._df, axis=axis, delimiter=delimiter)
@@ -194,6 +174,26 @@ class MacDataFrameAccessor:
         """see :meth:`macpie.pandas.sort_values_pair`"""
         return general_df.sort_values_pair(
             self._df, right, right_only=right_only, axis=axis, **kwargs
+        )
+
+    def subset_pair(
+        self,
+        right: pd.DataFrame,
+        filter_kwargs={},
+        left_filter_kwargs={},
+        right_filter_kwargs={},
+        intersection=False,
+        axis=None,
+    ):
+        """see :meth:`macpie.pandas.subset_pair`"""
+        return general_df.subset_pair(
+            self._df,
+            right,
+            filter_kwargs=filter_kwargs,
+            left_filter_kwargs=left_filter_kwargs,
+            right_filter_kwargs=right_filter_kwargs,
+            intersection=intersection,
+            axis=axis,
         )
 
     def to_datetime(self, date_col_name):
