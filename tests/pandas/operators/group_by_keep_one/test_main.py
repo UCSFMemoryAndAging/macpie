@@ -1,59 +1,60 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from macpie._config import get_option
 from macpie.pandas import file_to_dataframe
-from macpie.testing import assert_dfs_equal
 
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/pandas/operators/group_by_keep_one/").resolve()
+DATA_DIR = Path("tests/data/").resolve()
 
-# output_dir = current_dir
-output_dir = None
-
-cols_ignore = ["link_date", "link_id", get_option("column.system.duplicates")]
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "items": ["link_date", "link_id", get_option("column.system.duplicates")],
+        "invert": True,
+    }
+}
 
 
 def test_keep_earliest_csv():
     # test earliest
-    df = file_to_dataframe(data_dir / "instr1_primaryall.csv")
+    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.csv")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="earliest")
 
     assert get_option("column.system.duplicates") in result.columns
 
-    expected_result = file_to_dataframe(data_dir / "instr1_primaryearliest.csv")
+    expected_result = file_to_dataframe(DATA_DIR / "instr1_primaryearliest.csv")
 
-    assert_dfs_equal(
-        result,
-        expected_result,
-        filter_kwargs={"both_filter_labels_kwargs": {"items": cols_ignore, "invert": True}},
-        assimilate=True,
-        sort=True,
-        output_dir=output_dir,
+    (left, right) = result.mac.conform(
+        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
     )
+    pd.testing.assert_frame_equal(left, right)
 
 
 @pytest.mark.slow
 def test_keep_earliest_xl():
     # test earliest
-    df = file_to_dataframe(data_dir / "instr1_primaryall.xlsx")
+    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.xlsx")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="earliest")
+    expected_result = file_to_dataframe(DATA_DIR / "instr1_primaryearliest.xlsx")
 
-    expected_result = file_to_dataframe(data_dir / "instr1_primaryearliest.xlsx")
-
-    assert_dfs_equal(result, expected_result, cols_ignore=cols_ignore, output_dir=output_dir)
+    (left, right) = result.mac.conform(
+        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
+    )
+    pd.testing.assert_frame_equal(left, right)
 
 
 def test_keep_latest_csv():
     # test latest
-    df = file_to_dataframe(data_dir / "instr1_primaryall.csv")
+    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.csv")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="latest")
+    expected_result = file_to_dataframe(DATA_DIR / "instr1_primarylatest.csv")
 
-    expected_result = file_to_dataframe(data_dir / "instr1_primarylatest.csv")
-
-    assert_dfs_equal(result, expected_result, cols_ignore=cols_ignore, output_dir=output_dir)
+    (left, right) = result.mac.conform(
+        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
+    )
+    pd.testing.assert_frame_equal(left, right)

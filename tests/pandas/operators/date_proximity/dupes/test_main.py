@@ -1,39 +1,48 @@
 from pathlib import Path
 
+import pandas as pd
+
 from macpie._config import get_option
 from macpie.pandas import file_to_dataframe
-from macpie.testing import assert_dfs_equal
 
-current_dir = Path("tests/pandas/operators/date_proximity/dupes/").resolve()
+THIS_DIR = Path("tests/pandas/operators/date_proximity/dupes/").resolve()
 
-# output_dir = current_dir
-output_dir = None
 
-cols_ignore = [
-    get_option("column.system.abs_diff_days"),
-    get_option("column.system.diff_days"),
-    get_option("column.system.duplicates"),
-    '_abs_diff_days', '_diff_days', '_duplicates'
-]
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "items": [
+            get_option("column.system.abs_diff_days"),
+            get_option("column.system.diff_days"),
+            get_option("column.system.duplicates"),
+            "_abs_diff_days",
+            "_diff_days",
+            "_duplicates",
+        ],
+        "invert": True,
+    }
+}
 
 
 def test_dupes():
 
-    primary = file_to_dataframe(current_dir / "primary.xlsx")
-    secondary = file_to_dataframe(current_dir / "secondary.xlsx")
+    primary = file_to_dataframe(THIS_DIR / "primary.xlsx")
+    secondary = file_to_dataframe(THIS_DIR / "secondary.xlsx")
 
     dupes_result = primary.mac.date_proximity(
         secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='closest',
-        when='earlier_or_later',
+        id_on="pidn",
+        date_on="dcdate",
+        get="closest",
+        when="earlier_or_later",
         days=90,
-        left_link_id='instrid',
-        merge='full',
-        duplicates_indicator=True
+        left_link_id="instrid",
+        merge="full",
+        duplicates_indicator=True,
     )
 
-    # dupes_result.to_excel(current_dir / "dupes_result.xlsx", index=False)
-    dupes_expected_result = file_to_dataframe(current_dir / "dupes_expected_result.xlsx")
-    assert_dfs_equal(dupes_result, dupes_expected_result, cols_ignore=cols_ignore, output_dir=output_dir)
+    dupes_expected_result = file_to_dataframe(THIS_DIR / "dupes_expected_result.xlsx")
+
+    (left, right) = dupes_result.mac.conform(
+        dupes_expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True
+    )
+    pd.testing.assert_frame_equal(left, right)

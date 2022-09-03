@@ -1,3 +1,4 @@
+from cmath import exp
 import re
 from datetime import datetime
 
@@ -69,31 +70,6 @@ def test_any_duplicates():
     assert not df.mac.any_duplicates("col3", ignore_nan=True)
 
 
-def test_assimilate():
-    d1 = {
-        "col1": ["a", "b", "c"],
-        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
-        "col3": [7, 8, 9],
-        "col4": [7, 8, 9],
-    }
-    df1 = pd.DataFrame(data=d1)
-
-    d2 = {
-        "col1": ["a", "b", "c"],
-        "col3": ["7", "8", "9"],
-        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
-    }
-    df2 = pd.DataFrame(data=d2)
-
-    assert df1["col2"].dtype != df2["col2"].dtype
-    assert df1["col3"].dtype != df2["col3"].dtype
-
-    df2 = df1.mac.assimilate(df2)
-
-    assert df1["col2"].dtype == df2["col2"].dtype
-    assert df1["col3"].dtype == df2["col3"].dtype
-
-
 def test_compare():
     d1 = {"col1": [1, 2, 3], "col2": [4, 5, 6], "col3": [7, 8, 9]}
     df1 = pd.DataFrame(data=d1)
@@ -101,7 +77,7 @@ def test_compare():
     d2 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
     assert df1.mac.compare(
-        df2, filter_kwargs={"left_filter_labels_kwargs": {"items": ["col2"], "invert": True}}
+        df2, filter_kwargs={"filter_kwargs": {"items": ["col2"], "invert": True}}
     ).empty
 
 
@@ -152,14 +128,12 @@ def test_diff_cols_ignore():
     d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
 
-    filter_kwargs = {
-        "both_filter_labels_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}
-    }
+    filter_kwargs = {"filter_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}}
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
     assert [] == left_only_cols
     assert [] == right_only_cols
 
-    filter_kwargs = {"both_filter_labels_kwargs": {"items": ["col2"], "invert": True}}
+    filter_kwargs = {"filter_kwargs": {"items": ["col2"], "invert": True}}
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
     assert ["col3"] == left_only_cols
     assert ["col4"] == right_only_cols
@@ -222,7 +196,7 @@ def test_equals():
     df2 = pd.DataFrame(data=d2)
 
     assert df1.mac.equals(
-        df2, filter_kwargs={"both_filter_labels_kwargs": {"items": ["col4"], "invert": True}}
+        df2, filter_kwargs={"filter_kwargs": {"items": ["col4"], "invert": True}}
     )
 
 
@@ -236,7 +210,8 @@ def test_filter_labels():
         "col6": [10, "11", 12],
     }
     df = pd.DataFrame(data=d)
-    assert df.mac.filter_labels(all_labels=True) == [
+    assert df.mac.filter_labels(items=["col7"]) == []
+    assert df.mac.filter_labels(items=["col7"], invert=True) == [
         "col1",
         "col2",
         "col3",
@@ -244,6 +219,8 @@ def test_filter_labels():
         "misc",
         "col6",
     ]
+    assert df.mac.filter_labels(regex="^albert") == []
+    assert df.mac.filter_labels(items=["col7"], regex="^albert") == []
     assert df.mac.filter_labels(items=["col2", "col1"]) == ["col1", "col2"]
     assert df.mac.filter_labels(items=["col1", "col2"], invert=True) == [
         "col3",
@@ -255,6 +232,15 @@ def test_filter_labels():
     assert df.mac.filter_labels(like="ol", invert=True) == ["date", "misc"]
     assert df.mac.filter_labels(regex="^da") == ["date"]
     assert df.mac.filter_labels(regex="^col", invert=True) == ["date", "misc"]
+    assert df.mac.filter_labels(like="ol", regex="^da") == ["col1", "col2", "col3", "date", "col6"]
+    assert df.mac.filter_labels(items=["col1", "misc"], like="ol", regex="^da") == [
+        "col1",
+        "col2",
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
 
 
 def test_filter_labels_mi():
@@ -267,18 +253,13 @@ def test_filter_labels_mi():
     df.columns = pd.MultiIndex.from_product([["CDR"], df.columns])
 
     assert df.mac.filter_labels(items=[("CDR", "PIDN")]) == [("CDR", "PIDN")]
-    assert df.mac.filter_labels(all_labels=True, result_level=0) == ["CDR", "CDR", "CDR"]
-    assert df.mac.filter_labels(all_labels=True, result_level=1) == ["PIDN", "DCDate", "InstrID"]
-    assert df.mac.filter_labels(all_labels=True) == [
+    assert df.mac.filter_labels(items=[("CDR", "PIDN")], result_level=1) == ["PIDN"]
+    assert df.mac.filter_labels(regex=re.compile("cdr", re.IGNORECASE), filter_level=0) == [
         ("CDR", "PIDN"),
         ("CDR", "DCDate"),
         ("CDR", "InstrID"),
     ]
-    assert df.mac.filter_labels(regex=re.compile("cdr", re.IGNORECASE), level=0) == [
-        ("CDR", "PIDN"),
-        ("CDR", "DCDate"),
-        ("CDR", "InstrID"),
-    ]
+    assert df.mac.filter_labels(regex=re.compile("cdr", re.IGNORECASE), filter_level=1) == []
     assert df.mac.filter_labels(regex=re.compile("id", re.IGNORECASE)) == [
         ("CDR", "PIDN"),
         ("CDR", "InstrID"),
@@ -313,29 +294,55 @@ def test_filter_labels_pair():
     with pytest.raises(TypeError):
         df1.mac.filter_labels_pair(df2)
 
-    assert df1.mac.filter_labels_pair(df2, labels_intersection=True) == (
-        (["col1", "col2", "col3", "date", "col6"], ["misc1"]),
-        (["col1", "col2", "col3", "date", "col6"], ["misc2"]),
+    assert df1.mac.filter_labels_pair(df2, intersection=True) == (
+        (["col1", "col2", "col3", "date", "col6"], ["col1", "col2", "col3", "date", "col6"]),
+        (["misc1"], ["misc2"]),
     )
 
-    assert df1.mac.filter_labels_pair(df2, left_filter_labels_kwargs={"like": "col"}) == (
-        (["col1", "col2", "col3", "col6"], ["date", "misc1"]),
-        (["col1", "col2", "col3", "date", "misc2", "col6"], []),
+    assert df1.mac.filter_labels_pair(df2, left_filter_kwargs={"like": "col"}) == (
+        (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "date", "misc2", "col6"]),
+        (["date", "misc1"], []),
     )
 
-    assert df1.mac.filter_labels_pair(
-        df2, both_filter_labels_kwargs={"regex": "^col", "invert": True}
-    ) == (
-        (["date", "misc1"], ["col1", "col2", "col3", "col6"]),
-        (["date", "misc2"], ["col1", "col2", "col3", "col6"]),
+    assert df1.mac.filter_labels_pair(df2, filter_kwargs={"regex": "^col", "invert": True}) == (
+        (["date", "misc1"], ["date", "misc2"]),
+        (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "col6"]),
     )
 
     assert df1.mac.filter_labels_pair(
-        df2, both_filter_labels_kwargs={"regex": "^col", "invert": True}, labels_intersection=True
+        df2, filter_kwargs={"regex": "^col", "invert": True}, intersection=True
     ) == (
-        (["date"], ["col1", "col2", "col3", "misc1", "col6"]),
-        (["date"], ["col1", "col2", "col3", "misc2", "col6"]),
+        (["date"], ["date"]),
+        (["col1", "col2", "col3", "misc1", "col6"], ["col1", "col2", "col3", "misc2", "col6"]),
     )
+
+
+def test_filter_pair():
+    d1 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc1": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df1 = pd.DataFrame(data=d1, index=["zero", "one", "two"])
+
+    d2 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc2": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df2 = pd.DataFrame(data=d2, index=["one", "two", "three"])
+
+    expected_df1 = df1.drop(columns="misc1")
+    expected_df2 = df2.drop(columns="misc2")
+    result_df1, result_df2 = df1.mac.filter_pair(df2, axis=1, intersection=True)
+    assert result_df1.equals(expected_df1)
+    assert result_df2.equals(expected_df2)
 
 
 def test_get_col_name():
@@ -422,3 +429,69 @@ def test_to_datetime():
     # date is out of bounds
     with pytest.raises(pd.errors.OutOfBoundsDatetime):
         df1.mac.to_datetime("col5")
+
+
+def test_mimic_dtypes():
+    d1 = {
+        "col1": ["a", "b", "c"],
+        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
+        "col3": [7, 8, 9],
+        "col4": [7, 8, 9],
+    }
+    df1 = pd.DataFrame(data=d1)
+
+    d2 = {
+        "col1": ["a", "b", "c"],
+        "col3": ["7", "8", "9"],
+        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
+    }
+    df2 = pd.DataFrame(data=d2)
+
+    assert df1["col2"].dtype != df2["col2"].dtype
+    assert df1["col3"].dtype != df2["col3"].dtype
+
+    df2 = df1.mac.mimic_dtypes(df2)
+
+    assert df1["col2"].dtype == df2["col2"].dtype
+    assert df1["col3"].dtype == df2["col3"].dtype
+
+
+def test_mimic_index_order():
+    d1 = {
+        "col1": ["a", "b", "c"],
+        "col2": [datetime(2001, 3, 2), datetime(2001, 2, 1), datetime(2001, 8, 1)],
+        "col3": [7, 8, 9],
+        "col4": [7, 8, 9],
+    }
+    df1 = pd.DataFrame(data=d1, index=[1, 2, 3])
+
+    d2 = {
+        "col1": ["a", "b", "c"],
+        "col3": ["7", "8", "9"],
+        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
+    }
+    df2 = pd.DataFrame(data=d2, index=[1, 3, 2])
+
+    # test column axis
+    result_df2 = df1.mac.mimic_index_order(df2, axis="columns")
+
+    expected_d2 = {
+        "col1": ["a", "b", "c"],
+        "col2": ["3/2/2001", "2/1/2001", "8/1/2001"],
+        "col3": ["7", "8", "9"],
+    }
+    expected_df2 = pd.DataFrame(data=expected_d2, index=[1, 3, 2])
+
+    assert result_df2.equals(expected_df2)
+
+    # test row axis
+    result_df2 = df1.mac.mimic_index_order(df2, axis="index")
+
+    expected_d2 = {
+        "col1": ["a", "c", "b"],
+        "col3": ["7", "9", "8"],
+        "col2": ["3/2/2001", "8/1/2001", "2/1/2001"],
+    }
+    expected_df2 = pd.DataFrame(data=expected_d2, index=[1, 2, 3])
+
+    assert result_df2.equals(expected_df2)

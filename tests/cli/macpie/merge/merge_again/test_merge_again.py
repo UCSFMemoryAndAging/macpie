@@ -8,25 +8,25 @@ import pytest
 from macpie import MergeableAnchoredList
 from macpie._config import get_option
 from macpie.cli.macpie.main import main
-from macpie.testing import assert_dfs_equal
+from macpie.testing import DebugDir
 
-current_dir = Path(__file__).parent.absolute()
+THIS_DIR = Path(__file__).parent.absolute()
 
-# output_dir = current_dir
-output_dir = None
-
-cols_ignore = [
-    ("instr2_all", "InstrID_x"),
-]
-cols_ignore_pat = "^" + get_option("column.system.prefix")
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "items": [("instr2_all", "InstrID_x")],
+        "regex": "^" + get_option("column.system.prefix"),
+        "invert": True,
+    }
+}
 
 
 @pytest.mark.slow
-def test_merge_again(tmp_path):
+def test_merge_again(tmp_path, debugdir):
     # macpie merge tests/cli/macpie/merge/merge_again/full_merged_once.xlsx
 
     expected_result = pd.read_excel(
-        current_dir / "expected_results.xlsx",
+        THIS_DIR / "expected_results.xlsx",
         sheet_name=MergeableAnchoredList.merged_dsetname,
         header=[0, 1],
         index_col=None,
@@ -38,7 +38,7 @@ def test_merge_again(tmp_path):
     # of the tests.cli.merge.test_full.test_full_no_merge test,
     # and then removing the first duplicate in each set of duplicates for the
     # instr2_all dataset
-    cli_args = ["merge", str((current_dir / "full_merged_once.xlsx").resolve())]
+    cli_args = ["merge", str((THIS_DIR / "full_merged_once.xlsx").resolve())]
 
     with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
@@ -47,9 +47,10 @@ def test_merge_again(tmp_path):
         # get the results file
         results_path = next(Path(".").glob("**/*.xlsx"))
 
-        # copy file to current dir if you want to debug more
-        if output_dir is not None:
-            copy(results_path, current_dir)
+        # copy file to debugdir if you want to debug more
+        if debugdir:
+            with DebugDir(debugdir):
+                copy(results_path, debugdir)
 
         results = pd.read_excel(
             results_path,
@@ -58,10 +59,5 @@ def test_merge_again(tmp_path):
             index_col=None,
         )
 
-        assert_dfs_equal(
-            results,
-            expected_result,
-            cols_ignore=cols_ignore,
-            cols_ignore_pat=cols_ignore_pat,
-            output_dir=output_dir,
-        )
+        (left, right) = results.mac.conform(expected_result, filter_kwargs=COL_FILTER_KWARGS)
+        pd.testing.assert_frame_equal(left, right)

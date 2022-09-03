@@ -2,6 +2,7 @@ from copy import deepcopy
 from functools import partial
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from macpie._config import get_option
@@ -10,23 +11,25 @@ from macpie.collections.graph import ExecutableGraph
 from macpie.pandas import file_to_dataframe
 from macpie.pandas.operators.date_proximity import date_proximity
 from macpie.pandas.operators.group_by_keep_one import group_by_keep_one
-from macpie.testing import assert_dfs_equal
 
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path(__file__).parent.absolute()
-output_dir = None
+DATA_DIR = Path("tests/data/").resolve()
 
+THIS_DIR = Path(__file__).parent.absolute()
 
-cols_ignore = []
-cols_ignore_pat = "^" + get_option("column.system.prefix")
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "regex": "^" + get_option("column.system.prefix"),
+        "invert": True,
+    }
+}
 
 
 @pytest.mark.slow
 def test_keepone(cli_keepone_big):
     G = ExecutableGraph()
 
-    prim_filepath = data_dir / "instr1_primaryall.csv"
+    prim_filepath = DATA_DIR / "instr1_primaryall.csv"
 
     primary = LavaDataset.from_file(prim_filepath)
 
@@ -49,9 +52,10 @@ def test_keepone(cli_keepone_big):
 
     expected_result = file_to_dataframe(cli_keepone_big)
 
-    assert_dfs_equal(
-        result, expected_result, cols_ignore_pat=cols_ignore_pat, output_dir=output_dir
+    (left, right) = result.mac.conform(
+        expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
     )
+    pd.testing.assert_frame_equal(left, right)
 
 
 @pytest.mark.slow
@@ -59,8 +63,8 @@ def test_link():
     # macpie link -g closest tests/cli/macpie/link/small.xlsx tests/data/instr2_all.csv tests/data/instr3_all.csv
 
     prim = LavaDataset.from_file(Path("tests/cli/macpie/link/small.xlsx"))
-    sec_1 = LavaDataset.from_file(Path(data_dir / "instr2_all.csv"))
-    sec_2 = LavaDataset.from_file(Path(data_dir / "instr3_all.csv"))
+    sec_1 = LavaDataset.from_file(Path(DATA_DIR / "instr2_all.csv"))
+    sec_2 = LavaDataset.from_file(Path(DATA_DIR / "instr3_all.csv"))
 
     prim_copy = deepcopy(prim)
     sec_1_copy = deepcopy(sec_1)
@@ -125,12 +129,12 @@ def test_link():
         prepend_level_name=False,
     )
 
-    assert_dfs_equal(
-        sec_1_copy,
+    (left, right) = sec_1_copy.mac.conform(
         edges_with_operation_results[0]["operation_result"],
-        cols_ignore_pat=cols_ignore_pat,
-        output_dir=output_dir,
+        filter_kwargs=COL_FILTER_KWARGS,
+        values_order=True,
     )
+    pd.testing.assert_frame_equal(left, right)
 
     sec_2_copy = prim_copy.date_proximity(
         right_dset=sec_2_copy,
@@ -140,9 +144,9 @@ def test_link():
         prepend_level_name=False,
     )
 
-    assert_dfs_equal(
-        sec_2_copy,
+    (left, right) = sec_2_copy.mac.conform(
         edges_with_operation_results[1]["operation_result"],
-        cols_ignore_pat=cols_ignore_pat,
-        output_dir=output_dir,
+        filter_kwargs=COL_FILTER_KWARGS,
+        values_order=True,
     )
+    pd.testing.assert_frame_equal(left, right)

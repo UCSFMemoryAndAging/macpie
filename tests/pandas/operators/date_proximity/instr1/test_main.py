@@ -1,146 +1,145 @@
 from pathlib import Path
 
 import pandas as pd
-import pytest
+from macpie.pandas.general_df import mimic_index_order
 
 from macpie._config import get_option
 from macpie.pandas import file_to_dataframe
-from macpie.testing import assert_dfs_equal
 
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path(__file__).parent.absolute()
+DATA_DIR = Path("tests/data/").resolve()
 
-# output_dir = current_dir
-output_dir = None
+THIS_DIR = Path(__file__).parent.absolute()
 
-cols_ignore = [
-    'PIDN_x', 'VType', 'DayDiff', 'link_id'
-]
-cols_ignore_pat = '^' + get_option("column.system.prefix")
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "items": ["PIDN_x", "VType", "DayDiff", "link_id"],
+        "regex": "^" + get_option("column.system.prefix"),
+        "invert": True,
+    }
+}
 
 
-@pytest.mark.slow
-def test_instr1():
+dfs_dict = pd.read_excel(
+    DATA_DIR / "instr1.xlsx",
+    sheet_name=[
+        "primary",
+        "closest_earlier_or_later_90",
+        "closest_later_90",
+        "closest_earlier_90",
+        "all_earlier_or_later_90",
+        "all_later_90",
+        "all_earlier_90",
+    ],
+)
 
-    dfs_dict = pd.read_excel(
-        data_dir / "instr1.xlsx",
-        sheet_name=[
-            'primary',
-            'closest_earlier_or_later_90',
-            'closest_later_90',
-            'closest_earlier_90',
-            'all_earlier_or_later_90',
-            'all_later_90',
-            'all_earlier_90'
-        ]
-    )
+primary = dfs_dict["primary"]
+secondary = file_to_dataframe(DATA_DIR / "instr1_all.csv")
 
-    primary = dfs_dict['primary']
-    secondary = file_to_dataframe(data_dir / "instr1_all.csv")
+
+def test_instr1_closest_earlier_or_later_90():
 
     # test closest; earlier_or_later; 90 days
     closest_earlier_or_later_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='closest',
-        when='earlier_or_later',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="closest", when="earlier_or_later", days=90
     )
-    # closest_earlier_or_later_90_result.to_excel(current_dir / "closest_earlier_or_later_90_result.xlsx", index=False)
-    closest_earlier_or_later_90_expected_result = dfs_dict['closest_earlier_or_later_90']
-    assert_dfs_equal(closest_earlier_or_later_90_result,
-                     closest_earlier_or_later_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
+
+    closest_earlier_or_later_90_expected_result = dfs_dict["closest_earlier_or_later_90"]
+
+    (left, right) = closest_earlier_or_later_90_result.mac.conform(
+        closest_earlier_or_later_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_instr1_closest_later_90():
 
     # test closest; later; 90 days
     closest_later_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='closest',
-        when='later',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="closest", when="later", days=90
     )
-    # closest_later_90_result.to_excel(current_dir / "closest_later_90_result.xlsx", index=False)
-    closest_later_90_expected_result = dfs_dict['closest_later_90']
-    assert_dfs_equal(closest_later_90_result,
-                     closest_later_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
 
+    closest_later_90_expected_result = dfs_dict["closest_later_90"]
+
+    (left, right) = closest_later_90_result.mac.conform(
+        closest_later_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_instr1_closest_earlier_90():
     # test closest; earlier; 90 days
     closest_earlier_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='closest',
-        when='earlier',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="closest", when="earlier", days=90
     )
 
-    # closest_earlier_90_result.to_excel(current_dir / "closest_earlier_90_result.xlsx", index=False)
-    closest_earlier_90_expected_result = dfs_dict['closest_earlier_90']
-    assert_dfs_equal(closest_earlier_90_result,
-                     closest_earlier_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
+    closest_earlier_90_expected_result = dfs_dict["closest_earlier_90"]
+
+    (left, right) = closest_earlier_90_result.mac.conform(
+        closest_earlier_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_instr1_all_earlier_or_later_90():
 
     # test all; earlier_or_later; 90 days
     all_earlier_or_later_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='all',
-        when='earlier_or_later',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="all", when="earlier_or_later", days=90
     )
 
-    # all_earlier_or_later_90_result.to_excel(current_dir / "all_earlier_or_later_90_result.xlsx", index=False)
-    all_earlier_or_later_90_expected_result = dfs_dict['all_earlier_or_later_90']
-    assert_dfs_equal(all_earlier_or_later_90_result,
-                     all_earlier_or_later_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
+    all_earlier_or_later_90_expected_result = dfs_dict["all_earlier_or_later_90"]
 
+    (left, right) = all_earlier_or_later_90_result.mac.conform(
+        all_earlier_or_later_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+        values_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_instr1_all_later_90():
     # test all; later; 90 days
     all_later_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='all',
-        when='later',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="all", when="later", days=90
     )
 
-    # all_later_90_result.to_excel(current_dir / "all_later_90_result.xlsx", index=False)
-    all_later_90_expected_result = dfs_dict['all_later_90']
-    assert_dfs_equal(all_later_90_result,
-                     all_later_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
+    all_later_90_expected_result = dfs_dict["all_later_90"]
 
+    (left, right) = all_later_90_result.mac.conform(
+        all_later_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+        values_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)
+
+
+def test_instr1_all_earlier_90():
     # test all; earlier; 90 days
     all_earlier_90_result = primary.mac.date_proximity(
-        secondary,
-        id_on='pidn',
-        date_on='dcdate',
-        get='all',
-        when='earlier',
-        days=90
+        secondary, id_on="pidn", date_on="dcdate", get="all", when="earlier", days=90
     )
 
-    # all_earlier_90_result.to_excel(current_dir / "all_earlier_90_result.xlsx", index=False)
-    all_earlier_90_expected_result = dfs_dict['all_earlier_90']
-    assert_dfs_equal(all_earlier_90_result,
-                     all_earlier_90_expected_result,
-                     cols_ignore=cols_ignore,
-                     cols_ignore_pat=cols_ignore_pat,
-                     output_dir=output_dir)
+    all_earlier_90_expected_result = dfs_dict["all_earlier_90"]
+
+    (left, right) = all_earlier_90_result.mac.conform(
+        all_earlier_90_expected_result,
+        filter_kwargs=COL_FILTER_KWARGS,
+        dtypes=True,
+        index_order=True,
+        values_order=True,
+    )
+    pd.testing.assert_frame_equal(left, right)

@@ -1,28 +1,20 @@
 from pathlib import Path
 
-import macpie as mp
 import pandas as pd
 
-from macpie.pandas import file_to_dataframe
-from macpie.testing import assert_dfs_equal
+DATA_DIR = Path("tests/data/").resolve()
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path(__file__).parent.absolute()
-
-# output_dir = current_dir
-output_dir = None
-
-cols_ignore = []
+THIS_DIR = Path(__file__).parent.absolute()
 
 
 def test_instr2_small():
 
     dfs_dict = pd.read_excel(
-        current_dir / "instr2_small.xlsx", sheet_name=["primary", "expected_results"]
+        THIS_DIR / "instr2_small.xlsx", sheet_name=["primary", "expected_results"]
     )
 
     primary = dfs_dict["primary"]
-    secondary_instr1 = pd.read_csv(data_dir / "instr1_all.csv", parse_dates=[1])
+    secondary_instr1 = pd.read_csv(DATA_DIR / "instr1_all.csv", parse_dates=[1])
 
     # test closest; earlier_or_later; 90 days
     small_result = primary.mac.date_proximity(
@@ -36,4 +28,5 @@ def test_instr2_small():
     )
 
     small_expected_result = dfs_dict["expected_results"]
-    assert_dfs_equal(small_result, small_expected_result, cols_ignore=cols_ignore)
+    (left, right) = small_result.mac.conform(small_expected_result, dtypes=True)
+    pd.testing.assert_frame_equal(left, right)

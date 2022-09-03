@@ -1,4 +1,6 @@
-import itertools
+import re
+
+import pytest
 
 from macpie import lltools
 
@@ -23,13 +25,122 @@ def test_chunks():
 def test_common_members():
     l1 = [1, 2, 3, 1, 2, 3]
     l2 = [2, 3, 4]
-    assert lltools.common_members(l1, l2) == [2, 3]
+    assert list(lltools.common_members(l1, l2)) == [2, 3]
 
 
 def test_difference():
     l1 = [1, 2, 6, 8]
     l2 = [2, 3, 5, 8]
     assert lltools.difference(l1, l2) == [1, 6]
+
+
+def test_filter_seq():
+    seq = ["col1", "col2", "col3", "date", "misc", "col6"]
+    assert lltools.filter_seq(seq, items=["col7"])[0] == []
+    assert lltools.filter_seq(seq, items=["col7"], invert=True)[0] == [
+        "col1",
+        "col2",
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
+    assert lltools.filter_seq(seq, regex="^albert")[0] == []
+    assert lltools.filter_seq(seq, items=["col7"], regex="^albert")[0] == []
+    assert lltools.filter_seq(seq, items=["col2", "col1"])[0] == ["col1", "col2"]
+    assert lltools.filter_seq(seq, items=["col1", "col2"], invert=True)[0] == [
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
+    assert lltools.filter_seq(seq, like="ol")[0] == ["col1", "col2", "col3", "col6"]
+    assert lltools.filter_seq(seq, like="ol", invert=True)[0] == ["date", "misc"]
+    assert lltools.filter_seq(seq, regex="^da")[0] == ["date"]
+    assert lltools.filter_seq(seq, regex="^col", invert=True)[0] == ["date", "misc"]
+    assert lltools.filter_seq(seq, like="ol", regex="^da")[0] == [
+        "col1",
+        "col2",
+        "col3",
+        "date",
+        "col6",
+    ]
+    assert lltools.filter_seq(seq, items=["col1", "misc"], like="ol", regex="^da")[0] == [
+        "col1",
+        "col2",
+        "col3",
+        "date",
+        "misc",
+        "col6",
+    ]
+    assert lltools.filter_seq(seq, pred=lambda x: x.startswith("co"))[0] == [
+        "col1",
+        "col2",
+        "col3",
+        "col6",
+    ]
+
+
+def test_filter_seq_with_sub_seqs():
+    seq = [("CDR", "PIDN"), ("CDR", "DCDate"), ("CDR", "InstrID"), "RANDOM"]
+
+    assert lltools.filter_seq(seq, items=[("CDR", "PIDN")])[0] == [("CDR", "PIDN")]
+    assert lltools.filter_seq(seq, items=[("CDR", "PIDNS")])[0] == []
+    assert lltools.filter_seq(seq, like="CD")[0] == [
+        ("CDR", "PIDN"),
+        ("CDR", "DCDate"),
+        ("CDR", "InstrID"),
+    ]
+    assert lltools.filter_seq(seq, like="ID")[0] == [
+        ("CDR", "PIDN"),
+        ("CDR", "InstrID"),
+    ]
+    assert lltools.filter_seq(seq, regex=re.compile("id", re.IGNORECASE))[0] == [
+        ("CDR", "PIDN"),
+        ("CDR", "InstrID"),
+    ]
+    assert lltools.filter_seq(seq, regex=re.compile("id", re.IGNORECASE), invert=True)[0] == [
+        ("CDR", "DCDate"),
+        "RANDOM",
+    ]
+    assert lltools.filter_seq(seq, regex=re.compile("id$", re.IGNORECASE))[0] == [
+        ("CDR", "InstrID")
+    ]
+
+
+def test_filter_seq_pair():
+    left_seq = ["col1", "col2", "col3", "date", "misc1", "col6"]
+    right_seq = ["col1", "col2", "col3", "date", "misc2", "col6"]
+
+    with pytest.raises(TypeError):
+        lltools.filter_seq_pair(left_seq, right_seq)
+
+    assert lltools.filter_seq_pair(left_seq, right_seq, intersection=True) == (
+        (["col1", "col2", "col3", "date", "col6"], ["col1", "col2", "col3", "date", "col6"]),
+        (["misc1"], ["misc2"]),
+    )
+
+    assert lltools.filter_seq_pair(left_seq, right_seq, left_filter_kwargs={"like": "col"}) == (
+        (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "date", "misc2", "col6"]),
+        (["date", "misc1"], []),
+    )
+
+    assert lltools.filter_seq_pair(
+        left_seq, right_seq, filter_kwargs={"regex": "^col", "invert": True}
+    ) == (
+        (["date", "misc1"], ["date", "misc2"]),
+        (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "col6"]),
+    )
+
+    assert lltools.filter_seq_pair(
+        left_seq,
+        right_seq,
+        filter_kwargs={"regex": "^col", "invert": True},
+        intersection=True,
+    ) == (
+        (["date"], ["date"]),
+        (["col1", "col2", "col3", "misc1", "col6"], ["col1", "col2", "col3", "misc2", "col6"]),
+    )
 
 
 def test_is_disjoint():
@@ -158,6 +269,18 @@ def test_make_same_length():
     result = lltools.make_same_length(l1, l2, fillvalue=8)
     assert next(result) == tuple(l1)
     assert next(result) == (1, 2, 3, None, 8, 8)
+
+
+def test_remove_duplicates():
+    l1 = [1, 5, 2, 3, 2, 4, 3]
+
+    l1_no_dups_order_preserved = [1, 5, 2, 3, 4]
+    assert l1_no_dups_order_preserved == list(lltools.remove_duplicates(l1, preserve_order=True))
+
+    l1_no_dups_order_not_preserved = [1, 2, 3, 4, 5]
+    assert l1_no_dups_order_not_preserved == list(
+        sorted(lltools.remove_duplicates(l1, preserve_order=False))
+    )
 
 
 def test_rtrim():

@@ -7,17 +7,19 @@ import pandas as pd
 
 from macpie import DatasetFields, MACPieExcelWriter, MergeableAnchoredList
 from macpie._config import get_option
-from macpie.testing import assert_dfs_equal
+from macpie.testing import DebugDir
 
 from macpie.cli.macpie.main import main
 
-current_dir = Path(__file__).parent.absolute()
+THIS_DIR = Path(__file__).parent.absolute()
 
-# output_dir = current_dir
-output_dir = None
-
-cols_ignore = [("instr2_all", "InstrID_x"), ("instr3_all", "InstrID_x")]
-cols_ignore_pat = "^" + get_option("column.system.prefix")
+COL_FILTER_KWARGS = {
+    "filter_kwargs": {
+        "items": [("instr2_all", "InstrID_x"), ("instr3_all", "InstrID_x")],
+        "regex": "^" + get_option("column.system.prefix"),
+        "invert": True,
+    }
+}
 
 
 def create_available_fields(filepath):
@@ -50,17 +52,17 @@ def create_available_fields(filepath):
         available_fields.to_excel(writer)
 
 
-def test_small_with_merge(cli_link_small_with_merge, tmp_path):
-    run(cli_link_small_with_merge, tmp_path)
+def test_small_with_merge(cli_link_small_with_merge, tmp_path, debugdir):
+    run(cli_link_small_with_merge, tmp_path, debugdir)
 
 
-def test_small_no_merge(cli_link_small_no_merge, tmp_path):
-    run(cli_link_small_no_merge, tmp_path)
+def test_small_no_merge(cli_link_small_no_merge, tmp_path, debugdir):
+    run(cli_link_small_no_merge, tmp_path, debugdir)
 
 
-def run(filepath, tmp_path):
+def run(filepath, tmp_path, debugdir):
     expected_result = pd.read_excel(
-        current_dir / "small_expected_results.xlsx",
+        THIS_DIR / "small_expected_results.xlsx",
         sheet_name=MergeableAnchoredList.merged_dsetname,
         header=[0, 1],
         index_col=None,
@@ -79,8 +81,9 @@ def run(filepath, tmp_path):
         results_path = next(Path(".").glob("**/*.xlsx"))
 
         # copy file to current dir if you want to debug more
-        if output_dir is not None:
-            copy(results_path, current_dir)
+        if debugdir:
+            with DebugDir(debugdir):
+                copy(results_path, debugdir)
 
         results = pd.read_excel(
             results_path,
@@ -89,10 +92,7 @@ def run(filepath, tmp_path):
             index_col=None,
         )
 
-        assert_dfs_equal(
-            results,
-            expected_result,
-            cols_ignore=cols_ignore,
-            cols_ignore_pat=cols_ignore_pat,
-            output_dir=output_dir,
+        (left, right) = results.mac.conform(
+            expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
         )
+        pd.testing.assert_frame_equal(left, right)

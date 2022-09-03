@@ -19,6 +19,9 @@ from tests.cli.macpie.link.fixtures import (
 
 
 def pytest_addoption(parser):
+    parser.addoption(
+        "--debugdir", action="store_true", default=False, help="assist with debugging tests"
+    )
     parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
 
 
@@ -34,3 +37,20 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
+
+
+@pytest.fixture
+def debugdir(request):
+    val = request.config.getoption("--debugdir")
+    if val is True:
+        this_dir = Path(__file__).parent.absolute()
+        base_dir = this_dir / "test_output"
+        try:
+            node_name = request.node.name
+            module_name = request.module.__name__
+            folder_name = module_name + "." + node_name
+            output_dir = Path(base_dir / folder_name)
+        except Exception:
+            output_dir = base_dir
+        return output_dir
+    return False

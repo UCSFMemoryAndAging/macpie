@@ -1,3 +1,4 @@
+from distutils.log import debug
 from pathlib import Path
 from shutil import copy
 
@@ -11,15 +12,12 @@ from macpie.io.excel import (
     DATASETS_SHEET_NAME,
     COLLECTION_SHEET_NAME,
 )
-from macpie.testing import assert_dfs_equal
+from macpie.testing import DebugDir
 
 from macpie.cli.macpie.main import main
 
 
-current_dir = Path(__file__).parent.absolute()
-
-# output_dir = current_dir
-output_dir = None
+THIS_DIR = Path(__file__).parent.absolute()
 
 
 def create_available_fields(filepath):
@@ -51,11 +49,11 @@ def create_available_fields(filepath):
 
 
 @pytest.mark.slow
-def test_full_no_merge(cli_link_full_no_merge, tmp_path):
+def test_full_no_merge(cli_link_full_no_merge, tmp_path, debugdir):
     cli_link_full_no_merge_copy = Path(copy(cli_link_full_no_merge, tmp_path))
 
     expected_result = pd.read_excel(
-        current_dir / "full_expected_results.xlsx",
+        THIS_DIR / "full_expected_results.xlsx",
         sheet_name=MergeableAnchoredList.merged_dsetname,
         header=[0, 1],
         index_col=None,
@@ -74,8 +72,9 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path):
         results_path = next(Path(".").glob("**/*.xlsx"))
 
         # copy file to current dir if you want to debug more
-        if output_dir is not None:
-            copy(results_path, current_dir)
+        if debugdir:
+            with DebugDir(debugdir):
+                copy(results_path, debugdir)
 
         results_wb = pyxl.load_workbook(results_path)
         # expected_results_wb = pyxl.load_workbook(current_dir / "full_expected_results.xlsx")
@@ -98,4 +97,4 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path):
             index_col=None,
         )
 
-        assert_dfs_equal(results, expected_result, output_dir=output_dir)
+        pd.testing.assert_frame_equal(results, expected_result)

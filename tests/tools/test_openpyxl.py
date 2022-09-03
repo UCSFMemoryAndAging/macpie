@@ -52,11 +52,7 @@ def test():
 
 
 def test_no_headers():
-    # DataFrames with no headers have integers auto-created for their column labels.
-    # Since the column labels are integers and not strings, we can't use
-    # assert_dfs_equal to compare because it uses the .str accessor, which can only
-    # be used with strings values. Therefore, use the natiive pandas equals method
-    # to do the assertion check.
+    # Note: DataFrames with no headers have integers auto-created for their column labels.
 
     df_0_0_expected = pd.read_excel(f, sheet_name="0_0", header=None, index_col=None)
     # print("\n", df_0_0_expected, "\n", df_0_0_expected.index, "\n", df_0_0_expected.columns)

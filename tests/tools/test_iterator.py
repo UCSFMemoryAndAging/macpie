@@ -123,15 +123,3 @@ def test_overlay_with_predicate():
         bottom, top, predicate=lambda x: x is None, constrain_to_top=True, fillvalue="fill"
     )
     assert list(result) == [1, 2, 3, 4, 5, 6, 7, 8, "fill", "fill"]
-
-
-def test_remove_duplicates():
-    l1 = [1, 5, 2, 3, 2, 4, 3]
-
-    l1_no_dups_order_preserved = [1, 5, 2, 3, 4]
-    assert l1_no_dups_order_preserved == list(itertools.remove_duplicates(l1, preserve_order=True))
-
-    l1_no_dups_order_not_preserved = [1, 2, 3, 4, 5]
-    assert l1_no_dups_order_not_preserved == list(
-        sorted(itertools.remove_duplicates(l1, preserve_order=False))
-    )
