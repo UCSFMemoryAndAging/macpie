@@ -36,6 +36,10 @@ def test_difference():
 
 def test_filter_seq():
     seq = ["col1", "col2", "col3", "date", "misc", "col6"]
+    with pytest.raises(TypeError):
+        lltools.filter_seq(seq)
+
+    assert lltools.filter_seq(seq, items=(), regex=None, like=None)[0] == []
     assert lltools.filter_seq(seq, items=["col7"])[0] == []
     assert lltools.filter_seq(seq, items=["col7"], invert=True)[0] == [
         "col1",

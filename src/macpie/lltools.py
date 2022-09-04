@@ -178,6 +178,13 @@ def filter_seq_pair(
     --------
     filter_seq
     """
+    if not any(filter_kwargs.values()):
+        filter_kwargs = None
+    if not any(left_filter_kwargs.values()):
+        left_filter_kwargs = None
+    if not any(right_filter_kwargs.values()):
+        right_filter_kwargs = None
+
     nkw = mp.core.common.count_bool_true(
         filter_kwargs,
         left_filter_kwargs,
