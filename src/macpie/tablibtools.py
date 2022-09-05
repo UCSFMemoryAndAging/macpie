@@ -156,9 +156,18 @@ class MacpieTablibDataset(tl.Dataset):
         return instance
 
     @classmethod
-    def from_excel(cls, filepath, sheet_name=None) -> "MacpieTablibDataset":
+    def from_excel(
+        cls, filepath, sheet_name=None, headers=True, skip_lines=0, read_only=True
+    ) -> "MacpieTablibDataset":
         """Construct instance from an Excel sheet."""
-        return read_excel(filepath, sheet_name, tablib_class=cls)
+        try:
+            wb = pyxl.load_workbook(filepath, read_only=read_only, data_only=True)
+            return macpie.openpyxltools.to_tablib_dataset(
+                wb, sheet_name=sheet_name, headers=headers, skip_lines=skip_lines, tablib_class=cls
+            )
+        finally:
+            if read_only:
+                wb.close()
 
 
 class DictLikeTablibDataset(MacpieTablibDataset):
@@ -198,12 +207,3 @@ class DictLikeTablibDataset(MacpieTablibDataset):
         instance = cls(**kwargs)
         instance.append_dict(dictionary, tags=tags)
         return instance
-
-
-def read_excel(filepath, sheet_name=None, headers=True, tablib_class=MacpieTablibDataset):
-    """Returns a Tablib Dataset from an Excel file."""
-
-    wb = pyxl.load_workbook(filepath)
-    return macpie.openpyxltools.to_tablib_dataset(
-        wb, sheet_name=sheet_name, headers=headers, tablib_class=tablib_class
-    )

@@ -170,8 +170,12 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
     Better to use :func:`pandas.read_excel` as it takes care of
     more nuances.
 
-    :param num_header: number of header rows
-    :param num_idx: number of index columns
+    Parameters
+    ----------
+    num_header : int
+        Number of header rows
+    num_idx : int
+        Number of index columns
     """
     if num_header == 1 and num_idx == 0:
         data = ws.values
@@ -216,6 +220,10 @@ def to_df(ws, num_header: int = 1, num_idx: int = 0):
 
 
 def to_tablib_dataset(wb, sheet_name=None, headers=True, skip_lines=0, tablib_class=tl.Dataset):
+    """Return a Tablib Dataset from an Excel file.
+
+    Source: Adapted from https://github.com/jazzband/tablib/blob/418cc691a005a055a66b8e4f189f67ab675cb121/src/tablib/formats/_xlsx.py#L85
+    """
     if sheet_name is None:
         ws = wb.active
     else:
