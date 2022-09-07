@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 current_dir = Path("tests/pandas/operators/filter_by_id/").resolve()
 
 
 def test_filter_by_id():
 
-    df = file_to_dataframe(current_dir / "basic.xlsx")
+    df = read_file(current_dir / "basic.xlsx")
     # ids list with invalid integer should raise ValueError
     ids = [1, 2, "hello"]
     with pytest.raises(ValueError):

@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 THIS_DIR = Path(__file__).parent.absolute()
 
-primary = file_to_dataframe(THIS_DIR / "primary.xlsx")
+primary = read_file(THIS_DIR / "primary.xlsx")
 
-secondary = file_to_dataframe(THIS_DIR / "secondary.xlsx")
+secondary = read_file(THIS_DIR / "secondary.xlsx")
 
 
 def test_merge_partial():
@@ -26,9 +26,7 @@ def test_merge_partial():
         merge="partial",
     )
 
-    merge_partial_expected_result = file_to_dataframe(
-        THIS_DIR / "merge_partial_expected_result.xlsx"
-    )
+    merge_partial_expected_result = read_file(THIS_DIR / "merge_partial_expected_result.xlsx")
 
     (left, right) = merge_partial_result.mac.conform(merge_partial_expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)
@@ -79,7 +77,7 @@ def test_merge_full():
         merge="full",
     )
 
-    merge_full_expected_result = file_to_dataframe(THIS_DIR / "merge_full_expected_result.xlsx")
+    merge_full_expected_result = read_file(THIS_DIR / "merge_full_expected_result.xlsx")
 
     (left, right) = merge_full_result.mac.conform(merge_full_expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)

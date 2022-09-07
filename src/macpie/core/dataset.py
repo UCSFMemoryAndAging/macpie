@@ -712,9 +712,9 @@ class Dataset(pd.DataFrame):
         """
         Construct :class:`Dataset` from a file.
         """
-        from macpie.pandas.io import file_to_dataframe
+        from macpie.pandas.io import read_file
 
-        df = file_to_dataframe(filepath)
+        df = read_file(filepath)
 
         return cls(
             data=df,

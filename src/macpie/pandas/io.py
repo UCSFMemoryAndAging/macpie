@@ -1,41 +1,59 @@
 """
 Module contains tools for processing files (e.g. csv, xlsx) into pandas objects
 """
-
-import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
 
-from macpie import openpyxltools, pathtools
+from macpie import openpyxltools, tablibtools, UnsupportedFormat
+from macpie.io.utils import detect_format
 
 
-def file_to_dataframe(filepath):
+def read_file(
+    filepath_or_buffer,
+    format_options={
+        "csv": {"engine": "pandas", "engine_kwargs": {}},
+        "xlsx": {"engine": "pandas", "engine_kwargs": {}},
+    },
+):
     """
     Parse a file into a :class:`pandas.DataFrame`.
 
     Parameters
     ----------
-    filepath : File path
+    filepath_or_buffer : various
+        File path or file-like object
 
     Returns
     -------
     DataFrame
     """
+    fmt = detect_format(filepath_or_buffer)
 
-    if pathtools.has_csv_extension(filepath):
-        return csv_to_dataframe(filepath, engine="pandas")
-    if pathtools.has_excel_extension(filepath):
-        return excel_to_dataframe(filepath, engine="openpyxl")
-    raise NotImplementedError(f"Parsing file with this extension not implemented: {filepath}")
+    if fmt in ("csv", "tsv"):
+        csv_options = format_options.pop("csv", {})
+        csv_engine = csv_options.pop("engine", "pandas")
+        csv_engine_kwargs = csv_options.pop("engine_kwargs", {})
+        csv_engine_kwargs["delimiter"] = "\t" if fmt == "tsv" else ","
+
+        return read_csv(filepath_or_buffer, engine=csv_engine, engine_kwargs=csv_engine_kwargs)
+
+    if fmt == "xlsx":
+        xlsx_options = format_options.pop("xlsx", {})
+        xlsx_engine = xlsx_options.pop("engine", "pandas")
+        xlsx_engine_kwargs = xlsx_options.pop("engine_kwargs", {})
+        return read_excel(filepath_or_buffer, engine=xlsx_engine, engine_kwargs=xlsx_engine_kwargs)
+
+    raise UnsupportedFormat(f"File with this format not supported: {filepath_or_buffer}")
 
 
-def csv_to_dataframe(filepath_or_buffer, engine="pandas"):
+def read_csv(filepath_or_buffer, engine="pandas", engine_kwargs={}):
     """
     Parse a csv file into a :class:`pandas.DataFrame`.
 
     Parameters
     ----------
-    filepath : File path
+    filepath : various
+        File path or file-like object
     engine :  {'pandas', 'tablib'}, default 'pandas'
         Parser engine to use.
 
@@ -44,22 +62,25 @@ def csv_to_dataframe(filepath_or_buffer, engine="pandas"):
     DataFrame
     """
 
+    delimiter = engine_kwargs.pop("delimiter")
+
     if engine == "pandas":
-        return pd.read_csv(filepath_or_buffer)
-    elif engine == "tablib":
+        return pd.read_csv(filepath_or_buffer, delimiter=delimiter, **engine_kwargs)
+
+    if engine == "tablib":
         with open(filepath_or_buffer, "r") as fh:
-            imported_data = tl.Dataset().load(fh)
-        df = imported_data.export("df")
-        return df
+            imported_data = tl.Dataset().load(fh, delimiter=delimiter, **engine_kwargs)
+        return imported_data.export("df")
 
 
-def excel_to_dataframe(filepath_or_buffer, sheet_name=None, engine="openpyxl"):  # pragma: no cover
+def read_excel(filepath_or_buffer, sheet_name=None, engine="pandas", engine_kwargs={}):
     """
     Parse an Excel file into a :class:`pandas.DataFrame`.
 
     Parameters
     ----------
-    filepath : File path
+    filepath_or_buffer : various
+        File path or file-like object
     sheet_name : str, optional
         Worksheet to parse. If not specified, active worksheet is parsed.
     engine :  {'openpyxl', 'pandas', 'tablib'}, default 'openpyxl'
@@ -69,22 +90,18 @@ def excel_to_dataframe(filepath_or_buffer, sheet_name=None, engine="openpyxl"): 
     -------
     DataFrame
     """
+    sheet_name = engine_kwargs.pop("sheet_name", sheet_name)
 
-    if engine == "openpyxl":
-        book = pyxl.load_workbook(filepath_or_buffer)
-        if sheet_name is None:
-            ws = book.active
-        else:
-            ws = book[sheet_name]
-        df = openpyxltools.to_df(ws)
-        return df
-    elif engine == "pandas":
+    if engine == "pandas":
         if sheet_name is None:
             sheet_name = 0
-        df = pd.read_excel(filepath_or_buffer, sheet_name=sheet_name)
-        return df
-    elif engine == "tablib":
-        with open(filepath_or_buffer, "rb") as fh:
-            imported_data = tl.Dataset().load(fh)
-        df = imported_data.export("df")
-        return df
+        return pd.read_excel(filepath_or_buffer, sheet_name=sheet_name, **engine_kwargs)
+
+    if engine == "tablib":
+        tlset = tablibtools.read_excel(filepath_or_buffer, sheet_name=sheet_name, **engine_kwargs)
+        return tlset.export("df")
+
+    if engine == "openpyxl":
+        return openpyxltools.file_to_dataframe(
+            filepath_or_buffer, sheet_name=sheet_name, **engine_kwargs
+        )

@@ -1,10 +1,9 @@
 from pathlib import Path
 
 import pandas as pd
-from macpie.pandas.general_df import mimic_index_order
 
 from macpie._config import get_option
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 DATA_DIR = Path("tests/data/").resolve()
@@ -34,7 +33,7 @@ dfs_dict = pd.read_excel(
 )
 
 primary = dfs_dict["primary"]
-secondary = file_to_dataframe(DATA_DIR / "instr1_all.csv")
+secondary = read_file(DATA_DIR / "instr1_all.csv")
 
 
 def test_instr1_closest_earlier_or_later_90():

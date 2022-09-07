@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 THIS_DIR = Path("tests/pandas/operators/merge/basic/").resolve()
 
-primary = file_to_dataframe(THIS_DIR / "small.xlsx")
+primary = read_file(THIS_DIR / "small.xlsx")
 
 dfs_dict = pd.read_excel(
     THIS_DIR / "small.xlsx", sheet_name=["small_anchor", "instr2_all_linked", "instr3_all_linked"]

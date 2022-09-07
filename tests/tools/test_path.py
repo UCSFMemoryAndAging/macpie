@@ -4,7 +4,7 @@ import pytest
 
 from macpie import pathtools
 
-current_dir = Path("tests/io/data/").resolve()
+DATA_DIR = Path("tests/io/data/").resolve()
 
 
 def test_create_dir_with_datetime(tmp_path):
@@ -30,7 +30,7 @@ def test_create_dir_with_datetime(tmp_path):
 
 
 def test_get_files_from_dir():
-    files = pathtools.get_files_from_dir(current_dir)
+    files = pathtools.get_files_from_dir(DATA_DIR)
 
     file_names = [f.name for f in files]
 
@@ -39,9 +39,9 @@ def test_get_files_from_dir():
 
 
 def test_validate_paths():
-    (valid, invalid) = pathtools.validate_paths([current_dir])
+    (valid, invalid) = pathtools.validate_paths([DATA_DIR])
 
-    assert len(valid) == 7
+    assert len(valid) == 8
     assert len(invalid) == 0
 
     def allowed_path(p):
@@ -49,14 +49,14 @@ def test_validate_paths():
             return False
         return True
 
-    (valid, invalid) = pathtools.validate_paths([current_dir], allowed_path=allowed_path)
+    (valid, invalid) = pathtools.validate_paths([DATA_DIR], allowed_path=allowed_path)
 
-    assert len(valid) == 4
+    assert len(valid) == 5
     assert len(invalid) == 3
 
 
 def test_validate_paths_2():
-    ps = [current_dir / "test.txt", current_dir / "not_there.txt", current_dir / "test.csv"]
+    ps = [DATA_DIR / "test.txt", DATA_DIR / "not_there.txt", DATA_DIR / "test.csv"]
 
     (valid, invalid) = pathtools.validate_paths(ps)
 

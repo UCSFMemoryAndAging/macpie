@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from macpie._config import get_option
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 THIS_DIR = Path("tests/pandas/operators/date_proximity/dupes/").resolve()
 
@@ -25,8 +25,8 @@ COL_FILTER_KWARGS = {
 
 def test_dupes():
 
-    primary = file_to_dataframe(THIS_DIR / "primary.xlsx")
-    secondary = file_to_dataframe(THIS_DIR / "secondary.xlsx")
+    primary = read_file(THIS_DIR / "primary.xlsx")
+    secondary = read_file(THIS_DIR / "secondary.xlsx")
 
     dupes_result = primary.mac.date_proximity(
         secondary,
@@ -40,7 +40,7 @@ def test_dupes():
         duplicates_indicator=True,
     )
 
-    dupes_expected_result = file_to_dataframe(THIS_DIR / "dupes_expected_result.xlsx")
+    dupes_expected_result = read_file(THIS_DIR / "dupes_expected_result.xlsx")
 
     (left, right) = dupes_result.mac.conform(
         dupes_expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True

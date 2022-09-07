@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from macpie._config import get_option
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 DATA_DIR = Path("tests/data/").resolve()
@@ -30,7 +30,7 @@ primary = dfs_dict["LINK_INSTR2"]
 @pytest.mark.slow
 def test_secondary_instr1():
 
-    secondary_instr1 = file_to_dataframe(DATA_DIR / "instr1_all.csv")
+    secondary_instr1 = read_file(DATA_DIR / "instr1_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr1_result = primary.mac.date_proximity(
@@ -55,7 +55,7 @@ def test_secondary_instr1():
 @pytest.mark.slow
 def test_secondary_instr3():
 
-    secondary_instr3 = file_to_dataframe(DATA_DIR / "instr3_all.csv")
+    secondary_instr3 = read_file(DATA_DIR / "instr3_all.csv")
 
     # test closest; earlier_or_later; 90 days
     instr3_result = primary.mac.date_proximity(

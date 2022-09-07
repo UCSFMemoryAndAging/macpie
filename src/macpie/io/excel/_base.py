@@ -2,6 +2,7 @@ import abc
 import re
 
 import pandas as pd
+
 import tablib as tl
 
 import macpie as mp
@@ -66,7 +67,7 @@ def read_excel(io, as_collection=False, storage_options=None, engine=None, **kwa
     return data
 
 
-class MACPieExcelFile(pd.io.excel._base.ExcelFile):
+class MACPieExcelFile(pd.ExcelFile):
     """
     Class for parsing tabular Excel sheets into Dataset objects.
 
@@ -283,7 +284,7 @@ class MACPieExcelReader(pd.io.excel._base.BaseExcelReader):
         pass
 
 
-class MACPieExcelWriter(pd.io.excel._base.ExcelWriter):
+class MACPieExcelWriter(pd.ExcelWriter):
     """
     Class for writing Dataset objects into Excel sheets.
 

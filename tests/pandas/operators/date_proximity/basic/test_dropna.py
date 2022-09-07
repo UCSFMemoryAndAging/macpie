@@ -3,15 +3,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 THIS_DIR = Path(__file__).parent.absolute()
 
 
-primary = file_to_dataframe(THIS_DIR / "primary_no_dupes.xlsx")
+primary = read_file(THIS_DIR / "primary_no_dupes.xlsx")
 
-secondary = file_to_dataframe(THIS_DIR / "secondary.xlsx")
+secondary = read_file(THIS_DIR / "secondary.xlsx")
 
 
 def test_dropna_true():
@@ -27,7 +27,7 @@ def test_dropna_true():
         merge="partial",
     ).reset_index(drop=True)
 
-    expected_result = file_to_dataframe(THIS_DIR / "dropna_true_expected_result.xlsx")
+    expected_result = read_file(THIS_DIR / "dropna_true_expected_result.xlsx")
     (left, right) = result.mac.conform(expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right, check_categorical=True)
 
@@ -45,7 +45,7 @@ def test_dropna_true_merge_full():
         merge="full",
     ).reset_index(drop=True)
 
-    expected_result = file_to_dataframe(THIS_DIR / "dropna_true_merge_full_expected_result.xlsx")
+    expected_result = read_file(THIS_DIR / "dropna_true_merge_full_expected_result.xlsx")
     (left, right) = result.mac.conform(expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)
 
@@ -63,6 +63,6 @@ def test_dropna_false():
         merge="partial",
     )
 
-    expected_result = file_to_dataframe(THIS_DIR / "dropna_false_expected_result.xlsx")
+    expected_result = read_file(THIS_DIR / "dropna_false_expected_result.xlsx")
     (left, right) = result.mac.conform(expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)

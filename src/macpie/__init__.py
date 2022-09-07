@@ -11,6 +11,7 @@ import macpie.core.config_init
 
 
 # top-level api. ordering matters
+from macpie.core.exceptions import *
 from macpie.core.api import *
 
 from macpie.collections import *

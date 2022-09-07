@@ -2,32 +2,33 @@ from pathlib import Path
 
 import pytest
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/io/data/").resolve()
+DATA_DIR = Path("tests/data/").resolve()
+
+THIS_DIR = Path("tests/io/data/").resolve()
 
 
-def test_file_to_dataframe():
-    bad_file = current_dir / "badfile.csv"
-
-    with pytest.raises(Exception):
-        file_to_dataframe(bad_file)
-
-    bad_suffix = current_dir / "badfile.zzz"
+def test_read_file():
+    bad_file = THIS_DIR / "badfile.csv"
 
     with pytest.raises(Exception):
-        file_to_dataframe(bad_suffix)
+        read_file(bad_file)
 
+    bad_suffix = THIS_DIR / "badfile.zzz"
 
-def test_csv_to_dataframe():
-
-    empty_file = current_dir / "empty.csv"
     with pytest.raises(Exception):
-        file_to_dataframe(empty_file)
+        read_file(bad_suffix)
 
-    p1 = current_dir / "test.csv"
-    df1 = file_to_dataframe(p1)
+
+def test_read_csv():
+
+    empty_file = THIS_DIR / "empty.csv"
+    with pytest.raises(Exception):
+        read_file(empty_file)
+
+    p1 = THIS_DIR / "test.csv"
+    df1 = read_file(p1)
 
     # test column count and headers
     assert len(df1.columns) == 2
@@ -39,12 +40,12 @@ def test_csv_to_dataframe():
 
 
 def test_import_xl():
-    bad_file = current_dir / "bad_xl.xlsx"
+    bad_file = THIS_DIR / "bad_xl.xlsx"
     with pytest.raises(Exception):
-        file_to_dataframe(bad_file)
+        read_file(bad_file)
 
-    p1 = current_dir / "test.xlsx"
-    df1 = file_to_dataframe(p1)
+    p1 = THIS_DIR / "test.xlsx"
+    df1 = read_file(p1)
 
     # test column count and headers
     assert len(df1.columns) == 9
@@ -56,9 +57,9 @@ def test_import_xl():
     assert len(df1.index) == 5
 
 
-def test_csv_to_dataframe_medium():
-    p1 = data_dir / "instr1_primaryall.csv"
-    df1 = file_to_dataframe(p1)
+def test_read_csv_medium():
+    p1 = DATA_DIR / "instr1_primaryall.csv"
+    df1 = read_file(p1)
 
     # test column count and headers
     assert df1.mac.col_count() == 60
@@ -70,9 +71,9 @@ def test_csv_to_dataframe_medium():
 
 
 @pytest.mark.slow
-def test_import_xl_medium():
-    p1 = data_dir / "instr1_primaryall.xlsx"
-    df1 = file_to_dataframe(p1)
+def test_read_excel_medium():
+    p1 = DATA_DIR / "instr1_primaryall.xlsx"
+    df1 = read_file(p1)
 
     # test column count and headers
     assert df1.mac.col_count() == 58

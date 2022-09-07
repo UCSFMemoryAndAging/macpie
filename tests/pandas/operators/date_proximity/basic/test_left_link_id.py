@@ -2,15 +2,15 @@ from pathlib import Path
 
 import pandas as pd
 
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 THIS_DIR = Path(__file__).parent.absolute()
 
 
-primary = file_to_dataframe(THIS_DIR / "primary_no_dupes.xlsx")
+primary = read_file(THIS_DIR / "primary_no_dupes.xlsx")
 
-secondary = file_to_dataframe(THIS_DIR / "secondary.xlsx")
+secondary = read_file(THIS_DIR / "secondary.xlsx")
 
 
 def test_left_link_id_blank_merge_partial():
@@ -26,9 +26,7 @@ def test_left_link_id_blank_merge_partial():
         merge="partial",
     )
 
-    expected_result = file_to_dataframe(
-        THIS_DIR / "left_link_id_blank_merge_partial_expected_result.xlsx"
-    )
+    expected_result = read_file(THIS_DIR / "left_link_id_blank_merge_partial_expected_result.xlsx")
     (left, right) = result.mac.conform(expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)
 
@@ -46,8 +44,6 @@ def test_left_link_id_blank_merge_full():
         merge="full",
     )
 
-    expected_result = file_to_dataframe(
-        THIS_DIR / "left_link_id_blank_merge_full_expected_result.xlsx"
-    )
+    expected_result = read_file(THIS_DIR / "left_link_id_blank_merge_full_expected_result.xlsx")
     (left, right) = result.mac.conform(expected_result, dtypes=True)
     pd.testing.assert_frame_equal(left, right)

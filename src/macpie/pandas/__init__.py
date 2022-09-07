@@ -26,7 +26,7 @@ from .general_df import (
 
 from .general_ser import count_trailers, remove_trailers, rtrim, rtrim_longest
 
-from .io import csv_to_dataframe, excel_to_dataframe, file_to_dataframe
+from .io import read_csv, read_excel, read_file
 
 from .multi_index import prepend_multi_index_level
 

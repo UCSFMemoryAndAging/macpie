@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from macpie._config import get_option
-from macpie.pandas import file_to_dataframe
+from macpie.pandas.io import read_file
 
 
 DATA_DIR = Path("tests/data/").resolve()
@@ -19,13 +19,13 @@ COL_FILTER_KWARGS = {
 
 def test_keep_earliest_csv():
     # test earliest
-    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.csv")
+    df = read_file(DATA_DIR / "instr1_primaryall.csv")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="earliest")
 
     assert get_option("column.system.duplicates") in result.columns
 
-    expected_result = file_to_dataframe(DATA_DIR / "instr1_primaryearliest.csv")
+    expected_result = read_file(DATA_DIR / "instr1_primaryearliest.csv")
 
     (left, right) = result.mac.conform(
         expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
@@ -36,10 +36,10 @@ def test_keep_earliest_csv():
 @pytest.mark.slow
 def test_keep_earliest_xl():
     # test earliest
-    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.xlsx")
+    df = read_file(DATA_DIR / "instr1_primaryall.xlsx")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="earliest")
-    expected_result = file_to_dataframe(DATA_DIR / "instr1_primaryearliest.xlsx")
+    expected_result = read_file(DATA_DIR / "instr1_primaryearliest.xlsx")
 
     (left, right) = result.mac.conform(
         expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
@@ -49,10 +49,10 @@ def test_keep_earliest_xl():
 
 def test_keep_latest_csv():
     # test latest
-    df = file_to_dataframe(DATA_DIR / "instr1_primaryall.csv")
+    df = read_file(DATA_DIR / "instr1_primaryall.csv")
 
     result = df.mac.group_by_keep_one(group_by_col="pidn", date_col_name="dcdate", keep="latest")
-    expected_result = file_to_dataframe(DATA_DIR / "instr1_primarylatest.csv")
+    expected_result = read_file(DATA_DIR / "instr1_primarylatest.csv")
 
     (left, right) = result.mac.conform(
         expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True

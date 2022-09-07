@@ -21,7 +21,7 @@ class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelRead
 
     def parse_excel_dict_sheet(self, sheet_name):
         ws = self.book.active if sheet_name is None else self.book[sheet_name]
-        df = openpyxltools.to_df(ws)
+        df = openpyxltools.worksheet_to_dataframe(ws)
         df = df.applymap(json.loads)
         dld = tablibtools.DictLikeTablibDataset.from_df(df)
         return dld.to_dict()
@@ -34,7 +34,7 @@ class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelRead
         )
 
 
-class _MACPieOpenpyxlWriter(MACPieExcelWriter, pd.io.excel._OpenpyxlWriter):
+class _MACPieOpenpyxlWriter(pd.io.excel._OpenpyxlWriter, MACPieExcelWriter):
     engine = "mp_openpyxl"
 
     @property

@@ -165,10 +165,23 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
     return counter
 
 
-def to_df(ws, num_header: int = 1, num_idx: int = 0):
+def file_to_dataframe(filepath, sheet_name=None, read_only=True):
+    try:
+        wb = pyxl.load_workbook(filepath, read_only=read_only, data_only=True)
+        if sheet_name is None:
+            ws = wb.active
+        else:
+            ws = wb[sheet_name]
+        return worksheet_to_dataframe(ws)
+    finally:
+        if read_only:
+            wb.close()
+
+
+def worksheet_to_dataframe(ws, num_header: int = 1, num_idx: int = 0):
     """Converts an Excel worksheet to a :class:`pandas.DataFrame`.
-    Better to use :func:`pandas.read_excel` as it takes care of
-    more nuances.
+    Better to use :func:`pandas.read_excel` as it has more options
+    and is faster.
 
     Parameters
     ----------
