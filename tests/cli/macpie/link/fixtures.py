@@ -1,15 +1,14 @@
 from pathlib import Path
-from shutil import copy
+
 from click.testing import CliRunner
 import pytest
 
 from macpie.cli.macpie.main import main
 
-data_dir = Path("tests/data/").resolve()
-current_dir = Path("tests/cli/macpie/link/").resolve()
 
-# output_dir = current_dir
-output_dir = None
+DATA_DIR = Path("tests/data/").resolve()
+
+THIS_DIR = Path(__file__).parent.absolute()
 
 
 @pytest.fixture(scope="session")
@@ -32,9 +31,9 @@ def cli_link_small_with_merge(tmp_path_factory):
         90,
         "--secondary-when",
         "earlier_or_later",
-        str((current_dir / "small.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve()),
+        str((THIS_DIR / "small.xlsx").resolve()),
+        str((DATA_DIR / "instr2_all.csv").resolve()),
+        str((DATA_DIR / "instr3_all.csv").resolve()),
     ]
 
     with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_with_merge")):
@@ -67,9 +66,9 @@ def cli_link_small_no_merge(tmp_path_factory):
         90,
         "--secondary-when",
         "earlier_or_later",
-        str((current_dir / "small.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve()),
+        str((THIS_DIR / "small.xlsx").resolve()),
+        str((DATA_DIR / "instr2_all.csv").resolve()),
+        str((DATA_DIR / "instr3_all.csv").resolve()),
     ]
 
     with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_no_merge")):
@@ -102,9 +101,9 @@ def cli_link_full_no_merge(tmp_path_factory):
         90,
         "--secondary-when",
         "earlier_or_later",
-        str((current_dir / "full.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve()),
+        str((THIS_DIR / "full.xlsx").resolve()),
+        str((DATA_DIR / "instr2_all.csv").resolve()),
+        str((DATA_DIR / "instr3_all.csv").resolve()),
     ]
 
     with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_full_no_merge")):
@@ -136,9 +135,9 @@ def cli_link_small_with_dups(tmp_path_factory):
         90,
         "--secondary-when",
         "earlier_or_later",
-        str((current_dir / "small_with_dups.xlsx").resolve()),
-        str((data_dir / "instr2_all.csv").resolve()),
-        str((data_dir / "instr3_all.csv").resolve()),
+        str((THIS_DIR / "small_with_dups.xlsx").resolve()),
+        str((DATA_DIR / "instr2_all.csv").resolve()),
+        str((DATA_DIR / "instr3_all.csv").resolve()),
     ]
 
     with runner.isolated_filesystem(temp_dir=tmp_path_factory.mktemp("cli_link_small_with_dups")):

@@ -7,18 +7,16 @@ import pytest
 
 import macpie as mp
 from macpie.cli.macpie.main import main
-from macpie.testing import assert_excels_equal
+from macpie.testing import assert_excels_equal, DebugDir
 
-current_dir = Path(__file__).parent.absolute()
 
-# output_dir = current_dir
-output_dir = None
+THIS_DIR = Path(__file__).parent.absolute()
 
 RANDOM_SEED = 567
 
 
 @pytest.mark.parametrize("filename", ["data.csv", "data.xlsx"])
-def test_masker(tmp_path, filename):
+def test_masker(tmp_path, filename, debugdir):
     # macpie masker --random-seed 567 --id-range 1 5 --id-cols pidn --date-cols dcdate --id2-range 11 15 --id2-cols instrid data.csv
 
     runner = CliRunner()
@@ -39,7 +37,7 @@ def test_masker(tmp_path, filename):
         "15",
         "--id2-cols",
         "instrid",
-        str(Path(current_dir / filename).resolve()),
+        str(Path(THIS_DIR / filename).resolve()),
     ]
 
     with runner.isolated_filesystem(temp_dir=tmp_path):
@@ -47,7 +45,7 @@ def test_masker(tmp_path, filename):
         assert result.exit_code == 0
         # get the results file
         results_path = next(Path(".").rglob(filename)).resolve()
-        expected_results_path = Path(current_dir / ("expected_result" + results_path.suffix))
+        expected_results_path = Path(THIS_DIR / ("expected_result" + results_path.suffix))
 
         if results_path.suffix == ".xlsx":
             assert_excels_equal(results_path, expected_results_path)
@@ -55,10 +53,11 @@ def test_masker(tmp_path, filename):
             assert filecmp.cmp(results_path, expected_results_path, shallow=False) is True
 
         # copy file to current dir if you want to debug more
-        if output_dir is not None:
-            expected_resultpath = mp.shelltools.copy_file_same_dir(
-                results_path, new_file_name="expected_" + filename
-            )
-            shutil.move(expected_resultpath, output_dir)
+        if debugdir:
+            with DebugDir(debugdir):
+                expected_resultpath = mp.shelltools.copy_file_same_dir(
+                    results_path, new_file_name="expected_" + filename
+                )
+                shutil.move(expected_resultpath, debugdir)
 
     return results_path

@@ -4,19 +4,16 @@ import re
 
 import openpyxl as pyxl
 
+from macpie import openpyxltools
 from macpie.testing import assert_excel_worksheet_equal
 
-from macpie import openpyxltools
 
-current_dir = Path(__file__).parent.absolute()
-
-# output_dir = current_dir
-output_dir = None
+THIS_DIR = Path(__file__).parent.absolute()
 
 
 def test_replace():
 
-    wb = pyxl.load_workbook(current_dir / "data.xlsx")
+    wb = pyxl.load_workbook(THIS_DIR / "data.xlsx")
 
     # only work with copy as it will be modified in place
     orig_ws = wb["data"]

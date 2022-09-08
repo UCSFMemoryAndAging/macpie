@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from macpie.pandas.io import read_file
+from macpie.pandas import read_file
+
 
 DATA_DIR = Path("tests/data/").resolve()
 

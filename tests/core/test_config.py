@@ -10,7 +10,6 @@ import pandas._config.config as pandas_cf
 import pytest
 
 from macpie._config import config as cf
-from macpie._config.config import OptionError
 
 
 class TestConfig:
@@ -41,7 +40,7 @@ class TestConfig:
 
         # can't register an already registered option
         msg = "Option 'a' has already been registered"
-        with pytest.raises(OptionError, match=msg):
+        with pytest.raises(cf.OptionError, match=msg):
             self.cf.register_option("a", 1, "doc")
 
     def test_case_insensitive(self):
@@ -53,7 +52,7 @@ class TestConfig:
 
         # gets of non-existent keys fail
         msg = r"No such option exists: 'no_such_option'"
-        with pytest.raises(OptionError, match=msg):
+        with pytest.raises(cf.OptionError, match=msg):
             self.cf.get_option("no_such_option")
 
     def test_get_option(self):
@@ -68,7 +67,7 @@ class TestConfig:
 
         # gets of non-existent keys fail
         msg = r"No such option exists: 'no_such_option'"
-        with pytest.raises(OptionError, match=msg):
+        with pytest.raises(cf.OptionError, match=msg):
             self.cf.get_option("no_such_option")
 
     def test_set_option(self):
@@ -89,7 +88,7 @@ class TestConfig:
         assert self.cf.get_option("b.b") == 1.1
 
         msg = r"No such option exists: 'no.such.key'"
-        with pytest.raises(OptionError, match=msg):
+        with pytest.raises(cf.OptionError, match=msg):
             self.cf.set_option("no.such.key", None)
 
     def test_set_option_multiple(self):
@@ -160,20 +159,20 @@ def test_system_columns():
     prefix = cf.get_option("column.system.prefix")
     assert prefix == "_mp"
 
-    assert cf.get_option("column.system.abs_diff_days") == prefix + '_abs_diff_days'
-    assert cf.get_option("column.system.diff_days") == prefix + '_diff_days'
-    assert cf.get_option("column.system.duplicates") == prefix + '_duplicates'
-    assert cf.get_option("column.system.merge") == prefix + '_merge'
+    assert cf.get_option("column.system.abs_diff_days") == prefix + "_abs_diff_days"
+    assert cf.get_option("column.system.diff_days") == prefix + "_diff_days"
+    assert cf.get_option("column.system.duplicates") == prefix + "_duplicates"
+    assert cf.get_option("column.system.merge") == prefix + "_merge"
 
     cf.set_option("column.system.prefix", "_macpie")
 
     new_prefix = cf.get_option("column.system.prefix")
     assert new_prefix == "_macpie"
 
-    assert cf.get_option("column.system.abs_diff_days") == new_prefix + '_abs_diff_days'
-    assert cf.get_option("column.system.diff_days") == new_prefix + '_diff_days'
-    assert cf.get_option("column.system.duplicates") == new_prefix + '_duplicates'
-    assert cf.get_option("column.system.merge") == new_prefix + '_merge'
+    assert cf.get_option("column.system.abs_diff_days") == new_prefix + "_abs_diff_days"
+    assert cf.get_option("column.system.diff_days") == new_prefix + "_diff_days"
+    assert cf.get_option("column.system.duplicates") == new_prefix + "_duplicates"
+    assert cf.get_option("column.system.merge") == new_prefix + "_merge"
 
     cf.reset_option("column.system.prefix")
     assert prefix == "_mp"

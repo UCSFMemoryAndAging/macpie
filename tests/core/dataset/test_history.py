@@ -1,14 +1,14 @@
 from pathlib import Path
 
-from macpie.core.dataset import LavaDataset
+import macpie as mp
 
 
-current_dir = Path(__file__).parent.absolute()
+THIS_DIR = Path(__file__).parent.absolute()
 
 
 def test_history():
-    primary = LavaDataset.from_file(current_dir / "primary.xlsx")
-    secondary = LavaDataset.from_file(current_dir / "secondary.xlsx")
+    primary = mp.LavaDataset.from_file(THIS_DIR / "primary.xlsx")
+    secondary = mp.LavaDataset.from_file(THIS_DIR / "secondary.xlsx")
 
     secondary.date_proximity(primary, get="closest", when="earlier_or_later", days=90)
 

@@ -4,6 +4,7 @@ import pytest
 
 from macpie import pathtools
 
+
 DATA_DIR = Path("tests/io/data/").resolve()
 
 

@@ -5,8 +5,7 @@ from click.testing import CliRunner
 import pandas as pd
 import pytest
 
-from macpie import MergeableAnchoredList
-from macpie._config import get_option
+import macpie as mp
 from macpie.cli.macpie.main import main
 from macpie.testing import DebugDir
 
@@ -15,7 +14,7 @@ THIS_DIR = Path(__file__).parent.absolute()
 COL_FILTER_KWARGS = {
     "filter_kwargs": {
         "items": [("instr2_all", "InstrID_x")],
-        "regex": "^" + get_option("column.system.prefix"),
+        "regex": "^" + mp.get_option("column.system.prefix"),
         "invert": True,
     }
 }
@@ -27,7 +26,7 @@ def test_merge_again(tmp_path, debugdir):
 
     expected_result = pd.read_excel(
         THIS_DIR / "expected_results.xlsx",
-        sheet_name=MergeableAnchoredList.merged_dsetname,
+        sheet_name=mp.MergeableAnchoredList.merged_dsetname,
         header=[0, 1],
         index_col=None,
     )
@@ -54,7 +53,7 @@ def test_merge_again(tmp_path, debugdir):
 
         results = pd.read_excel(
             results_path,
-            sheet_name=MergeableAnchoredList.merged_dsetname,
+            sheet_name=mp.MergeableAnchoredList.merged_dsetname,
             header=[0, 1],
             index_col=None,
         )

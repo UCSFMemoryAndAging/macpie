@@ -1,4 +1,3 @@
-from distutils.log import debug
 from pathlib import Path
 from shutil import copy
 
@@ -7,13 +6,12 @@ import openpyxl as pyxl
 import pandas as pd
 import pytest
 
-from macpie import DatasetFields, MACPieExcelWriter, MergeableAnchoredList
+import macpie as mp
 from macpie.io.excel import (
     DATASETS_SHEET_NAME,
     COLLECTION_SHEET_NAME,
 )
 from macpie.testing import DebugDir
-
 from macpie.cli.macpie.main import main
 
 
@@ -35,16 +33,16 @@ def create_available_fields(filepath):
         ("instr3_all", "Col3"),
     ]
 
-    available_fields = DatasetFields(
-        *available_fields_rows, title=MergeableAnchoredList.available_fields_sheetname
+    available_fields = mp.DatasetFields(
+        *available_fields_rows, title=mp.MergeableAnchoredList.available_fields_sheetname
     )
-    available_fields.append_col_fill("x", header=MergeableAnchoredList.to_merge_column_name)
+    available_fields.append_col_fill("x", header=mp.MergeableAnchoredList.to_merge_column_name)
 
     wb = pyxl.load_workbook(filepath)
-    del wb[MergeableAnchoredList.available_fields_sheetname]
+    del wb[mp.MergeableAnchoredList.available_fields_sheetname]
     wb.save(filepath)
 
-    with MACPieExcelWriter(filepath, mode="a", engine="mp_openpyxl") as writer:
+    with mp.MACPieExcelWriter(filepath, mode="a", engine="mp_openpyxl") as writer:
         available_fields.to_excel(writer)
 
 
@@ -54,7 +52,7 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path, debugdir):
 
     expected_result = pd.read_excel(
         THIS_DIR / "full_expected_results.xlsx",
-        sheet_name=MergeableAnchoredList.merged_dsetname,
+        sheet_name=mp.MergeableAnchoredList.merged_dsetname,
         header=[0, 1],
         index_col=None,
     )
@@ -84,15 +82,15 @@ def test_full_no_merge(cli_link_full_no_merge, tmp_path, debugdir):
             "instr3_all_DUPS",
             COLLECTION_SHEET_NAME,
             DATASETS_SHEET_NAME,
-            MergeableAnchoredList.available_fields_sheetname,
-            MergeableAnchoredList.merged_dsetname,
+            mp.MergeableAnchoredList.available_fields_sheetname,
+            mp.MergeableAnchoredList.merged_dsetname,
         ]
 
         assert all(sheetname in results_wb.sheetnames for sheetname in expected_sheetnames)
 
         results = pd.read_excel(
             results_path,
-            sheet_name=MergeableAnchoredList.merged_dsetname,
+            sheet_name=mp.MergeableAnchoredList.merged_dsetname,
             header=[0, 1],
             index_col=None,
         )

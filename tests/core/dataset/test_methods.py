@@ -1,11 +1,6 @@
-from pathlib import Path
-
 import pandas as pd
 
-from macpie import Dataset
-
-data_dir = Path("tests/data/").resolve()
-current_dir = Path(__file__).parent.absolute()
+import macpie as mp
 
 
 def test_keep_cols():
@@ -18,7 +13,7 @@ def test_keep_cols():
     df = pd.DataFrame(data, columns=columns)
     mi_df = pd.DataFrame(data=data, columns=mi_columns)
 
-    mi_dset = Dataset(
+    mi_dset = mp.Dataset(
         mi_df, id_col_name=("level", "ids"), date_col_name=("level", "date"), name="mi_test_name"
     )
 
@@ -41,7 +36,7 @@ def test_prepend_level():
 
     df = pd.DataFrame(data, columns=columns)
 
-    dset = Dataset(df, id_col_name="ids", date_col_name="date")
+    dset = mp.Dataset(df, id_col_name="ids", date_col_name="date")
 
     new_dset = dset.prepend_level("level")
 
@@ -60,7 +55,7 @@ def test_rename_col():
 
     df = pd.DataFrame(data, columns=columns)
 
-    dset = Dataset(df, id_col_name="ids", date_col_name="date")
+    dset = mp.Dataset(df, id_col_name="ids", date_col_name="date")
 
     new_dset = dset.prepend_level("level")
 

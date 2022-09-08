@@ -1,12 +1,7 @@
 from pathlib import Path
 
-import openpyxl as pyxl
-import pandas as pd
-from macpie.collections.mergeableanchoredlist import MergeableAnchoredList
 import pytest
 
-from macpie._config import get_option, set_option
-from macpie import MacSeriesAccessor, MacDataFrameAccessor
 
 # import fixtures needed across files
 from tests.cli.macpie.keepone.fixtures import cli_keepone_big

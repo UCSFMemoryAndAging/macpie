@@ -1,12 +1,6 @@
-from pathlib import Path
-
 import numpy as np
-import pandas as pd
 
-from macpie.core.dataset import Dataset
-
-
-current_dir = Path("tests/core/dataset/").resolve()
+import macpie as mp
 
 
 def test_io():
@@ -24,7 +18,7 @@ def test_io():
         "id_col_with_none": [None, None, 3],
     }
 
-    dset = Dataset(
+    dset = mp.Dataset(
         data=d,
         id_col_name="id_col_name",
         date_col_name="date",

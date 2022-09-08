@@ -4,11 +4,9 @@ from shutil import copy
 from click.testing import CliRunner
 import pandas as pd
 
-from macpie import MergeableAnchoredList
-from macpie._config import get_option, reset_option, set_option
+import macpie as mp
 from macpie.cli.macpie.main import main
 from macpie.testing import DebugDir
-
 
 THIS_DIR = Path(__file__).parent.absolute()
 
@@ -16,7 +14,7 @@ DATA_DIR = Path("tests/data/").resolve()
 
 COL_FILTER_KWARGS = {
     "filter_kwargs": {
-        "regex": "^" + get_option("column.system.prefix"),
+        "regex": "^" + mp.get_option("column.system.prefix"),
         "invert": True,
     }
 }
@@ -25,7 +23,7 @@ COL_FILTER_KWARGS = {
 def test_small_with_merge(cli_link_small_with_merge, debugdir):
     expected = pd.read_excel(
         THIS_DIR / "small_with_merge_expected_result.xlsx",
-        sheet_name=MergeableAnchoredList.merged_dsetname,
+        sheet_name=mp.MergeableAnchoredList.merged_dsetname,
         index_col=None,
         header=[0, 1],
     )
@@ -37,7 +35,7 @@ def test_small_with_merge(cli_link_small_with_merge, debugdir):
 
     result = pd.read_excel(
         cli_link_small_with_merge,
-        sheet_name=MergeableAnchoredList.merged_dsetname,
+        sheet_name=mp.MergeableAnchoredList.merged_dsetname,
         index_col=None,
         header=[0, 1],
     )
@@ -77,8 +75,8 @@ def test_small_no_merge(cli_link_small_no_merge, debugdir):
     pd.testing.assert_frame_equal(left, right)
 
     COL_FILTER_KWARGS["filter_kwargs"]["items"] = [
-        get_option("column.system.abs_diff_days"),
-        get_option("column.system.diff_days"),
+        mp.get_option("column.system.abs_diff_days"),
+        mp.get_option("column.system.diff_days"),
         "PIDN",
         "VType",
         "_merge",
@@ -102,7 +100,7 @@ def test_small_no_link_id(tmp_path, debugdir):
 
     expected_result = pd.read_excel(
         THIS_DIR / "small_no_link_id_expected_result.xlsx",
-        sheet_name=MergeableAnchoredList.merged_dsetname,
+        sheet_name=mp.MergeableAnchoredList.merged_dsetname,
         index_col=None,
         header=[0, 1],
     )
@@ -143,7 +141,7 @@ def test_small_no_link_id(tmp_path, debugdir):
 
         results = pd.read_excel(
             results_path,
-            sheet_name=MergeableAnchoredList.merged_dsetname,
+            sheet_name=mp.MergeableAnchoredList.merged_dsetname,
             index_col=None,
             header=[0, 1],
         )
@@ -178,7 +176,7 @@ def test_small_link_suffixes(tmp_path, debugdir):
         str((DATA_DIR / "instr3_all.csv").resolve()),
     ]
 
-    set_option("operators.binary.column_suffixes", ("_link", "_y"))
+    mp.set_option("operators.binary.column_suffixes", ("_link", "_y"))
 
     with runner.isolated_filesystem(temp_dir=tmp_path):
         results = runner.invoke(main, cli_args)
@@ -188,7 +186,7 @@ def test_small_link_suffixes(tmp_path, debugdir):
 
         expected_result = pd.read_excel(
             THIS_DIR / "small_link_suffixes_expected_result.xlsx",
-            sheet_name=MergeableAnchoredList.merged_dsetname,
+            sheet_name=mp.MergeableAnchoredList.merged_dsetname,
             index_col=None,
             header=[0, 1],
         )
@@ -200,7 +198,7 @@ def test_small_link_suffixes(tmp_path, debugdir):
 
         results = pd.read_excel(
             results_path,
-            sheet_name=MergeableAnchoredList.merged_dsetname,
+            sheet_name=mp.MergeableAnchoredList.merged_dsetname,
             index_col=None,
             header=[0, 1],
         )
@@ -210,4 +208,4 @@ def test_small_link_suffixes(tmp_path, debugdir):
         )
         pd.testing.assert_frame_equal(left, right)
 
-    reset_option("operators.binary.column_suffixes")
+    mp.reset_option("operators.binary.column_suffixes")

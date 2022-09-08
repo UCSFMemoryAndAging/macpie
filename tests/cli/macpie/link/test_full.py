@@ -5,10 +5,9 @@ from click.testing import CliRunner
 import pandas as pd
 import pytest
 
-from macpie._config import get_option
-from macpie.testing import DebugDir
+import macpie as mp
 from macpie.cli.macpie.main import main
-
+from macpie.testing import DebugDir
 
 DATA_DIR = Path("tests/data/").resolve()
 
@@ -17,7 +16,7 @@ THIS_DIR = Path(__file__).parent.absolute()
 COL_FILTER_KWARGS = {
     "filter_kwargs": {
         "items": ["PIDN", "VType", "InstrID_x", "link_id_x"],
-        "regex": "^" + get_option("column.system.prefix"),
+        "regex": "^" + mp.get_option("column.system.prefix"),
         "invert": True,
     }
 }
