@@ -1,7 +1,7 @@
 import collections
 import itertools
 
-from macpie.lltools import make_same_length
+from macpie.tools import lltools
 
 
 class DataTable(collections.UserList):
@@ -41,7 +41,7 @@ class DataTable(collections.UserList):
             super().__init__([[]])
         else:
             if axis == 0:
-                data = list(map(list, make_same_length(*data, fillvalue=fillvalue)))
+                data = list(map(list, lltools.make_same_length(*data, fillvalue=fillvalue)))
             else:
                 data = list(map(list, itertools.zip_longest(*data, fillvalue=fillvalue)))
             super().__init__(data)

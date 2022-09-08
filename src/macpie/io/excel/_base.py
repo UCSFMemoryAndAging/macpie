@@ -5,9 +5,10 @@ import pandas as pd
 
 import tablib as tl
 
-import macpie as mp
 from macpie._config import get_option
-from macpie import lltools, tablibtools
+from macpie.core.dataset import Dataset
+from macpie.core.datasetfields import DatasetFields
+from macpie.tools import lltools, tablibtools
 
 
 DATASETS_SHEET_NAME = "_mp_datasets"
@@ -188,7 +189,7 @@ class MACPieExcelFile(pd.ExcelFile):
 
     def parse_dataset_fields(self, sheet_name):
         tldset = self.parse_tablib_dataset(sheet_name)
-        dataset_fields = mp.DatasetFields()
+        dataset_fields = DatasetFields()
         tldset.df.apply(
             lambda x: dataset_fields.append_series(x, with_tags=True, tag_value="x"),
             axis="columns",
@@ -201,8 +202,10 @@ class MACPieExcelFile(pd.ExcelFile):
                 f"Cannot parse as collection without '{self.collection_sheet_name}' sheet."
             )
 
+        import macpie.core.collections
+
         collection_class_name = self._collection_dict["class_name"]
-        collection_class = getattr(mp.collections, collection_class_name)
+        collection_class = getattr(macpie.core.collections, collection_class_name)
         return collection_class.from_excel_dict(self, self._collection_dict)
 
     def parse(self, sheet_name=0, **kwargs):
@@ -246,9 +249,9 @@ class MACPieExcelFile(pd.ExcelFile):
             df = self._reader.parse(sheet_name=sheetname, **kwargs)
 
             if excel_dict is not None:
-                output[asheetname] = mp.Dataset.from_excel_dict(excel_dict, df)
+                output[asheetname] = Dataset.from_excel_dict(excel_dict, df)
             else:
-                output[asheetname] = mp.Dataset(df)
+                output[asheetname] = Dataset(df)
 
         if ret_dict:
             return output

@@ -1,1 +1,1 @@
-from ._json import MACPieJSONEncoder, MACPieJSONDecoder
+from macpie.io.json._json import MACPieJSONEncoder, MACPieJSONDecoder

@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 import pandas as pd
 
-from macpie import pathtools
+from macpie.tools import pathtools
 from macpie.util import MaskMap, Masker
 
 from macpie.cli.macpie.masker import masker_params

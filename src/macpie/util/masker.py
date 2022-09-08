@@ -38,7 +38,7 @@ from typing import Dict
 import pandas as pd
 import tablib as tl
 
-from macpie import lltools
+from macpie.tools import lltools
 
 
 class Masker:

@@ -5,14 +5,13 @@ import tablib as tl
 import xlsxwriter
 
 from macpie._config import get_option
-from macpie import tablibtools, xlsxwritertools
-
-from ._base import (
+from macpie.io.excel._base import (
     DATASETS_SHEET_NAME,
     COLLECTION_SHEET_NAME,
     safe_xlsx_sheet_title,
     MACPieExcelWriter,
 )
+from macpie.tools import tablibtools, xlsxwritertools
 
 
 class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):

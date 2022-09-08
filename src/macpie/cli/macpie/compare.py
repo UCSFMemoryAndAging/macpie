@@ -121,7 +121,7 @@ def process_sheet_options(left_file, right_file, sheet, sheet_pair):
     if not results:
         left_sheets = mp.openpyxltools.get_sheet_names(left_file)
         right_sheets = mp.openpyxltools.get_sheet_names(right_file)
-        common_sheets = list(set(left_sheets).intersection(right_sheets))
+        ((common_sheets, _), _) = mp.lltools.filter_seq_pair(left_sheets, right_sheets)
         for cs in common_sheets:
             results.append((cs, cs))
         if not results:

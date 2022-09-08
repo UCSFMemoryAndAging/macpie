@@ -3,10 +3,8 @@ Public testing utility functions for Excel files.
 """
 
 import openpyxl as pyxl
-import pandas as pd
 
-import macpie.datetimetools
-import macpie.openpyxltools
+from macpie.tools import openpyxltools
 
 
 def assert_excels_equal(filepath_1, filepath_2):
@@ -45,7 +43,7 @@ def assert_excel_worksheet_equal(left_ws, right_ws):
     assert left_ws.max_row == right_ws.max_row
 
     # same data in each cell?
-    for left_cell in macpie.openpyxltools.iter_cells(left_ws):
+    for left_cell in openpyxltools.iter_cells(left_ws):
         right_cell = right_ws[left_cell.coordinate]
         # convert None to empty string
         left_cell.value = "" if left_cell.value is None else left_cell.value

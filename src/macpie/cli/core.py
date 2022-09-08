@@ -1,10 +1,9 @@
 import functools
 from pathlib import Path
-from webbrowser import get
 
 import click
 
-from macpie import datetimetools, pathtools
+from macpie.tools import datetimetools, pathtools
 
 from .helpers import get_client_system_info, get_command_info
 
@@ -15,6 +14,7 @@ class ResultsResource:
         self.sub_ctx = None
         self.output_dir = output_dir
         self.verbose = verbose
+        self.results_dir = None
 
     def __enter__(self):
         return self
@@ -29,7 +29,10 @@ class ResultsResource:
         click.echo(f"\nResults are in the following directory: {self.output_dir.resolve()}")
 
     def create_results_dir(self):
-        return pathtools.create_subdir(self._create_results_name(), where=self.output_dir)
+        self.results_dir = pathtools.create_subdir(
+            self._create_results_name(), where=self.output_dir
+        )
+        return self.results_dir
 
     def create_results_filepath(self, file_extension=".xlsx"):
         return self.output_dir / (self._create_results_name() + file_extension)

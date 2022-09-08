@@ -4,8 +4,9 @@ Module contains tools for processing files (e.g. csv, xlsx) into pandas objects
 import pandas as pd
 import tablib as tl
 
-from macpie import openpyxltools, tablibtools, UnsupportedFormat
+from macpie.core.exceptions import UnsupportedFormat
 from macpie.io.utils import detect_format
+from macpie.tools import openpyxltools, tablibtools
 
 
 def read_file(

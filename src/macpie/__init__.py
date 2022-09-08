@@ -5,26 +5,17 @@ __version__ = "0.5.0"
 
 from macpie._config import get_option, set_option, reset_option
 
-
 # let init-time option registration happen
 import macpie.core.config_init
 
-
-# top-level api. ordering matters
-from macpie.core.exceptions import *
 from macpie.core.api import *
 
-from macpie.collections import *
+from macpie.io.api import *
 
-from macpie.io import *
+from macpie.tools.api import *
 
-from macpie.operators import *
+from macpie.pandas.accessors import MacDataFrameAccessor, MacSeriesAccessor
 
-from macpie.pandas.accessor_ser import MacSeriesAccessor
-from macpie.pandas.accessor_df import MacDataFrameAccessor
-
-
-# sub-level api
 from macpie import pandas
 
 from macpie import testing

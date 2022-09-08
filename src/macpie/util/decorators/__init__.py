@@ -1,1 +1,1 @@
-from .method import MethodHistory, MethodTimer
+from macpie.util.decorators.method import MethodHistory, MethodTimer

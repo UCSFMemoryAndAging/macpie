@@ -14,8 +14,15 @@ def count_not_none(*args) -> int:
     return sum(x is not None for x in args)
 
 
+def count_bool_falsey(*args) -> int:
+    """
+    Returns the count of arguments that are falsey.
+    """
+    return sum(bool(x) is False for x in args)
+
+
 def count_bool_true(*args) -> int:
     """
-    Returns the count of arguments that are falsy.
+    Returns the count of arguments that are truthy.
     """
     return sum(bool(x) is True for x in args)

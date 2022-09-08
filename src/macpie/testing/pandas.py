@@ -1,8 +1,9 @@
 """
 Public testing utility functions related to pandas.
 """
-import pathlib
-import macpie as mp
+
+from macpie.testing.util import DebugDir
+from macpie.tools import datetimetools
 
 
 def compare_helper(left, right, output_dir=None, **kwargs):
@@ -21,9 +22,7 @@ def compare_helper(left, right, output_dir=None, **kwargs):
     diffs = left.mac.compare(right, **kwargs)
     if not diffs.empty:
         if output_dir:
-            with mp.testing.DebugDir(output_dir):
-                diffs_filename = (
-                    "diffs_" + mp.datetimetools.current_datetime_str(ms=True) + ".xlsx"
-                )
+            with DebugDir(output_dir):
+                diffs_filename = "diffs_" + datetimetools.current_datetime_str(ms=True) + ".xlsx"
                 diffs.to_excel(output_dir / diffs_filename, index=True)
         assert False, f"\ndiffs: {diffs}"

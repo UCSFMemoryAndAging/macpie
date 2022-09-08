@@ -4,9 +4,9 @@ import pandas as pd
 import tablib as tl
 
 from macpie._config import get_option
-from macpie import openpyxltools, tablibtools
+from macpie.tools import openpyxltools, tablibtools
 
-from ._base import (
+from macpie.io.excel._base import (
     DATASETS_SHEET_NAME,
     COLLECTION_SHEET_NAME,
     safe_xlsx_sheet_title,

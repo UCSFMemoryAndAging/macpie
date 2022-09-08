@@ -10,13 +10,12 @@ module is imported, register them here rather than in the module.
 """
 
 import pandas._config.config as pandas_cf
+from pandas import options as pandas_options
 
 import macpie._config.config as cf
 
 # set pandas options
-from pandas import options
-
-options.io.excel.xlsx.writer = "xlsxwriter"
+pandas_options.io.excel.xlsx.writer = "xlsxwriter"
 
 
 # set macpie options

@@ -1,5 +1,6 @@
 import json
 import platform
+from functools import update_wrapper
 
 import click
 
@@ -61,3 +62,34 @@ def get_param_values(ctx):
             param_source = ctx.get_parameter_source(param.name)
             param_value = ctx.params[param.name]
             yield param, param_source, param_value
+
+
+def pipeline_generator(f):
+    """Similar to the :func:`pipeline_processor` but passes through old values
+    unchanged and does not pass through the values as parameter.
+
+    From: https://github.com/pallets/click/blob/fb4327216543d751e2654a0d3bf6ce3d31c435cc/examples/imagepipe/imagepipe.py
+    """
+
+    @pipeline_processor
+    def new_func(stream, *args, **kwargs):
+        yield from stream
+        yield from f(*args, **kwargs)
+
+    return update_wrapper(new_func, f)
+
+
+def pipeline_processor(f):
+    """Helper decorator to rewrite a function so that it returns another
+    function from it.
+
+    From: https://github.com/pallets/click/blob/fb4327216543d751e2654a0d3bf6ce3d31c435cc/examples/imagepipe/imagepipe.py
+    """
+
+    def new_func(*args, **kwargs):
+        def processor(stream):
+            return f(stream, *args, **kwargs)
+
+        return processor
+
+    return update_wrapper(new_func, f)

@@ -6,8 +6,8 @@ import openpyxl as pyxl
 from pandas.core.dtypes.common import is_re_compilable
 from tabulate import tabulate
 
-from macpie import openpyxltools, pathtools
 from macpie.cli.core import pass_results_resource
+from macpie.tools import openpyxltools, pathtools
 
 
 @click.command()

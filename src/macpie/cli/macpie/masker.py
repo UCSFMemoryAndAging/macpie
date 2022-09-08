@@ -196,7 +196,7 @@ def masker(
         output_filepath = results_dir / file_path.name
 
         if file_path.suffix == ".csv":
-            df = mp.pandas.file_to_dataframe(file_path)
+            df = mp.pandas.read_file(file_path)
             try:
                 masker.mask_df(
                     df, drop_cols=cols_to_drop, norename_cols=cols_no_rename, inplace=True

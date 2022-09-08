@@ -8,7 +8,7 @@ from pandas.io.json._table_schema import (
     parse_table_schema as pd_parse_table_schema,
 )
 
-from macpie import Dataset
+from macpie.core.api import Dataset
 
 
 TABLE_SCHEMA_VERSION = "0.6"

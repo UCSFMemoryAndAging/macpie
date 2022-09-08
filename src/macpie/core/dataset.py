@@ -3,13 +3,11 @@ from typing import ClassVar, List
 import numpy as np
 import pandas as pd
 
-from macpie import itertools, lltools, strtools
 from macpie._config import get_option
-from macpie.io.excel import MACPieExcelWriter, safe_xlsx_sheet_title
-from macpie.pandas.general_df import get_col_name
+from macpie.core.datasetfields import DatasetField, DatasetFields
+from macpie.pandas.select import get_col_name
+from macpie.tools import itertools, lltools, strtools
 from macpie.util.decorators.method import MethodHistory
-
-from .datasetfields import DatasetField, DatasetFields
 
 
 class Dataset(pd.DataFrame):
@@ -321,6 +319,8 @@ class Dataset(pd.DataFrame):
         :attr:`display_name` to 30 characters. The maximum allowed by Excel is 31,
         but leaving one character for use by library (i.e. prepending an '_').
         """
+        from macpie.io.excel import safe_xlsx_sheet_title
+
         return safe_xlsx_sheet_title(self.display_name[:31], "-")
 
     # -------------------------------------------------------------------------
@@ -606,7 +606,7 @@ class Dataset(pd.DataFrame):
         pandas.DataFrame.to_excel : Pandas analog
         """
 
-        from macpie.io.formats.excel import MACPieExcelFormatter
+        from macpie.io.excel import MACPieExcelWriter
 
         if isinstance(excel_writer, MACPieExcelWriter):
             need_save = False
@@ -623,6 +623,8 @@ class Dataset(pd.DataFrame):
                 dset = self
             else:
                 dset = self.to_frame()
+
+            from macpie.io.formats.excel import MACPieExcelFormatter
 
             formatter = MACPieExcelFormatter(
                 dset,
@@ -749,7 +751,7 @@ class Dataset(pd.DataFrame):
         Calls :func:`macpie.date_proximity`, passing in ``right_dset`` as
         the "left" Dataset, and this Dataset as the "right" Dataset.
         """
-        from macpie.operators.date_proximity import date_proximity
+        from macpie.core.combine import date_proximity
 
         return date_proximity(
             left=self,
@@ -778,7 +780,7 @@ class Dataset(pd.DataFrame):
         drop_duplicates :
             See :meth:`macpie.pandas.group_by_keep_one`
         """
-        from macpie.operators.group_by_keep_one import group_by_keep_one
+        from macpie.core.groupby import group_by_keep_one
 
         return group_by_keep_one(self, keep, drop_duplicates)
 

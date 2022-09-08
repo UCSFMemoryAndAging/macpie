@@ -1,36 +1,42 @@
 # flake8: noqa
-from .general_df import (
+
+from macpie.pandas.combine import date_proximity, merge
+
+from macpie.pandas.compare import compare, diff_cols, diff_rows, equals
+
+from macpie.pandas.convert import conform, mimic_dtypes, mimic_index_order, to_datetime
+
+from macpie.pandas.describe import (
     add_diff_days,
     any_duplicates,
-    compare,
-    diff_cols,
-    diff_rows,
+    count_trailers,
+    is_date_col,
+    mark_duplicates_by_cols,
+)
+
+from macpie.pandas.groupby import group_by_keep_one
+
+from macpie.pandas.io import read_csv, read_excel, read_file
+
+from macpie.pandas.indexing import (
     drop_suffix,
-    equals,
+    flatten_multiindex,
+    insert,
+    prepend_multi_index_level,
+    replace_suffix,
+)
+
+from macpie.pandas.select import (
+    filter_by_id,
     filter_labels,
     filter_labels_pair,
-    flatten_multiindex,
     get_col_name,
     get_col_names,
     get_cols_by_prefixes,
-    insert,
-    is_date_col,
-    mark_duplicates_by_cols,
-    mimic_dtypes,
-    mimic_index_order,
-    replace_suffix,
-    sort_values_pair,
+    remove_trailers,
+    rtrim,
+    rtrim_longest,
     subset_pair,
-    to_datetime,
 )
 
-from .general_ser import count_trailers, remove_trailers, rtrim, rtrim_longest
-
-from .io import read_csv, read_excel, read_file
-
-from .multi_index import prepend_multi_index_level
-
-from .operators.date_proximity import date_proximity
-from .operators.filter_by_id import filter_by_id
-from .operators.group_by_keep_one import group_by_keep_one
-from .operators.merge import merge
+from macpie.pandas.sort import sort_values_pair
