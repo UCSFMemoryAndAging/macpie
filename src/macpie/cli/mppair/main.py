@@ -107,6 +107,15 @@ def process_sheet_options(pair, sheet, sheet_pair):
     return sheet_pairs
 
 
+def echo_command_info(title, file_pair_info: FilePairInfo):
+    (left_file, right_file), _, _ = file_pair_info
+    click.echo()
+    click.secho(title, bold=True, bg="green", fg="black")
+    click.secho(f"'{left_file.resolve()}'", bold=True)
+    click.echo("to")
+    click.secho(f"'{right_file.resolve()}'\n", bold=True)
+
+
 def iter_df_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 

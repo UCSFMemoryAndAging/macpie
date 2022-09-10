@@ -4,7 +4,7 @@ import macpie as mp
 from macpie.cli.core import pass_results_resource
 from macpie.cli.helpers import pipeline_processor, SingletonExcelWriter
 
-from .main import FilePairInfo, iter_df_pairs
+from .main import echo_command_info, FilePairInfo, iter_df_pairs
 
 
 @click.command()
@@ -28,11 +28,7 @@ def conform(results_resource, file_pair_info, data_types, index_order, values_or
 
     (left_file, right_file), sheet_pairs, filter_kwargs = file_pair_info
 
-    click.echo()
-    click.secho("Conforming", bold=True, bg="green", fg="black")
-    click.secho(f"'{left_file.resolve()}'", bold=True)
-    click.echo("to")
-    click.secho(f"'{right_file.resolve()}'\n", bold=True)
+    echo_command_info("Conforming", file_pair_info)
 
     left_results_path = results_resource.results_dir / ("conformed_" + left_file.name)
     right_results_path = results_resource.results_dir / ("conformed_" + right_file.name)

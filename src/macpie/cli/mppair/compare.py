@@ -7,7 +7,7 @@ import macpie as mp
 from macpie.cli.core import pass_results_resource
 from macpie.cli.helpers import pipeline_processor, SingletonExcelWriter
 
-from .main import iter_df_pairs, iter_tl_pairs
+from .main import echo_command_info, iter_df_pairs, iter_tl_pairs
 
 
 POSSIBLE_ENGINES = ["pandas", "tablib"]
@@ -34,11 +34,7 @@ def compare(results_resource, file_pair_info, engines):
 
     (left_file, right_file), sheet_pairs, filter_kwargs = file_pair_info
 
-    click.echo()
-    click.secho("Comparing", bold=True, bg="green", fg="black")
-    click.secho(f"'{left_file.resolve()}'", bold=True)
-    click.echo("to")
-    click.secho(f"'{right_file.resolve()}'\n", bold=True)
+    echo_command_info("Comparing", file_pair_info)
 
     results_filename = (
         left_file.stem
