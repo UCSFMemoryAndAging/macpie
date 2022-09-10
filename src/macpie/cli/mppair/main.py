@@ -155,6 +155,8 @@ def iter_tl_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
 
 from .compare import compare
 from .conform import conform
+from .replace import replace
 
 main.add_command(compare)
 main.add_command(conform)
+main.add_command(replace)

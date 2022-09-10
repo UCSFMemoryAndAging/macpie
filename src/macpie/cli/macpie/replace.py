@@ -10,12 +10,17 @@ from macpie.cli.core import pass_results_resource
 from macpie.tools import openpyxltools, pathtools
 
 
+def replace_params(func):
+    func = click.option("-r", "--to-replace", required=True)(func)
+    func = click.option("-v", "--value", required=True)(func)
+    func = click.option("--ignorecase", is_flag=True)(func)
+    func = click.option("--regex", is_flag=True)(func)
+    func = click.option("--re-dotall", is_flag=True)(func)
+    return func
+
+
 @click.command()
-@click.option("-r", "--to-replace", required=True)
-@click.option("-v", "--value", required=True)
-@click.option("--ignorecase", is_flag=True)
-@click.option("--regex", is_flag=True)
-@click.option("--re-dotall", is_flag=True)
+@replace_params
 @click.argument(
     "files",
     nargs=-1,
@@ -31,8 +36,14 @@ def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, f
     if len(valid_files) < 1:
         raise click.UsageError("ERROR: No valid files.")
 
-    results_dir = results_resource.create_results_dir()
+    results_resource.create_results_dir()
 
+    replace_in_files(
+        results_resource, valid_files, to_replace, value, ignorecase, regex, re_dotall
+    )
+
+
+def replace_in_files(results_resource, files, to_replace, value, ignorecase, regex, re_dotall):
     flags = 0
     if regex:
         if not is_re_compilable(to_replace):
@@ -40,8 +51,9 @@ def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, f
         if re_dotall:
             flags |= re.DOTALL
 
-    for file_path in valid_files:
-        output_filepath = results_dir / file_path.name
+    result_filepaths = []
+    for file_path in files:
+        output_filepath = results_resource.results_dir / file_path.name
 
         wb = pyxl.load_workbook(file_path)
         for sheet in wb.sheetnames:
@@ -65,6 +77,9 @@ def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, f
                 click.echo("NO REPLACEMENTS")
 
         wb.save(output_filepath)
+        result_filepaths.append(output_filepath)
+
+    return result_filepaths
 
 
 def allowed_path(p):
