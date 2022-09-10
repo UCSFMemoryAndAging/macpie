@@ -2,6 +2,7 @@ import pathlib
 from collections import namedtuple
 
 import click
+import pandas as pd
 
 import macpie as mp
 from macpie.cli.core import ResultsResource
@@ -9,13 +10,17 @@ from macpie.cli.core import ResultsResource
 possible_engines = ["pandas", "tablib"]
 
 
-FilePairSheetPairs = namedtuple("FilePairSheetPairs", ["file_pair", "sheet_pairs"])
+FilePairInfo = namedtuple("FilePairInfo", ["file_pair", "sheet_pairs", "filter_kwargs"])
 
 
 @click.group(chain=True)
 @click.option("-v", "--verbose", is_flag=True, help="Will print verbose messages.")
 @click.option("-s", "--sheet", multiple=True)
 @click.option("-p", "--sheet-pair", nargs=2, multiple=True)
+@click.option("-n", "--filter-name", type=str, multiple=True)
+@click.option("-l", "--filter-like", type=str)
+@click.option("-r", "--filter-regex", type=str)
+@click.option("-i", "--filter-invert", is_flag=True)
 @click.argument(
     "files",
     nargs=2,
@@ -24,23 +29,47 @@ FilePairSheetPairs = namedtuple("FilePairSheetPairs", ["file_pair", "sheet_pairs
     ),
 )
 @click.pass_context
-def main(ctx, verbose, sheet, sheet_pair, files):
+def main(
+    ctx, verbose, sheet, sheet_pair, filter_name, filter_like, filter_regex, filter_invert, files
+):
     """This script processes a pair of files. One command feeds into the next."""
 
 
 @main.result_callback()
 @click.pass_context
-def process_commands(ctx, processors, verbose, sheet, sheet_pair, files):
+def process_commands(
+    ctx,
+    processors,
+    verbose,
+    sheet,
+    sheet_pair,
+    filter_name,
+    filter_like,
+    filter_regex,
+    filter_invert,
+    files,
+):
     """This result callback is invoked with an iterable of all the chained
     subcommands.  As in this example each subcommand returns a function
     we can chain them together to feed one into the other, similar to how
     a pipe on unix works.
     """
     rr = ResultsResource(ctx=ctx, verbose=verbose)
-    rr.create_results_dir()
+    # rr.create_results_dir()
     ctx.obj = ctx.with_resource(rr)
 
-    stream = FilePairSheetPairs(files, process_sheet_options(files, sheet, sheet_pair))
+    sheet_pairs = process_sheet_options(files, sheet, sheet_pair)
+
+    filter_kwargs = {
+        "items": filter_name,
+        "like": filter_like,
+        "regex": filter_regex,
+        "invert": filter_invert,
+    }
+    if not any(filter_kwargs.values()):
+        filter_kwargs = {}
+
+    stream = FilePairInfo(files, sheet_pairs, filter_kwargs)
 
     # Pipe it through all stream processors.
     for processor in processors:
@@ -76,6 +105,43 @@ def process_sheet_options(pair, sheet, sheet_pair):
             sheet_pairs.append((left_sheets[0], right_sheets[0]))
 
     return sheet_pairs
+
+
+def iter_df_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
+    left_sheets, right_sheets = map(list, zip(*sheet_pairs))
+
+    left_dfs_dict = pd.read_excel(left_file, sheet_name=left_sheets)
+    right_dfs_dict = pd.read_excel(right_file, sheet_name=right_sheets)
+
+    for sheet_pair in sheet_pairs:
+        left_sheetname, right_sheetname = sheet_pair
+        left_df = left_dfs_dict[left_sheetname]
+        right_df = right_dfs_dict[right_sheetname]
+        if filter_kwargs:
+            left_df, right_df = mp.pandas.subset_pair(
+                left_df, right_df, filter_kwargs=filter_kwargs
+            )
+        yield ((left_df, right_df), (left_sheetname, right_sheetname))
+
+
+def iter_tl_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
+    left_sheets, right_sheets = map(list, zip(*sheet_pairs))
+
+    with mp.MACPieExcelFile(left_file) as reader:
+        left_tlsets_dict = reader.parse_tablib_datasets(sheet_name=left_sheets)
+
+    with mp.MACPieExcelFile(right_file) as reader:
+        right_tlsets_dict = reader.parse_tablib_datasets(sheet_name=right_sheets)
+
+    for sheet_pair in sheet_pairs:
+        left_sheetname, right_sheetname = sheet_pair
+        left_tl = left_tlsets_dict[left_sheetname]
+        right_tl = right_tlsets_dict[right_sheetname]
+        if filter_kwargs:
+            left_tl, right_tl = mp.tablibtools.subset_pair(
+                left_tl, right_tl, filter_kwargs=filter_kwargs
+            )
+        yield ((left_tl, right_tl), (left_sheetname, right_sheetname))
 
 
 from .compare import compare

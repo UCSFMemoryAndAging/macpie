@@ -82,6 +82,9 @@ def filter_seq(seq, items=None, like=None, regex=None, pred=None, invert=False):
     --------
     filter_seq_pair
     """
+    if list(seq) == []:
+        return [], []
+
     nkw = com.count_not_none(items, like, regex, pred)
     if nkw == 0:
         raise TypeError("Must pass at least one of `items`, `like`, `regex`, or `pred`")

@@ -153,13 +153,13 @@ def filter_labels_pair(
     left : DataFrame
     right : DataFrame
     filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
         to be applied to both DataFrames.
     left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
         to be applied to left DataFrame.
     right_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels`
+        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
         to be applied to right DataFrame.
     intersection : bool, default False
         Whether to only return the labels common to both, after excluding

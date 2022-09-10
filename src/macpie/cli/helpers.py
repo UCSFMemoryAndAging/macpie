@@ -4,7 +4,32 @@ from functools import update_wrapper
 
 import click
 
-from macpie import __version__, tablibtools, MACPieJSONEncoder
+from macpie import __version__, tablibtools, MACPieExcelWriter, MACPieJSONEncoder
+
+
+class SingletonExcelWriter:
+    def __init__(self, path, *args, **kwargs):
+        class singleton_excel_writer:
+            instance = None
+
+            def __new__(cls):
+                if cls.instance is None:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    cls.instance = MACPieExcelWriter(
+                        path,
+                        *args,
+                        **kwargs,
+                    )
+                return cls.instance
+
+        self.singleton_class = singleton_excel_writer
+
+    def __enter__(self):
+        return self.singleton_class
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if self.singleton_class.instance is not None:
+            self.singleton_class().close()
 
 
 def get_all_commands(ctx: click.Context):

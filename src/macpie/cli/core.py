@@ -15,6 +15,7 @@ class ResultsResource:
         self.output_dir = output_dir
         self.verbose = verbose
         self.results_dir = None
+        self.results_file = None
 
     def __enter__(self):
         return self
@@ -26,16 +27,31 @@ class ResultsResource:
             click.echo("\nSYSTEM INFO:\n")
             get_client_system_info().print()
 
-        click.echo(f"\nResults are in the following directory: {self.output_dir.resolve()}")
+        if self.results_file:
+            click.secho(f"\nResults output to file: {self.results_file.resolve()}\n", bold=True)
+        elif self.results_dir:
+            click.secho(
+                f"\nResults are in this directory: {self.results_dir.resolve()}\n", bold=True
+            )
+        elif self.output_dir:
+            click.secho(
+                f"\nResults are in this directory: {self.output_dir.resolve()}\n", bold=True
+            )
 
     def create_results_dir(self):
         self.results_dir = pathtools.create_subdir(
-            self._create_results_name(), where=self.output_dir
+            self.create_results_name(), where=self.output_dir
         )
         return self.results_dir
 
     def create_results_filepath(self, file_extension=".xlsx"):
-        return self.output_dir / (self._create_results_name() + file_extension)
+        return self.output_dir / (self.create_results_name() + file_extension)
+
+    def create_results_name(self):
+        name_prefix = self.ctx.info_name + "_"
+        if self.sub_ctx:
+            name_prefix += self.sub_ctx.info_name + "_"
+        return name_prefix + datetimetools.current_datetime_str()
 
     def get_param_value(self, param_name):
         if param_name in self.ctx.params:
@@ -50,12 +66,6 @@ class ResultsResource:
             sub_command_info = get_command_info(self.sub_ctx)
             return main_command_info.stack(sub_command_info)
         return main_command_info
-
-    def _create_results_name(self):
-        name_prefix = self.ctx.info_name + "_"
-        if self.sub_ctx:
-            name_prefix += self.sub_ctx.info_name + "_"
-        return name_prefix + datetimetools.current_datetime_str()
 
 
 def pass_results_resource(f):
