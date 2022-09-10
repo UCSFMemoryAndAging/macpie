@@ -4,7 +4,7 @@ import macpie as mp
 from macpie.cli.core import pass_results_resource
 from macpie.cli.helpers import pipeline_processor, SingletonExcelWriter
 
-from .main import iter_df_pairs
+from .main import FilePairInfo, iter_df_pairs
 
 
 @click.command()
@@ -28,10 +28,14 @@ def conform(results_resource, file_pair_info, data_types, index_order, values_or
 
     (left_file, right_file), sheet_pairs, filter_kwargs = file_pair_info
 
-    results_dir = results_resource.create_results_dir()
+    click.echo()
+    click.secho("Conforming", bold=True, bg="green", fg="black")
+    click.secho(f"'{left_file.resolve()}'", bold=True)
+    click.echo("to")
+    click.secho(f"'{right_file.resolve()}'\n", bold=True)
 
-    left_results_path = results_dir / left_file.name
-    right_results_path = results_dir / right_file.name
+    left_results_path = results_resource.results_dir / ("conformed_" + left_file.name)
+    right_results_path = results_resource.results_dir / ("conformed_" + right_file.name)
 
     with SingletonExcelWriter(left_results_path) as left_writer, SingletonExcelWriter(
         right_results_path
@@ -47,8 +51,12 @@ def conform(results_resource, file_pair_info, data_types, index_order, values_or
                 index_order=index_order,
                 values_order=values_order,
             )
-
             left_df.to_excel(left_writer(), sheet_name=left_sheetname, index=False)
             right_df.to_excel(right_writer(), sheet_name=right_sheetname, index=False)
 
-    return file_pair_info
+    click.echo()
+    click.secho("Conformed results files:", bold=True)
+    click.echo(f"{left_results_path.resolve()}")
+    click.echo(f"{right_results_path.resolve()}")
+
+    return FilePairInfo((left_results_path, right_results_path), sheet_pairs, filter_kwargs)

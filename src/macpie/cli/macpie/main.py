@@ -27,7 +27,6 @@ def main(ctx, verbose, id_col, date_col, id2_col):
     ctx.obj = ctx.with_resource(ResultsResource(ctx=ctx, verbose=verbose))
 
 
-from .compare import compare
 from .envfile import envfile
 from .keepone import keepone
 from .link import link
@@ -35,7 +34,6 @@ from .masker import masker
 from .merge import merge
 from .replace import replace
 
-main.add_command(compare)
 main.add_command(envfile)
 main.add_command(keepone)
 main.add_command(link)

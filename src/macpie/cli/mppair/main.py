@@ -55,7 +55,7 @@ def process_commands(
     a pipe on unix works.
     """
     rr = ResultsResource(ctx=ctx, verbose=verbose)
-    # rr.create_results_dir()
+    rr.create_results_dir()
     ctx.obj = ctx.with_resource(rr)
 
     sheet_pairs = process_sheet_options(files, sheet, sheet_pair)

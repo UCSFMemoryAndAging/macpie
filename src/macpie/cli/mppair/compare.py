@@ -34,12 +34,11 @@ def compare(results_resource, file_pair_info, engines):
 
     (left_file, right_file), sheet_pairs, filter_kwargs = file_pair_info
 
-    click.echo("\nComparing\n")
+    click.echo()
+    click.secho("Comparing", bold=True, bg="green", fg="black")
     click.secho(f"'{left_file.resolve()}'", bold=True)
     click.echo("to")
     click.secho(f"'{right_file.resolve()}'\n", bold=True)
-    click.echo("using the following pairs of worksheets:\n")
-    click.secho(f"{sheet_pairs}\n\n", bold=True)
 
     results_filename = (
         left_file.stem
@@ -50,29 +49,28 @@ def compare(results_resource, file_pair_info, engines):
         + ".xlsx"
     )
 
-    results_dir_name = results_resource.create_results_name()
-    results_path = results_resource.output_dir / results_dir_name / results_filename
+    results_path = results_resource.results_dir / results_filename
 
     with SingletonExcelWriter(results_path) as writer:
 
         if "pandas" in engines:
+            click.echo("Begin comparing using 'pandas' engine.")
             dfs_results = collections.OrderedDict()
             for (left_df, right_df), (left_sheetname, right_sheetname) in iter_df_pairs(
                 left_file, right_file, sheet_pairs, filter_kwargs=filter_kwargs
             ):
+                click.echo(f"\tComparing '{left_sheetname}' with '{right_sheetname}'... ", nl="")
                 diffs_df = left_df.mac.compare(right_df)
                 if not diffs_df.empty:
                     result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
                         "df" + "|" + left_sheetname + "|" + right_sheetname
                     )
                     dfs_results[result_sheetname] = diffs_df
+                    click.echo(f"Differences found. See worksheet '{result_sheetname}'")
+                else:
+                    click.echo("No differences found.")
 
-            if dfs_results:
-                click.echo(
-                    "Differences found using the 'pandas' engine. See the following worksheets in results file:"
-                )
             for sheetname, df in dfs_results.items():
-                click.echo(f'\t"{sheetname}"')
                 if results_resource.verbose:
                     click.echo_via_pager(
                         [sheetname, "\n\n", tabulate.tabulate(df, headers="keys", tablefmt="grid")]
@@ -82,24 +80,31 @@ def compare(results_resource, file_pair_info, engines):
                 click.echo()
 
         if "tablib" in engines:
+            click.echo("Begin comparing using 'tablib' engine.")
             tlsets_results = collections.OrderedDict()
             for (left_tl, right_tl), (left_sheetname, right_sheetname) in iter_tl_pairs(
                 left_file, right_file, sheet_pairs, filter_kwargs=filter_kwargs
             ):
+                click.echo(f"\tComparing '{left_sheetname}' with '{right_sheetname}'... ", nl="")
+                try:
+                    diffs_tl = left_tl.compare(right_tl)
+                except ValueError:
+                    click.secho(
+                        f"Warning: Skipping due to mismatching headers or rows.",
+                        fg="yellow",
+                    )
+                    continue
 
-                diffs_tl = left_tl.compare(right_tl)
                 if diffs_tl is not None:
                     result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
                         "tl" + "|" + left_sheetname + "|" + right_sheetname
                     )
                     tlsets_results[result_sheetname] = diffs_tl
+                    click.echo(f"Differences found. See worksheet '{result_sheetname}'")
+                else:
+                    click.echo("No differences found.")
 
-            if tlsets_results:
-                click.echo(
-                    "Differences found using the 'tablib' engine. See the following worksheets in results file:"
-                )
             for sheetname, tlset in tlsets_results.items():
-                click.echo(f'\t"{sheetname}"')
                 if results_resource.verbose:
                     click.echo_via_pager(
                         [
@@ -113,9 +118,10 @@ def compare(results_resource, file_pair_info, engines):
             if tlsets_results:
                 click.echo()
 
+        click.secho("\nComparison results:", bold=True)
         if writer.instance is None:
             click.echo("No differences found.")
         else:
-            results_resource.results_file = results_path
+            click.echo(f"See {results_path.resolve}")
 
     return file_pair_info

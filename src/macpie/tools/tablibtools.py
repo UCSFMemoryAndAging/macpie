@@ -156,7 +156,9 @@ class MacpieTablibDataset(tl.Dataset):
             return MacpieTablibDataset(headers=self.headers, title=self.title)
         else:
             dset = super().subset(*args, rows=rows, cols=cols)
-
+            if dset is None:
+                # None is returned if no data
+                return MacpieTablibDataset()
             return MacpieTablibDataset.from_tablib_dset(dset)
 
     @classmethod
