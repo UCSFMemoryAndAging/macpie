@@ -7,8 +7,6 @@ import pandas as pd
 import macpie as mp
 from macpie.cli.core import ResultsResource
 
-possible_engines = ["pandas", "tablib"]
-
 
 FilePairInfo = namedtuple("FilePairInfo", ["file_pair", "sheet_pairs", "filter_kwargs"])
 
@@ -32,7 +30,14 @@ FilePairInfo = namedtuple("FilePairInfo", ["file_pair", "sheet_pairs", "filter_k
 def main(
     ctx, verbose, sheet, sheet_pair, filter_name, filter_like, filter_regex, filter_invert, files
 ):
-    """This script processes a pair of files. One command feeds into the next."""
+    """
+    This command processes a pair of files via one or more subcommands. One subcommand
+    feeds into the next.
+
+    Example:
+    \b
+        mppair -i col1 -i col2 file1.xlsx file2.xlsx conform replace compare
+    """
 
 
 @main.result_callback()
@@ -50,12 +55,14 @@ def process_commands(
     files,
 ):
     """This result callback is invoked with an iterable of all the chained
-    subcommands.  As in this example each subcommand returns a function
+    subcommands. Because each subcommand returns a function,
     we can chain them together to feed one into the other, similar to how
     a pipe on unix works.
+
+    Adapted From: https://github.com/pallets/click/blob/fb4327216543d751e2654a0d3bf6ce3d31c435cc/examples/imagepipe/imagepipe.py#L24
     """
     rr = ResultsResource(ctx=ctx, verbose=verbose)
-    rr.create_results_dir()
+    rr.create_results_dir()  # to be shared among all subcommands
     ctx.obj = ctx.with_resource(rr)
 
     sheet_pairs = process_sheet_options(files, sheet, sheet_pair)

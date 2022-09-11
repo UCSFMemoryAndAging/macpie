@@ -20,10 +20,11 @@ POSSIBLE_ENGINES = ["pandas", "tablib"]
 def compare(results_resource, file_pair_info, engines):
     """Compare a pair of files and output the differences.
 
-    Examples
-    --------
-    mppair -i col1 -i col2 file1.xlsx file2.xlsx compare
+    Example:
+    \b
+        mppair -i col1 -i col2 file1.xlsx file2.xlsx compare
     """
+
     for engine in engines:
         if engine not in POSSIBLE_ENGINES:
             raise click.BadOptionUsage(
@@ -120,4 +121,5 @@ def compare(results_resource, file_pair_info, engines):
         else:
             click.echo(f"See {results_path.resolve}")
 
+    # as this command doesn't modify the input files, return original inputs
     return file_pair_info

@@ -16,10 +16,11 @@ from .main import echo_command_info, FilePairInfo, iter_df_pairs
 def conform(results_resource, file_pair_info, data_types, index_order, values_order):
     """Conform a worksheet in one file to "look like" a worksheet in another file.
 
-    Examples
-    --------
-    mppair file1.xlsx file2.xlsx conform
+    Example:
+    \b
+        mppair file1.xlsx file2.xlsx conform --data-types
     """
+
     if mp.core.common.count_bool_true(data_types, index_order, values_order) == 0:
         click.echo(
             "At least one of the options must be specified. Try 'conform --help' to view options."

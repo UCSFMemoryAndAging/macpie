@@ -20,9 +20,13 @@ def replace(
     regex,
     re_dotall,
 ):
-    """Loads one or multiple images for processing.  The input parameter
-    can be specified multiple times to load more than one image.
+    """Given a pair of files, replace all cell values given in `to_replace` with `value`.
+
+    Example:
+    \b
+        mppair file1.xlsx file2.xlsx replace --to-replace hello --value world
     """
+
     (left_file, right_file), sheet_pairs, filter_kwargs = file_pair_info
 
     echo_command_info("Replacing values", file_pair_info)
