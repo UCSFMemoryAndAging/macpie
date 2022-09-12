@@ -119,7 +119,7 @@ def compare(results_resource, file_pair_info, engines):
         if writer.instance is None:
             click.echo("No differences found.")
         else:
-            click.echo(f"See {results_path.resolve}")
+            click.echo(f"See {results_path.resolve()}")
 
     # as this command doesn't modify the input files, return original inputs
     return file_pair_info

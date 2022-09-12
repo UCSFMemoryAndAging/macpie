@@ -119,7 +119,7 @@ def echo_command_info(title, file_pair_info: FilePairInfo):
     click.echo()
     click.secho(title, bold=True, bg="green", fg="black")
     click.secho(f"'{left_file.resolve()}'", bold=True)
-    click.echo("to")
+    click.echo("and")
     click.secho(f"'{right_file.resolve()}'\n", bold=True)
 
 
