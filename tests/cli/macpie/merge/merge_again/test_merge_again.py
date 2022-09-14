@@ -12,11 +12,9 @@ from macpie.testing import DebugDir
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": [("instr2_all", "InstrID_x")],
-        "regex": "^" + mp.get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "items": [("instr2_all", "InstrID_x")],
+    "regex": "^" + mp.get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -58,5 +56,5 @@ def test_merge_again(tmp_path, debugdir):
             index_col=None,
         )
 
-        (left, right) = results.mac.conform(expected_result, filter_kwargs=COL_FILTER_KWARGS)
+        (left, right) = results.mac.conform(expected_result, subset_pair_kwargs=COL_FILTER_KWARGS)
         pd.testing.assert_frame_equal(left, right)

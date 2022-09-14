@@ -13,11 +13,9 @@ from macpie.cli.macpie.main import main
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": [("instr2_all", "InstrID_x"), ("instr3_all", "InstrID_x")],
-        "regex": "^" + mp.get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "items": [("instr2_all", "InstrID_x"), ("instr3_all", "InstrID_x")],
+    "regex": "^" + mp.get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -92,6 +90,6 @@ def run(filepath, tmp_path, debugdir):
         )
 
         (left, right) = results.mac.conform(
-            expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+            expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
         )
         pd.testing.assert_frame_equal(left, right)

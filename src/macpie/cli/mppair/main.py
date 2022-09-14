@@ -123,7 +123,7 @@ def echo_command_info(title, file_pair_info: FilePairInfo):
     click.secho(f"'{right_file.resolve()}'\n", bold=True)
 
 
-def iter_df_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
+def iter_df_pairs(left_file, right_file, sheet_pairs):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
     left_dfs_dict = pd.read_excel(left_file, sheet_name=left_sheets)
@@ -133,14 +133,10 @@ def iter_df_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
         left_sheetname, right_sheetname = sheet_pair
         left_df = left_dfs_dict[left_sheetname]
         right_df = right_dfs_dict[right_sheetname]
-        if filter_kwargs:
-            left_df, right_df = mp.pandas.subset_pair(
-                left_df, right_df, filter_kwargs=filter_kwargs
-            )
         yield ((left_df, right_df), (left_sheetname, right_sheetname))
 
 
-def iter_tl_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
+def iter_tl_pairs(left_file, right_file, sheet_pairs):
     left_sheets, right_sheets = map(list, zip(*sheet_pairs))
 
     with mp.MACPieExcelFile(left_file) as reader:
@@ -153,17 +149,15 @@ def iter_tl_pairs(left_file, right_file, sheet_pairs, filter_kwargs={}):
         left_sheetname, right_sheetname = sheet_pair
         left_tl = left_tlsets_dict[left_sheetname]
         right_tl = right_tlsets_dict[right_sheetname]
-        if filter_kwargs:
-            left_tl, right_tl = mp.tablibtools.subset_pair(
-                left_tl, right_tl, filter_kwargs=filter_kwargs
-            )
         yield ((left_tl, right_tl), (left_sheetname, right_sheetname))
 
 
 from .compare import compare
 from .conform import conform
 from .replace import replace
+from .subset import subset
 
 main.add_command(compare)
 main.add_command(conform)
 main.add_command(replace)
+main.add_command(subset)

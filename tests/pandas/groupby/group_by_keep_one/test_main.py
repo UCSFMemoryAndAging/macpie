@@ -10,10 +10,8 @@ from macpie.pandas import read_file
 DATA_DIR = Path("tests/data/").resolve()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": ["link_date", "link_id", get_option("column.system.duplicates")],
-        "invert": True,
-    }
+    "items": ["link_date", "link_id", get_option("column.system.duplicates")],
+    "invert": True,
 }
 
 
@@ -28,7 +26,7 @@ def test_keep_earliest_csv():
     expected_result = read_file(DATA_DIR / "instr1_primaryearliest.csv")
 
     (left, right) = result.mac.conform(
-        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
+        expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -42,7 +40,7 @@ def test_keep_earliest_xl():
     expected_result = read_file(DATA_DIR / "instr1_primaryearliest.xlsx")
 
     (left, right) = result.mac.conform(
-        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
+        expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -55,6 +53,6 @@ def test_keep_latest_csv():
     expected_result = read_file(DATA_DIR / "instr1_primarylatest.csv")
 
     (left, right) = result.mac.conform(
-        expected_result, filter_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
+        expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, dtypes=True, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)

@@ -38,7 +38,7 @@ def conform(results_resource, file_pair_info, data_types, index_order, values_or
         right_results_path
     ) as right_writer:
         for (left_df, right_df), (left_sheetname, right_sheetname) in iter_df_pairs(
-            left_file, right_file, sheet_pairs, filter_kwargs=filter_kwargs
+            left_file, right_file, sheet_pairs
         ):
             click.echo(f"Conforming excel worksheet pair: ({left_sheetname}, {right_sheetname})")
             (left_df, right_df) = mp.pandas.conform(

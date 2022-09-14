@@ -14,10 +14,8 @@ DATA_DIR = Path("tests/data/").resolve()
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "regex": "^" + mp.get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "regex": "^" + mp.get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -49,7 +47,7 @@ def test_keepone(cli_keepone_big):
     expected_result = mp.pandas.read_file(cli_keepone_big)
 
     (left, right) = result.mac.conform(
-        expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -127,7 +125,7 @@ def test_link():
 
     (left, right) = sec_1_copy.mac.conform(
         edges_with_operation_results[0]["operation_result"],
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         values_order=True,
     )
     pd.testing.assert_frame_equal(left, right)
@@ -142,7 +140,7 @@ def test_link():
 
     (left, right) = sec_2_copy.mac.conform(
         edges_with_operation_results[1]["operation_result"],
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         values_order=True,
     )
     pd.testing.assert_frame_equal(left, right)

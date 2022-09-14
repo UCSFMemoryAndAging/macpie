@@ -38,7 +38,7 @@ def reformat_datetime_str(arg, format="%Y-%m-%d", **kwargs):
         to generate new formatted datetime string.
     **kwargs
         All keyword arguments are passed through to the underlying
-        :func:`pandas.to_datetime` method.
+        :func:`pandas.to_datetime` function.
 
     Returns
     -------

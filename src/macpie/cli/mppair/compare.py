@@ -54,10 +54,10 @@ def compare(results_resource, file_pair_info, engines):
             click.echo("Begin comparing using 'pandas' engine.")
             dfs_results = collections.OrderedDict()
             for (left_df, right_df), (left_sheetname, right_sheetname) in iter_df_pairs(
-                left_file, right_file, sheet_pairs, filter_kwargs=filter_kwargs
+                left_file, right_file, sheet_pairs
             ):
                 click.echo(f"\tComparing '{left_sheetname}' with '{right_sheetname}'... ", nl="")
-                diffs_df = left_df.mac.compare(right_df)
+                diffs_df = left_df.mac.compare(right_df, subset_pair_kwargs=filter_kwargs)
                 if not diffs_df.empty:
                     result_sheetname = mp.io.excel.safe_xlsx_sheet_title(
                         "df" + "|" + left_sheetname + "|" + right_sheetname
@@ -80,9 +80,12 @@ def compare(results_resource, file_pair_info, engines):
             click.echo("Begin comparing using 'tablib' engine.")
             tlsets_results = collections.OrderedDict()
             for (left_tl, right_tl), (left_sheetname, right_sheetname) in iter_tl_pairs(
-                left_file, right_file, sheet_pairs, filter_kwargs=filter_kwargs
+                left_file, right_file, sheet_pairs
             ):
                 click.echo(f"\tComparing '{left_sheetname}' with '{right_sheetname}'... ", nl="")
+                (left_tl, right_tl) = mp.tablibtools.subset_pair(
+                    left_tl, right_tl, **filter_kwargs
+                )
                 try:
                     diffs_tl = left_tl.compare(right_tl)
                 except ValueError:

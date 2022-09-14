@@ -116,22 +116,19 @@ def test_filter_seq_pair():
     left_seq = ["col1", "col2", "col3", "date", "misc1", "col6"]
     right_seq = ["col1", "col2", "col3", "date", "misc2", "col6"]
 
-    with pytest.raises(TypeError):
-        lltools.filter_seq_pair(left_seq, right_seq)
-
     assert lltools.filter_seq_pair(left_seq, right_seq, intersection=True) == (
         (["col1", "col2", "col3", "date", "col6"], ["col1", "col2", "col3", "date", "col6"]),
         (["misc1"], ["misc2"]),
     )
 
-    assert lltools.filter_seq_pair(left_seq, right_seq, left_filter_kwargs={"like": "col"}) == (
+    assert lltools.filter_seq_pair(
+        left_seq, right_seq, left_filter_seq_kwargs={"like": "col"}
+    ) == (
         (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "date", "misc2", "col6"]),
         (["date", "misc1"], []),
     )
 
-    assert lltools.filter_seq_pair(
-        left_seq, right_seq, filter_kwargs={"regex": "^col", "invert": True}
-    ) == (
+    assert lltools.filter_seq_pair(left_seq, right_seq, regex="^col", invert=True) == (
         (["date", "misc1"], ["date", "misc2"]),
         (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "col6"]),
     )
@@ -139,7 +136,8 @@ def test_filter_seq_pair():
     assert lltools.filter_seq_pair(
         left_seq,
         right_seq,
-        filter_kwargs={"regex": "^col", "invert": True},
+        regex="^col",
+        invert=True,
         intersection=True,
     ) == (
         (["date"], ["date"]),

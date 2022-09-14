@@ -6,14 +6,14 @@ import macpie.pandas as mppd
 def conform(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    filter_kwargs={},
+    subset_pair_kwargs={},
     dtypes=False,
     index_order=False,
     values_order=False,
     axis=None,
 ):
     """
-    Conform to another DataFrame and show the differences.
+    Conform one Dataframe to another.
 
     Parameters
     ----------
@@ -21,8 +21,8 @@ def conform(
         DataFrame to conform to.
     right : DataFrame
         DataFrame to conform.
-    filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
+    subset_pair_kwargs : dict, optional
+        Keyword arguments to pass to underlying :func:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
     dtypes : bool, default is False
         Whether ``right`` should be modified to mimic the dtypes of ``left``
@@ -43,8 +43,8 @@ def conform(
     if axis is None:
         axis = left._info_axis_name
 
-    if filter_kwargs:
-        (left, right) = mppd.subset_pair(left, right, axis=axis, **filter_kwargs)
+    if subset_pair_kwargs:
+        (left, right) = mppd.subset_pair(left, right, axis=axis, **subset_pair_kwargs)
 
     if dtypes:
         right = mimic_dtypes(left, right)
@@ -166,20 +166,14 @@ def to_datetime(df: pd.DataFrame, date_col_name, **kwargs):
         Column to convert, case-insensitive
     **kwargs
         All keyword arguments are passed through to the underlying
-        :func:`pandas.to_datetime` method.
+        :func:`pandas.to_datetime` function.
 
     Returns
     -------
     str
         Properly-cased date column name.
     """
-
-    try:
-        _date_col = mppd.get_col_name(df, date_col_name)
-        if not mppd.is_date_col(df[_date_col]):
-            df[_date_col] = pd.to_datetime(df[_date_col], **kwargs)
-        return _date_col
-    except KeyError:
-        raise KeyError(f"Date column '{date_col_name}' in dataframe is not a valid column")
-    except Exception:
-        raise
+    _date_col = mppd.get_col_name(df, date_col_name)
+    if not mppd.is_date_col(df, _date_col):
+        df[_date_col] = pd.to_datetime(df[_date_col], **kwargs)
+    return _date_col

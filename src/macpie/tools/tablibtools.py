@@ -231,10 +231,7 @@ class DictLikeTablibDataset(MacpieTablibDataset):
 def filter_headers_pair(
     left: tl.Dataset,
     right: tl.Dataset,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=False,
+    **kwargs,
 ):
     """
     Filter headers on a pair of Tablib Datasets.
@@ -243,18 +240,9 @@ def filter_headers_pair(
     ----------
     left : :class:`tablib.Dataset`
     right : :class:`tablib.Dataset`
-    filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to both Datasets.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to left Dataset.
-    right_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to right Dataset.
-    intersection : bool, default False
-        Whether to only return the headers common to both, after excluding
-        any headers filtered out by the *filter_kwargs params.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`macpie.lltools.filter_seq_pair` to perform the filtering.
 
     Returns
     -------
@@ -271,10 +259,7 @@ def filter_headers_pair(
     return lltools.filter_seq_pair(
         left_headers,
         right_headers,
-        filter_kwargs=filter_kwargs,
-        left_filter_kwargs=left_filter_kwargs,
-        right_filter_kwargs=right_filter_kwargs,
-        intersection=intersection,
+        **kwargs,
     )
 
 
@@ -298,30 +283,18 @@ def read_excel(
 def subset_pair(
     left: tl.Dataset,
     right: tl.Dataset,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=None,
+    **kwargs,
 ):
     """
-    Subset columns of a pair of Tablig Datasets according to filtered headers.
+    Subset columns of a pair of Tablib Datasets according to filtered headers.
 
     Parameters
     ----------
     left : :class:`tablib.Dataset`
     right : :class:`tablib.Dataset`
-    filter_kwargs : list-like
-        Keyword arguments to pass to underlying :func:`filter_headers_pair`
-        to be applied to both Datasets.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :func:`filter_headers_pair`
-        to be applied to left Dataset.
-    right_filter_kwargs : list-like
-        Keyword arguments to pass to underlying :func:`filter_headers_pair`
-        to be applied to right Dataset.
-    intersection : bool, default False
-        Whether to only return the columns common to both, after excluding
-        any columns filtered out by the *filter_kwargs params.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`filter_headers_pair` function to perform the filtering.
 
     Returns
     -------
@@ -329,14 +302,7 @@ def subset_pair(
         (subsetted left dataset, subsetted right dataset)
     """
 
-    ((left_columns_to_keep, right_columns_to_keep), _) = filter_headers_pair(
-        left,
-        right,
-        filter_kwargs=filter_kwargs,
-        left_filter_kwargs=left_filter_kwargs,
-        right_filter_kwargs=right_filter_kwargs,
-        intersection=intersection,
-    )
+    ((left_columns_to_keep, right_columns_to_keep), _) = filter_headers_pair(left, right, **kwargs)
 
     left = left.subset(cols=left_columns_to_keep)
     right = right.subset(cols=right_columns_to_keep)

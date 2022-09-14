@@ -12,11 +12,9 @@ DATA_DIR = Path("tests/data/").resolve()
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": ["PIDN", "VType", "DayDiff"],
-        "regex": "^" + get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "items": ["PIDN", "VType", "DayDiff"],
+    "regex": "^" + get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -47,7 +45,7 @@ def test_secondary_instr1():
     instr1_expected_result = dfs_dict["INSTR1_linked"]
 
     (left, right) = instr1_result.mac.conform(
-        instr1_expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        instr1_expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -72,6 +70,6 @@ def test_secondary_instr3():
     instr3_expected_result = dfs_dict["INSTR3_linked"]
 
     (left, right) = instr3_result.mac.conform(
-        instr3_expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        instr3_expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)

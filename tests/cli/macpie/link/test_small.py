@@ -13,10 +13,8 @@ THIS_DIR = Path(__file__).parent.absolute()
 DATA_DIR = Path("tests/data/").resolve()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "regex": "^" + mp.get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "regex": "^" + mp.get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -41,7 +39,7 @@ def test_small_with_merge(cli_link_small_with_merge, debugdir):
     )
 
     (left, right) = result.mac.conform(
-        expected, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -70,11 +68,11 @@ def test_small_no_merge(cli_link_small_no_merge, debugdir):
     result_secondary_instr3 = results_dict["instr3_all_linked"]
 
     (left, right) = result_primary.mac.conform(
-        expected_primary, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_primary, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
-    COL_FILTER_KWARGS["filter_kwargs"]["items"] = [
+    COL_FILTER_KWARGS["items"] = [
         mp.get_option("column.system.abs_diff_days"),
         mp.get_option("column.system.diff_days"),
         "PIDN",
@@ -83,16 +81,16 @@ def test_small_no_merge(cli_link_small_no_merge, debugdir):
     ]
 
     (left, right) = result_secondary_instr2.mac.conform(
-        expected_secondary_instr2, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_secondary_instr2, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
     (left, right) = result_secondary_instr3.mac.conform(
-        expected_secondary_instr3, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_secondary_instr3, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
-    del COL_FILTER_KWARGS["filter_kwargs"]["items"]
+    del COL_FILTER_KWARGS["items"]
 
 
 def test_small_no_link_id(tmp_path, debugdir):
@@ -147,7 +145,7 @@ def test_small_no_link_id(tmp_path, debugdir):
         )
 
         (left, right) = results.mac.conform(
-            expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+            expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
         )
         pd.testing.assert_frame_equal(left, right)
 
@@ -204,7 +202,7 @@ def test_small_link_suffixes(tmp_path, debugdir):
         )
 
         (left, right) = results.mac.conform(
-            expected_result, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+            expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
         )
         pd.testing.assert_frame_equal(left, right)
 

@@ -143,12 +143,7 @@ def filter_seq(seq, items=None, like=None, regex=None, pred=None, invert=False):
 
 
 def filter_seq_pair(
-    left,
-    right,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=None,
+    left, right, intersection=None, left_filter_seq_kwargs={}, right_filter_seq_kwargs={}, **kwargs
 ):
     """
     Filter pair of sequences of strings.
@@ -159,18 +154,19 @@ def filter_seq_pair(
         Left sequence to filter
     right : list-like of strings
         Right sequence to filter
-    filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`filter_seq`
-        to be applied to both sequences.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`filter_seq`
-        to be applied to left sequences.
-    right_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`filter_seq`
-        to be applied to right sequences.
     intersection : bool, default False
         Whether to only return the items common to both, after excluding
         any values filtered out by the *filter_kwargs params.
+    left_filter_kwargs : dict
+        Keyword arguments to pass to underlying :func:`filter_seq`
+        to be applied to left sequences.
+    right_filter_kwargs : dict
+        Keyword arguments to pass to underlying :func:`filter_seq`
+        to be applied to right sequences.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`filter_seq` function to be applied to both `left` and `right`.
+
 
     Returns
     -------
@@ -181,43 +177,24 @@ def filter_seq_pair(
     --------
     filter_seq
     """
-    if not any(filter_kwargs.values()):
-        filter_kwargs = None
-    if not any(left_filter_kwargs.values()):
-        left_filter_kwargs = None
-    if not any(right_filter_kwargs.values()):
-        right_filter_kwargs = None
-
-    nkw = com.count_bool_true(
-        filter_kwargs,
-        left_filter_kwargs,
-        right_filter_kwargs,
-        intersection,
-    )
-    if nkw == 0:
-        raise TypeError(
-            "Must pass at least one of `filter_kwargs`, `left_filter_kwargs`, "
-            "`right_filter_kwargs`, or `intersection`"
-        )
-
     left_items = []
     right_items = []
 
-    # if no filtering is done, return all items
-    if not filter_kwargs and not left_filter_kwargs:
-        left_items = left
-    if not filter_kwargs and not right_filter_kwargs:
-        right_items = right
+    if not kwargs:
+        # if no filtering is done, return all items
+        if not left_filter_seq_kwargs:
+            left_items = left
+        if not right_filter_seq_kwargs:
+            right_items = right
+    else:
+        left_items += filter_seq(left, **kwargs)[0]
+        right_items += filter_seq(right, **kwargs)[0]
 
-    if filter_kwargs:
-        left_items += filter_seq(left, **filter_kwargs)[0]
-        right_items += filter_seq(right, **filter_kwargs)[0]
+    if left_filter_seq_kwargs:
+        left_items += filter_seq(left, **left_filter_seq_kwargs)[0]
 
-    if left_filter_kwargs:
-        left_items += filter_seq(left, **left_filter_kwargs)[0]
-
-    if right_filter_kwargs:
-        right_items += filter_seq(right, **right_filter_kwargs)[0]
+    if right_filter_seq_kwargs:
+        right_items += filter_seq(right, **right_filter_seq_kwargs)[0]
 
     if intersection:
         left_items = right_items = list(common_members(left_items, right_items))

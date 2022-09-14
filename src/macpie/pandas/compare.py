@@ -8,11 +8,11 @@ from macpie.tools import lltools
 def compare(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    filter_kwargs={},
+    subset_pair_kwargs={},
     **kwargs,
 ):
     """
-    Compare to another DataFrame and show the differences.
+    Compare two DataFrames and show the differences.
 
     Parameters
     ----------
@@ -20,8 +20,8 @@ def compare(
         DataFrame to compare.
     right : DataFrame
         DataFrame to compare with.
-    filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
+    subset_pair_kwargs : dict, optional
+        Keyword arguments to pass to underlying :func:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
     **kwargs
         All remaining keyword arguments are passed through to the underlying
@@ -32,8 +32,8 @@ def compare(
     DataFrame
         Showing differences.
     """
-    if filter_kwargs:
-        (left, right) = mppd.subset_pair(left, right, **filter_kwargs)
+    if subset_pair_kwargs:
+        (left, right) = mppd.subset_pair(left, right, **subset_pair_kwargs)
 
     try:
         return left.compare(right, **kwargs)
@@ -50,7 +50,7 @@ def compare(
             return diff_rows(left, right)
 
 
-def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
+def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_labels_pair_kwargs={}):
     """
     Find the column differences between two DataFrames.
 
@@ -58,8 +58,8 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     ----------
     left : DataFrame
     right : DataFrame
-    filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
+    filter_labels_pair_kwargs : dict, optional
+        Keyword arguments to pass to underlying :func:`macpie.pandas.filter_labels_pair`
         to pre-filter columns before comparison.
 
     Returns
@@ -68,8 +68,10 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
         First element is the list of columns that exist only in ``left``,
         and second element is the list of columns that exist only in ``right``.
     """
-    if filter_kwargs:
-        ((left_cols, right_cols), _) = mppd.filter_labels_pair(left, right, **filter_kwargs)
+    if filter_labels_pair_kwargs:
+        ((left_cols, right_cols), _) = mppd.filter_labels_pair(
+            left, right, **filter_labels_pair_kwargs
+        )
     else:
         left_cols = left.columns
         right_cols = right.columns
@@ -83,25 +85,25 @@ def diff_cols(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     return (left_only_cols, right_only_cols)
 
 
-def diff_rows(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
+def diff_rows(left: pd.DataFrame, right: pd.DataFrame, subset_pair_kwargs={}):
     """
-    If ``left`` and ``right`` share the same columns, returns a DataFrame
-    containing rows that differ.
+    Find the row differences between two DataFrames (that share the same columns).
 
     Parameters
     ----------
     left : DataFrame
     right : DataFrame
-    filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
+    subset_pair_kwargs : dict, optional
+        Keyword arguments to pass to underlying :func:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
 
     Returns
     -------
     DataFrame
+        Row differences.
     """
-    if filter_kwargs:
-        (left, right) = mppd.subset_pair(left, right, **filter_kwargs)
+    if subset_pair_kwargs:
+        (left, right) = mppd.subset_pair(left, right, **subset_pair_kwargs)
 
     left_cols = left.columns
     right_cols = right.columns
@@ -123,7 +125,7 @@ def diff_rows(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
     raise KeyError("Dataframes do not share the same columns")
 
 
-def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
+def equals(left: pd.DataFrame, right: pd.DataFrame, subset_pair_kwargs={}):
     """
     For testing equality of :class:`pandas.DataFrame` objects
 
@@ -133,8 +135,8 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
         left DataFrame to compare
     right : DataFrame
         right DataFrame to compare
-    filter_kwargs : dict, optional
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.subset_pair`
+    subset_pair_kwargs : dict, optional
+        Keyword arguments to pass to underlying :func:`macpie.pandas.subset_pair`
         to pre-filter columns before comparison.
 
     Returns
@@ -143,6 +145,6 @@ def equals(left: pd.DataFrame, right: pd.DataFrame, filter_kwargs={}):
         True if all elements, except those in filtered out columns,
         are the same in both objects, False otherwise.
     """
-    if filter_kwargs:
-        (left, right) = mppd.subset_pair(left, right, **filter_kwargs)
+    if subset_pair_kwargs:
+        (left, right) = mppd.subset_pair(left, right, **subset_pair_kwargs)
     return left.equals(right)

@@ -14,11 +14,9 @@ DATA_DIR = Path("tests/data/").resolve()
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": ["PIDN", "VType", "InstrID_x", "link_id_x"],
-        "regex": "^" + mp.get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "items": ["PIDN", "VType", "InstrID_x", "link_id_x"],
+    "regex": "^" + mp.get_option("column.system.prefix"),
+    "invert": True,
 }
 
 expected_dict = pd.read_excel(
@@ -50,12 +48,12 @@ def test_full_no_merge(cli_link_full_no_merge, debugdir):
     pd.testing.assert_frame_equal(left, right)
 
     (left, right) = result_secondary_instr2.mac.conform(
-        expected_secondary_instr2, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_secondary_instr2, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
     (left, right) = result_secondary_instr3.mac.conform(
-        expected_secondary_instr3, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+        expected_secondary_instr3, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
     )
     pd.testing.assert_frame_equal(left, right)
 
@@ -106,11 +104,11 @@ def test_full_no_link_id(tmp_path, debugdir):
         result_secondary_instr3 = results_dict["instr3_all_DUPS"]
 
         (left, right) = result_secondary_instr2.mac.conform(
-            expected_secondary_instr2, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+            expected_secondary_instr2, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
         )
         pd.testing.assert_frame_equal(left, right)
 
         (left, right) = result_secondary_instr3.mac.conform(
-            expected_secondary_instr3, filter_kwargs=COL_FILTER_KWARGS, values_order=True
+            expected_secondary_instr3, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True
         )
         pd.testing.assert_frame_equal(left, right)

@@ -14,9 +14,7 @@ def test_compare():
 
     d2 = {"col1": [1, 2, 3], "col3": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
-    assert df1.mac.compare(
-        df2, filter_kwargs={"filter_kwargs": {"items": ["col2"], "invert": True}}
-    ).empty
+    assert df1.mac.compare(df2, subset_pair_kwargs={"items": ["col2"], "invert": True}).empty
 
 
 def test_diff_cols_equality():
@@ -66,12 +64,12 @@ def test_diff_cols_ignore():
     d2 = {"col1": [1, 2, 3], "col4": [7, 8, 9]}
     df2 = pd.DataFrame(data=d2)
 
-    filter_kwargs = {"filter_kwargs": {"items": ["col2", "col3", "col4"], "invert": True}}
+    filter_kwargs = {"items": ["col2", "col3", "col4"], "invert": True}
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
     assert [] == left_only_cols
     assert [] == right_only_cols
 
-    filter_kwargs = {"filter_kwargs": {"items": ["col2"], "invert": True}}
+    filter_kwargs = {"items": ["col2"], "invert": True}
     (left_only_cols, right_only_cols) = df1.mac.diff_cols(df2, filter_kwargs)
     assert ["col3"] == left_only_cols
     assert ["col4"] == right_only_cols
@@ -133,6 +131,4 @@ def test_equals():
     }
     df2 = pd.DataFrame(data=d2)
 
-    assert df1.mac.equals(
-        df2, filter_kwargs={"filter_kwargs": {"items": ["col4"], "invert": True}}
-    )
+    assert df1.mac.equals(df2, subset_pair_kwargs={"items": ["col4"], "invert": True})

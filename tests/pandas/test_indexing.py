@@ -14,7 +14,7 @@ def test_diff_rows_multiindex():
 
     result = df1.mac.diff_rows(
         df2,
-        filter_kwargs={"filter_kwargs": {"items": [("CDR", "col2")], "invert": True}},
+        subset_pair_kwargs={"items": [("CDR", "col2")], "invert": True},
     )
     assert result.empty
 

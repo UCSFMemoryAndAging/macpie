@@ -103,27 +103,22 @@ def test_filter_labels_pair():
     }
     df2 = pd.DataFrame(data=d2)
 
-    with pytest.raises(TypeError):
-        df1.mac.filter_labels_pair(df2)
-
     assert df1.mac.filter_labels_pair(df2, intersection=True) == (
         (["col1", "col2", "col3", "date", "col6"], ["col1", "col2", "col3", "date", "col6"]),
         (["misc1"], ["misc2"]),
     )
 
-    assert df1.mac.filter_labels_pair(df2, left_filter_kwargs={"like": "col"}) == (
+    assert df1.mac.filter_labels_pair(df2, left_filter_seq_kwargs={"like": "col"}) == (
         (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "date", "misc2", "col6"]),
         (["date", "misc1"], []),
     )
 
-    assert df1.mac.filter_labels_pair(df2, filter_kwargs={"regex": "^col", "invert": True}) == (
+    assert df1.mac.filter_labels_pair(df2, regex="^col", invert=True) == (
         (["date", "misc1"], ["date", "misc2"]),
         (["col1", "col2", "col3", "col6"], ["col1", "col2", "col3", "col6"]),
     )
 
-    assert df1.mac.filter_labels_pair(
-        df2, filter_kwargs={"regex": "^col", "invert": True}, intersection=True
-    ) == (
+    assert df1.mac.filter_labels_pair(df2, regex="^col", invert=True, intersection=True) == (
         (["date"], ["date"]),
         (["col1", "col2", "col3", "misc1", "col6"], ["col1", "col2", "col3", "misc2", "col6"]),
     )
@@ -220,6 +215,36 @@ def test_rtrim():
 
     expected = pd.Series([1, "2", 3, None, 4])
     assert ser2.mac.rtrim().equals(expected)
+
+
+def test_subset():
+    d1 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc1": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df1 = pd.DataFrame(data=d1, index=["zero", "one", "two"])
+
+    d2 = {
+        "col1": [1, 2, 3],
+        "col2": [4, "5", 6],
+        "col3": [7, 8, 9],
+        "date": ["1/1/2001", "2/2/2002", "3/3/2003"],
+        "misc2": ["john", "paul", "mary"],
+        "col6": [10, "11", 12],
+    }
+    df2 = pd.DataFrame(data=d2, index=["one", "two", "three"])
+
+    expected_df1 = df1.drop(columns=["col1", "col2", "col3"])
+    expected_df2 = df2.drop(columns=["col1", "col2", "col3"])
+
+    results = list(mp.pandas.subset(df1, df2, items=["col1", "col2", "col3"]))
+
+    assert results[0].equals(expected_df1)
+    assert results[1].equals(expected_df2)
 
 
 def test_subset_pair():

@@ -36,6 +36,7 @@ from macpie.pandas.select import (
     remove_trailers,
     rtrim,
     rtrim_longest,
+    subset,
     subset_pair,
 )
 

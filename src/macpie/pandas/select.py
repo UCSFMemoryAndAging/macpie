@@ -40,14 +40,11 @@ def filter_by_id(df: pd.DataFrame, id_col_name: str, ids: List[int]) -> pd.DataF
 
 def filter_labels(
     *dfs: pd.DataFrame,
-    items=None,
-    like=None,
-    regex=None,
-    invert=False,
     axis=None,
     filter_level=None,
     result_level=None,
     result_type="single_list",
+    **kwargs,
 ):
     """
     Filter dataframe row or column labels. The options ``items``, ``like``,
@@ -55,15 +52,7 @@ def filter_labels(
 
     Parameters
     ----------
-    items : list-like
-        Get labels from axis which are in `items`.
-    like : str
-        Get labels from axis for which "like in label == True".
-    regex : str (regular expression)
-        Get labels from axis for which re.search(regex, label) == True.
-    invert : bool, default False
-        Whether to invert the result (i.e. discard labels returned by
-        `items`, `like`, or `regex`)
+    dfs : Sequence of DataFrames
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
@@ -79,6 +68,9 @@ def filter_labels(
         * single_list: Results are flattened into a single list
         * single_list_no_dups: Results are flattened into a single list with duplicates removed
         * list_of_lists: List of lists.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`macpie.lltools.filter_seq` function to perform the actual filtering.
 
     Returns
     -------
@@ -92,7 +84,7 @@ def filter_labels(
 
     if result_type not in ["single_list", "single_list_no_dups", "list_of_lists"]:
         raise ValueError(
-            "invalid value for result_type, must be one "
+            "Invalid value for result_type, must be one "
             "of {'single_list', 'single_list_no_dups', 'list_of_lists'}"
         )
 
@@ -114,9 +106,7 @@ def filter_labels(
                     mi_level = filter_level
                 labels = mi_labels.get_level_values(mi_level)
 
-        _, filtered_idxs = lltools.filter_seq(
-            labels, items=items, like=like, regex=regex, invert=invert
-        )
+        _, filtered_idxs = lltools.filter_seq(labels, **kwargs)
 
         if mi_labels is not None:
             result = [mi_labels[idx] for idx in filtered_idxs]
@@ -136,15 +126,7 @@ def filter_labels(
     return final_result
 
 
-def filter_labels_pair(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=False,
-    axis=None,
-):
+def filter_labels_pair(left: pd.DataFrame, right: pd.DataFrame, axis=None, **kwargs):
     """
     Filter row or column labels on a pair of dataframes.
 
@@ -152,22 +134,14 @@ def filter_labels_pair(
     ----------
     left : DataFrame
     right : DataFrame
-    filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to both DataFrames.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to left DataFrame.
-    right_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.lltools.filter_seq_pair`
-        to be applied to right DataFrame.
-    intersection : bool, default False
-        Whether to only return the labels common to both, after excluding
-        any labels filtered out by the *filter_kwargs params.
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`macpie.lltools.filter_seq_pair` function to perform the actual
+        label filtering.
 
     Returns
     -------
@@ -180,14 +154,7 @@ def filter_labels_pair(
     left_labels = left._get_axis(axis)
     right_labels = right._get_axis(axis)
 
-    return lltools.filter_seq_pair(
-        left_labels,
-        right_labels,
-        filter_kwargs=filter_kwargs,
-        left_filter_kwargs=left_filter_kwargs,
-        right_filter_kwargs=right_filter_kwargs,
-        intersection=intersection,
-    )
+    return lltools.filter_seq_pair(left_labels, right_labels, **kwargs)
 
 
 def get_col_name(df: pd.DataFrame, col_name):
@@ -399,12 +366,14 @@ def rtrim(ser: pd.Series, trim_empty_string=True):
     trim_empty_string : bool, default True
         Whether to also include empty strings when trimming.
 
-        >>> ser = pd.Series([1, 2, 3, None, None])
-        >>> rtrim(ser)
-        0    1.0
-        1    2.0
-        2    3.0
-        dtype: float64
+    Examples
+    --------
+    >>> ser = pd.Series([1, 2, 3, None, None])
+    >>> rtrim(ser)
+    0    1.0
+    1    2.0
+    2    3.0
+    dtype: float64
 
     Returns
     -------
@@ -456,14 +425,37 @@ def rtrim_longest(*sers, trim_empty_string=True, as_tuple=False):
     return pd.concat(result, axis="columns")
 
 
+def subset(*dfs: pd.DataFrame, **kwargs):
+    """
+    Subset rows or columns of one or more DataFrames according to filtered labels.
+
+    Parameters
+    ----------
+    dfs : Sequence of DataFrames
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`macpie.pandas.filter_labels` function for filtering.
+
+    Returns
+    -------
+    DataFrame
+        Subsetted DataFrame
+    """
+    axis = kwargs.pop("axis", dfs[0]._info_axis_name)
+    kwargs.pop("result_level", None)
+    kwargs.pop("result_type", None)
+
+    for df in dfs:
+        subsetted_labels = filter_labels(df, axis=axis, result_level=None, **kwargs)
+        subsetted_df = df.drop(labels=subsetted_labels, axis=axis)
+        yield subsetted_df
+
+
 def subset_pair(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    filter_kwargs={},
-    left_filter_kwargs={},
-    right_filter_kwargs={},
-    intersection=None,
     axis=None,
+    **kwargs,
 ):
     """
     Subset rows or columns of a pair of dataframes according to filtered labels.
@@ -472,22 +464,13 @@ def subset_pair(
     ----------
     left : DataFrame
     right : DataFrame
-    filter_kwargs : list-like
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to both DataFrames.
-    left_filter_kwargs : dict
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to left DataFrame.
-    right_filter_kwargs : list-like
-        Keyword arguments to pass to underlying :meth:`macpie.pandas.filter_labels_pair`
-        to be applied to right DataFrame.
-    intersection : bool, default False
-        Whether to only return the labels common to both, after excluding
-        any labels filtered out by the *filter_kwargs params.
     axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
+    **kwargs
+        All remaining keyword arguments are passed through to the underlying
+        :func:`macpie.pandas.filter_labels_pair` function for filtering.
 
     Returns
     -------
@@ -500,11 +483,8 @@ def subset_pair(
     (_, (left_labels_to_drop, right_labels_to_drop)) = filter_labels_pair(
         left,
         right,
-        filter_kwargs=filter_kwargs,
-        left_filter_kwargs=left_filter_kwargs,
-        right_filter_kwargs=right_filter_kwargs,
-        intersection=intersection,
         axis=axis,
+        **kwargs,
     )
 
     left = left.drop(labels=left_labels_to_drop, axis=axis)

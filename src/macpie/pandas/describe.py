@@ -13,7 +13,7 @@ def add_diff_days(
     df: pd.DataFrame, col_start: str, col_end: str, diff_days_col: str = None, inplace=False
 ):
     """
-    Adds a column whos values are the number of days between ``col_start`` and ``col_end``
+    Adds a column whose values are the number of days between ``col_start`` and ``col_end``
 
     Parameters
     ----------
@@ -131,15 +131,16 @@ def count_trailers(ser: pd.Series, predicates=None, count_na=True, count_empty_s
     return counter
 
 
-def is_date_col(arr_or_dtype):
+def is_date_col(df: pd.DataFrame, arr_or_dtype):
     """
     Check whether the provided array or dtype is of the datetime64 dtype.
 
     Parameters
     ----------
+    df : DataFrame
     arr_or_dtype : array or dtype
     """
-    return pd.api.types.is_datetime64_any_dtype(arr_or_dtype)
+    return pd.api.types.is_datetime64_any_dtype(df[arr_or_dtype])
 
 
 def mark_duplicates_by_cols(df: pd.DataFrame, cols: List[str]):

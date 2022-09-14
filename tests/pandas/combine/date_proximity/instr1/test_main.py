@@ -11,11 +11,9 @@ DATA_DIR = Path("tests/data/").resolve()
 THIS_DIR = Path(__file__).parent.absolute()
 
 COL_FILTER_KWARGS = {
-    "filter_kwargs": {
-        "items": ["PIDN_x", "VType", "DayDiff", "link_id"],
-        "regex": "^" + get_option("column.system.prefix"),
-        "invert": True,
-    }
+    "items": ["PIDN_x", "VType", "DayDiff", "link_id"],
+    "regex": "^" + get_option("column.system.prefix"),
+    "invert": True,
 }
 
 
@@ -47,7 +45,7 @@ def test_instr1_closest_earlier_or_later_90():
 
     (left, right) = closest_earlier_or_later_90_result.mac.conform(
         closest_earlier_or_later_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
     )
@@ -65,7 +63,7 @@ def test_instr1_closest_later_90():
 
     (left, right) = closest_later_90_result.mac.conform(
         closest_later_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
     )
@@ -82,7 +80,7 @@ def test_instr1_closest_earlier_90():
 
     (left, right) = closest_earlier_90_result.mac.conform(
         closest_earlier_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
     )
@@ -100,7 +98,7 @@ def test_instr1_all_earlier_or_later_90():
 
     (left, right) = all_earlier_or_later_90_result.mac.conform(
         all_earlier_or_later_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
         values_order=True,
@@ -118,7 +116,7 @@ def test_instr1_all_later_90():
 
     (left, right) = all_later_90_result.mac.conform(
         all_later_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
         values_order=True,
@@ -136,7 +134,7 @@ def test_instr1_all_earlier_90():
 
     (left, right) = all_earlier_90_result.mac.conform(
         all_earlier_90_expected_result,
-        filter_kwargs=COL_FILTER_KWARGS,
+        subset_pair_kwargs=COL_FILTER_KWARGS,
         dtypes=True,
         index_order=True,
         values_order=True,
