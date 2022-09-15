@@ -62,7 +62,7 @@ On Windows:
 
     $ .\env\Scripts\activate
 
-You can confirm you’re in the activated virtual environment by checking the location
+You can confirm you're in the activated virtual environment by checking the location
 of your Python interpreter; it should point to the ``env`` directory.
 
 On MacOS and Linux:
@@ -101,7 +101,7 @@ If you want to switch projects or otherwise leave your virtual environment, simp
     $ deactivate
 
 If you want to re-enter the virtual environment just follow the same instructions above
-about activating a virtual environment. There’s no need to re-create the virtual environment.
+about activating a virtual environment. There's no need to re-create the virtual environment.
 
 
 Installing MACPie with Anaconda

@@ -8,15 +8,12 @@ the following various modules:
 
 datetimetools
 -------------
-.. module:: macpie.datetimetools
-
 .. automodule:: macpie.datetimetools
    :noindex:
 
 .. autosummary::
    :toctree: api/
-   :recursive:
-
+   
    current_datetime_str
    datetime_ms
    reformat_datetime_str
@@ -24,8 +21,6 @@ datetimetools
 
 itertools
 ---------
-.. module:: macpie.itertools
-
 .. automodule:: macpie.itertools
    :noindex:
 
@@ -37,13 +32,10 @@ itertools
    filter_get_message
    first_true
    overlay
-   remove_duplicates
 
 
 lltools
 -------
-.. module:: macpie.lltools
-
 .. automodule:: macpie.lltools
    :noindex:
 
@@ -52,7 +44,9 @@ lltools
 
    chunks
    common_members
-   diff
+   difference
+   filter_seq
+   filter_seq_pair
    is_disjoint
    is_list_like
    list_like_str_equal
@@ -62,14 +56,13 @@ lltools
    maybe_make_list
    maybe_make_tuple
    move_item_to
+   remove_duplicates
    rtrim
    rtrim_longest
 
 
 openpyxltools
 -------------
-.. module:: macpie.openpyxltools
-
 .. automodule:: macpie.openpyxltools
    :noindex:
 
@@ -77,19 +70,18 @@ openpyxltools
    :toctree: api/
 
    autofit_column_width
+   file_to_dataframe
    get_column_index
    get_sheet_names
    highlight_row
    is_row_empty
    iter_rows_with_column_value
-   to_df
    to_tablib_dataset
+   worksheet_to_dataframe
 
 
 pathtools
 ---------
-.. module:: macpie.pathtools
-
 .. automodule:: macpie.pathtools
    :noindex:
 
@@ -106,8 +98,6 @@ pathtools
 
 shelltools
 ----------
-.. module:: macpie.shelltools
-
 .. automodule:: macpie.shelltools
    :noindex:
 
@@ -119,8 +109,6 @@ shelltools
 
 strtools
 --------
-.. module:: macpie.strtools
-
 .. automodule:: macpie.strtools
    :noindex:
 
@@ -141,8 +129,6 @@ strtools
 
 tablibtools
 -----------
-.. module:: macpie.tablibtools
-
 .. automodule:: macpie.tablibtools
    :noindex:
 
@@ -156,8 +142,6 @@ tablibtools
 
 validatortools
 --------------
-.. module:: macpie.validatortools
-
 .. automodule:: macpie.validatortools
    :noindex:
 
@@ -169,8 +153,6 @@ validatortools
 
 xlsxwritertools
 ---------------
-.. module:: macpie.xlsxwritertools
-
 .. automodule:: macpie.xlsxwritertools
    :noindex:
 

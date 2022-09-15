@@ -28,6 +28,7 @@
       ~DatasetFields.from_collection
       ~DatasetFields.from_df
       ~DatasetFields.from_excel
+      ~DatasetFields.from_tablib_dset
       ~DatasetFields.get_cli
       ~DatasetFields.get_col
       ~DatasetFields.get_csv

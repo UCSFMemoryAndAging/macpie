@@ -1,6 +1,6 @@
-﻿macpie.pandas.assimilate
+﻿macpie.pandas.read\_file
 ========================
 
 .. currentmodule:: macpie.pandas
 
-.. autofunction:: assimilate
+.. autofunction:: read_file

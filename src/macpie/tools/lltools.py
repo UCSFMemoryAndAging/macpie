@@ -156,11 +156,11 @@ def filter_seq_pair(
         Right sequence to filter
     intersection : bool, default False
         Whether to only return the items common to both, after excluding
-        any values filtered out by the *filter_kwargs params.
-    left_filter_kwargs : dict
+        any values filtered out by the \*filter_kwargs params.
+    left_filter_seq_kwargs : dict
         Keyword arguments to pass to underlying :func:`filter_seq`
         to be applied to left sequences.
-    right_filter_kwargs : dict
+    right_filter_seq_kwargs : dict
         Keyword arguments to pass to underlying :func:`filter_seq`
         to be applied to right sequences.
     **kwargs

@@ -27,6 +27,7 @@
       ~MacpieTablibDataset.filter
       ~MacpieTablibDataset.from_df
       ~MacpieTablibDataset.from_excel
+      ~MacpieTablibDataset.from_tablib_dset
       ~MacpieTablibDataset.get_cli
       ~MacpieTablibDataset.get_col
       ~MacpieTablibDataset.get_csv

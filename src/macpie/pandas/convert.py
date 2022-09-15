@@ -30,7 +30,7 @@ def conform(
         Whether ``right`` should be modified to mimic the index order of ``left``
     values_order : bool, default is False
         Whether both DataFrames should be sorted by their common labels.
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+    axis : {0 or `index`, 1 or `columns`, None}, default None
         The axis to conform on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
@@ -102,7 +102,7 @@ def mimic_index_order(left: pd.DataFrame, right: pd.DataFrame, axis=None):
     ----------
     left : DataFrame
     right : DataFrame
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+    axis : {0 or `index`, 1 or `columns`, None}, default None
         The axis to mimic on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
@@ -138,7 +138,7 @@ def sort_values_pair(
     right : DataFrame
     right_only : bool, default is False
         Whether to only sort the values of ``right``
-    axis : {0 or ‘index’, 1 or ‘columns’}, default 'index'
+    axis : {0 or `index`, 1 or `columns`}, default 'index'
         Axis to be sorted.
     **kwargs
         All keyword arguments are passed through to the underlying

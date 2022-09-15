@@ -55,5 +55,6 @@ Command Summary
   :caption: Commands
 
   macpie <cli_reference/macpie/index>
+  mppair <cli_reference/mppair/index>
   mpsql <cli_reference/mpsql/index>
   

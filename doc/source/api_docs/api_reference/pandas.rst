@@ -68,9 +68,9 @@ I/O Functions
 .. autosummary::
    :toctree: api/
 
-   csv_to_dataframe
-   excel_to_dataframe
-   file_to_dataframe
+   read_csv
+   read_excel
+   read_file
 
 
 DataFrame Helper Functions
@@ -81,12 +81,13 @@ DataFrame Helper Functions
 
    add_diff_days
    any_duplicates
-   assimilate
+   compare
    diff_cols
    diff_rows
-   drop_cols
    drop_suffix
    equals
+   filter_labels
+   filter_labels_pair
    flatten_multiindex
    get_col_name
    get_col_names
@@ -94,7 +95,11 @@ DataFrame Helper Functions
    insert
    is_date_col
    mark_duplicates_by_cols
+   mimic_dtypes
+   mimic_index_order
    replace_suffix
+   sort_values_pair
+   subset_pair
    to_datetime
 
 

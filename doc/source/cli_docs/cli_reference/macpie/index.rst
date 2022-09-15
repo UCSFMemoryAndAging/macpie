@@ -46,5 +46,3 @@ If they are not specified using these options, then defaults (as described below
 .. include:: ./link.inc
 
 .. include:: ./merge.inc
-
-.. include:: ./compare.inc

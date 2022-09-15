@@ -16,6 +16,11 @@ class MacDataFrameAccessor:
     for calling those functions (leaving out the first argument, as that is the
     DataFrame object using the accessor).
 
+    Methods
+    -------
+    add_diff_days
+    any_duplicates
+
     Examples
     --------
     >>> from datetime import datetime

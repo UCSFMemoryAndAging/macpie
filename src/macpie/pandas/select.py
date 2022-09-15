@@ -53,7 +53,7 @@ def filter_labels(
     Parameters
     ----------
     dfs : Sequence of DataFrames
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+    axis : {0 or `index`, 1 or `columns`, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
@@ -65,6 +65,7 @@ def filter_labels(
         level (name or number). Default is returning all levels.
     result_type : {'single_list', 'single_list_no_dups', 'list_of_lists'}, default 'single_list_no_dups'
         Indicates how results should be returned.
+
         * single_list: Results are flattened into a single list
         * single_list_no_dups: Results are flattened into a single list with duplicates removed
         * list_of_lists: List of lists.
@@ -79,7 +80,7 @@ def filter_labels(
     See Also
     --------
     DataFrame.filter : Subset the dataframe rows or columns according
-    to the specified index labels.
+        to the specified index labels.
     """
 
     if result_type not in ["single_list", "single_list_no_dups", "list_of_lists"]:
@@ -134,7 +135,7 @@ def filter_labels_pair(left: pd.DataFrame, right: pd.DataFrame, axis=None, **kwa
     ----------
     left : DataFrame
     right : DataFrame
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+    axis : {0 or `index`, 1 or `columns`, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.
@@ -464,7 +465,7 @@ def subset_pair(
     ----------
     left : DataFrame
     right : DataFrame
-    axis : {0 or ‘index’, 1 or ‘columns’, None}, default None
+    axis : {0 or `index`, 1 or `columns`, None}, default None
         The axis to filter labels on, expressed either as an index (int)
         or axis name (str). By default this is the info axis,
         'index' for Series, 'columns' for DataFrame.

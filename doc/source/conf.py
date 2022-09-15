@@ -51,3 +51,19 @@ html_sidebars = {
     "**": ["sidebar-nav-bs", "sidebar-ethical-ads"],
     "index": [],
 }
+
+
+def setup(app):
+    import sys
+
+    # these modules aren't found by sphinx
+    sys.modules["macpie.datetimetools"] = macpie.datetimetools
+    sys.modules["macpie.itertools"] = macpie.itertools
+    sys.modules["macpie.lltools"] = macpie.lltools
+    sys.modules["macpie.openpyxltools"] = macpie.openpyxltools
+    sys.modules["macpie.pathtools"] = macpie.pathtools
+    sys.modules["macpie.shelltools"] = macpie.shelltools
+    sys.modules["macpie.strtools"] = macpie.strtools
+    sys.modules["macpie.tablibtools"] = macpie.tablibtools
+    sys.modules["macpie.validatortools"] = macpie.validatortools
+    sys.modules["macpie.xlsxwritertools"] = macpie.xlsxwritertools

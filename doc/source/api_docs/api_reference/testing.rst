@@ -6,5 +6,5 @@ Testing
 .. autosummary::
    :toctree: api/
 
-   assert_dfs_equal
    assert_excels_equal
+   assert_excel_worksheet_equal

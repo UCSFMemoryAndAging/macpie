@@ -2,7 +2,7 @@
 
 .. _command-compare:
 
-macpie compare
+mppair compare
 --------------
 
 This command compares two Excel files and outputs differences found, if any.
@@ -16,7 +16,7 @@ Usage
 ~~~~~
 .. code-block:: bash
 
-    $ macpie compare [OPTIONS] LEFT_FILE RIGHT_FILE
+    $ mppair compare [OPTIONS] LEFT_FILE RIGHT_FILE
 
 
 Options
@@ -90,8 +90,3 @@ Examples
 
 API
 ~~~
-
-.. click:: macpie.cli.macpie.compare:compare
-   :prog: macpie compare
-   :nested: full
-

@@ -15,7 +15,7 @@ def sort_values_pair(
     right : DataFrame
     right_only : bool, default is False
         Whether to only sort the values of ``right``
-    axis : {0 or ‘index’, 1 or ‘columns’}, default 'index'
+    axis : {0 or `index`, 1 or `columns`}, default 'index'
         Axis to be sorted.
     **kwargs
         All keyword arguments are passed through to the underlying

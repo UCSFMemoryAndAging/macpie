@@ -29,6 +29,7 @@
       ~DictLikeTablibDataset.from_df
       ~DictLikeTablibDataset.from_dict
       ~DictLikeTablibDataset.from_excel
+      ~DictLikeTablibDataset.from_tablib_dset
       ~DictLikeTablibDataset.get_cli
       ~DictLikeTablibDataset.get_col
       ~DictLikeTablibDataset.get_csv
