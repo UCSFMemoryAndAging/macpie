@@ -1,66 +1,12 @@
 Pandas
 ======
 
-As MACPie relies heavily on the ``pandas`` library, a rich set of methods
+As MACPie relies heavily on the ``pandas`` library, a rich set of functions
 that work with :class:`pandas.DataFrame` and :class:`pandas.Series` objects
-were created and are provided through this API. These custom methods are
-exposed and accessible through the :class:`pandas.DataFrame` and
-:class:`pandas.Series` objects themselves via the ``mac`` namespace.
-See the corresponding accessor class to see which methods are available
-via the ``mac`` namespace.
-
-Example: ::
-
-    >>> from datetime import datetime 
-    >>> import pandas as pd
-    >>> from macpie import MacDataFrameAccessor
-
-    >>> df = pd.DataFrame({'col1': [1,2], 'date1': [datetime(2001, 3, 2), datetime(2001, 8, 1)]})
-    >>> df.mac.is_date_col('col1')
-    False
-    >>> df.mac.is_date_col('date1')
-    True
-
-DataFrame Accessor
-~~~~~~~~~~~~~~~~~~
-
-Methods on this accessor class are available on :class:`pandas.DataFrame`
-objects via the ``mac`` namespace.
-
-.. currentmodule:: macpie
-.. autosummary::
-   :toctree: api/
-
-   MacDataFrameAccessor
-
-
-Series Accessor
-~~~~~~~~~~~~~~~
-
-Methods on this accessor class are available on :class:`pandas.Series`
-objects via the ``mac`` namespace.
-
-
-.. currentmodule:: macpie
-.. autosummary::
-   :toctree: api/
-
-   MacSeriesAccessor
+were created and are provided through this API.
 
 
 .. currentmodule:: macpie.pandas
-
-Core Functions
-~~~~~~~~~~~~~~
-
-.. autosummary::
-   :toctree: api/
-
-   date_proximity
-   filter_by_id
-   group_by_keep_one
-   merge
-
 
 I/O Functions
 ~~~~~~~~~~~~~
@@ -73,43 +19,133 @@ I/O Functions
    read_file
 
 
-DataFrame Helper Functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Selecting data
+~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   filter_by_id
+   filter_labels
+   filter_labels_pair
+   get_col_name
+   get_col_names
+   get_cols_by_prefixes
+   remove_trailers
+   rtrim
+   rtrim_longest
+   subset
+   subset_pair
+
+
+Indexing
+~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   drop_suffix
+   flatten_multiindex
+   insert
+   prepend_multi_index_level
+   replace_suffix
+
+
+Describing data
+~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: api/
 
    add_diff_days
    any_duplicates
-   compare
-   diff_cols
-   diff_rows
-   drop_suffix
-   equals
-   filter_labels
-   filter_labels_pair
-   flatten_multiindex
-   get_col_name
-   get_col_names
-   get_cols_by_prefixes
-   insert
+   count_trailers
    is_date_col
    mark_duplicates_by_cols
-   mimic_dtypes
-   mimic_index_order
-   replace_suffix
-   sort_values_pair
-   subset_pair
-   to_datetime
 
 
-Series Helper Functions
-~~~~~~~~~~~~~~~~~~~~~~~
+Combining data
+~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: api/
 
-   count_trailers
-   remove_trailers
-   rtrim
-   rtrim_longest
+   date_proximity
+   merge
+
+
+Comparing data
+~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   compare
+   diff_cols
+   diff_rows
+   equals
+
+
+Converting data
+~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   conform
+   mimic_dtypes
+   mimic_index_order
+   to_datetime
+
+
+Group by
+~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   group_by_keep_one
+
+
+Sorting Data
+~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: api/
+
+   sort_values_pair
+
+
+.. currentmodule:: macpie
+
+Accessors
+~~~~~~~~~
+
+Pandas allows adding additional "namespaces" to pandas objects to extend them.
+MACPie adds the ``mac`` namespace to :class:`pandas.DataFrame` and
+:class:`pandas.Series` objects to provide access to many of these methods and more.
+
+See the corresponding accessor classes to see which methods are available
+via the ``mac`` namespace.
+
+DataFrame Accessor
+^^^^^^^^^^^^^^^^^^
+
+Methods on this accessor class are available on :class:`pandas.DataFrame`
+objects via the ``mac`` namespace.
+
+.. autosummary::
+   :toctree: api/
+
+   MacDataFrameAccessor
+
+Series Accessor
+^^^^^^^^^^^^^^^
+
+Methods on this accessor class are available on :class:`pandas.Series`
+objects via the ``mac`` namespace.
+
+.. autosummary::
+   :toctree: api/
+
+   MacSeriesAccessor

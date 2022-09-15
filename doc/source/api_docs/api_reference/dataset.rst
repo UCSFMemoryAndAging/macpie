@@ -33,8 +33,8 @@ Methods related to changing the columns in the Dataset.
     Dataset.keep_fields
 
 
-Binary operator functions
--------------------------
+Combining, group by
+-------------------
 .. autosummary::
    :toctree: api/
 
