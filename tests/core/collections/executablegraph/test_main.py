@@ -44,7 +44,7 @@ def test_keepone(cli_keepone_big):
 
     result = nodes_with_operations[0]["operation_result"]
 
-    expected_result = mp.pandas.read_file(cli_keepone_big)
+    expected_result = mp.Dataset.from_file(cli_keepone_big)
 
     (left, right) = result.mac.conform(
         expected_result, subset_pair_kwargs=COL_FILTER_KWARGS, values_order=True

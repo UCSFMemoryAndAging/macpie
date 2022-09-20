@@ -5,6 +5,8 @@ import pandas as pd
 
 from macpie._config import get_option
 from macpie.core.datasetfields import DatasetField, DatasetFields
+
+# from macpie.core.macseries import MacSeries
 from macpie.pandas.select import get_col_name
 from macpie.tools import itertools, lltools, strtools
 from macpie.util.decorators.method import MethodHistory
@@ -792,6 +794,12 @@ class Dataset(pd.DataFrame):
     def _constructor(self):
         """Retain Dataset as a result of an operation."""
         return Dataset
+
+    """ In development
+    @property
+    def _constructor_sliced(self):
+        return MacSeries
+    """
 
     def equals(self, other: object):
         """Test whether two Datasets are equal."""
