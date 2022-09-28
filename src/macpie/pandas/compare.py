@@ -41,10 +41,9 @@ def compare(
         # first compare columns
         (left_only_cols, right_only_cols) = diff_cols(left, right)
         if left_only_cols or right_only_cols:
-            col_diffs = pd.DataFrame()
-            col_diffs["Left_Only_Cols"] = left_only_cols
-            col_diffs["Right_Only_Cols"] = right_only_cols
-            return col_diffs
+            left_only_ser = pd.Series(left_only_cols, name="Left_Only_Cols", dtype="string")
+            right_only_ser = pd.Series(right_only_cols, name="Right_Only_Cols", dtype="string")
+            return pd.concat([left_only_ser, right_only_ser], axis="columns")
         else:
             # then compare rows
             return diff_rows(left, right)
