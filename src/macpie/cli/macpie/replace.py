@@ -3,7 +3,6 @@ import re
 
 import click
 import openpyxl as pyxl
-from pandas.core.dtypes.common import is_re_compilable
 from tabulate import tabulate
 
 from macpie.cli.core import pass_results_resource
@@ -21,13 +20,14 @@ def replace_params(func):
 
 @click.command()
 @replace_params
+@click.option("-s", "--sheet", multiple=True)
 @click.argument(
     "files",
     nargs=-1,
     type=click.Path(exists=True, file_okay=True, dir_okay=True, path_type=pathlib.Path),
 )
 @pass_results_resource
-def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, files):
+def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, sheet, files):
     valid_files, invalid_files = pathtools.validate_paths(files, allowed_path)
 
     for f in invalid_files:
@@ -39,27 +39,35 @@ def replace(results_resource, to_replace, value, ignorecase, regex, re_dotall, f
     results_resource.create_results_dir()
 
     replace_in_files(
-        results_resource, valid_files, to_replace, value, ignorecase, regex, re_dotall
+        results_resource,
+        valid_files,
+        to_replace,
+        value,
+        ignorecase,
+        regex,
+        re_dotall,
+        sheet_names=sheet,
     )
 
 
-def replace_in_files(results_resource, files, to_replace, value, ignorecase, regex, re_dotall):
+def replace_in_files(
+    results_resource, files, to_replace, value, ignorecase, regex, re_dotall, sheet_names=None
+):
     flags = 0
-    if regex:
-        if not is_re_compilable(to_replace):
-            raise TypeError("Could not compile 'to_replace' to regex.")
-        if re_dotall:
-            flags |= re.DOTALL
+    if regex and re_dotall:
+        flags |= re.DOTALL
 
     result_filepaths = []
-    for file_path in files:
-        output_filepath = results_resource.results_dir / file_path.name
 
-        wb = pyxl.load_workbook(file_path)
-        for sheet in wb.sheetnames:
-            click.secho(f"\nProcessing: {file_path.resolve()} - {sheet}", fg="green")
+    for filepath, wb, wb_sheet_names in openpyxltools.iter_filepaths(
+        files, sheet_names=sheet_names
+    ):
+        output_filepath = results_resource.results_dir / filepath.name
 
-            ws = wb[sheet]
+        for asheetname in wb_sheet_names:
+            click.secho(f"\nProcessing: {filepath.resolve()} - {asheetname}", fg="green")
+
+            ws = wb[asheetname]
             counter = openpyxltools.replace(
                 ws,
                 to_replace=to_replace,

@@ -31,8 +31,17 @@ def replace(
 
     echo_command_info("Replacing values", file_pair_info)
 
+    left_sheets, right_sheets = map(list, zip(*sheet_pairs))
+
     result_filepaths = replace_in_files(
-        results_resource, [left_file, right_file], to_replace, value, ignorecase, regex, re_dotall
+        results_resource,
+        [left_file, right_file],
+        to_replace,
+        value,
+        ignorecase,
+        regex,
+        re_dotall,
+        sheet_names=[left_sheets, right_sheets],
     )
 
     left_results_path, right_results_path = result_filepaths

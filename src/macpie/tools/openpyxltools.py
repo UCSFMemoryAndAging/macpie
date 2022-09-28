@@ -5,8 +5,9 @@ import re
 import openpyxl as pyxl
 import pandas as pd
 import tablib as tl
+from pandas.core.dtypes.common import is_re_compilable
 
-from macpie.tools import strtools
+from macpie.tools import lltools, strtools
 
 
 YELLOW = "00FFFF00"
@@ -122,6 +123,36 @@ def iter_rows_with_column_value(ws, column: str, value):
                 yield cell.row
 
 
+def iter_filepaths(filepaths, sheet_names=None):
+    if sheet_names and lltools.is_list_like(sheet_names) and lltools.is_list_like(sheet_names[0]):
+        if len(filepaths) != len(sheet_names):
+            raise ValueError("filepaths and sheet_names have different lengths.")
+
+    for idx, filepath in enumerate(filepaths):
+        wb = pyxl.load_workbook(filepath)
+
+        sheet_names_result = []
+        if not sheet_names:
+            sheet_names_result = wb.sheetnames
+        elif isinstance(sheet_names, str):
+            if sheet_names in wb.sheetnames:
+                sheet_names_result = [sheet_names]
+        elif lltools.is_list_like(sheet_names):
+            if lltools.is_list_like(sheet_names[0]):
+                sheet_names_for_file = lltools.maybe_make_list(sheet_names[idx])
+                sheet_names_result = [
+                    sheet_name
+                    for sheet_name in sheet_names_for_file
+                    if sheet_name in wb.sheetnames
+                ]
+            else:
+                sheet_names_result = [
+                    sheet_name for sheet_name in sheet_names if sheet_name in wb.sheetnames
+                ]
+
+        yield filepath, wb, sheet_names_result
+
+
 def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
     """For a given Worksheet, replace values given in `to_replace` with `value`.
 
@@ -142,21 +173,27 @@ def replace(ws, to_replace, value, ignorecase=False, regex=False, flags=0):
     """
     counter = collections.Counter()
     if regex:
+        if not is_re_compilable(to_replace):
+            raise TypeError("Could not compile 'to_replace' to regex.")
         if ignorecase:
             flags |= re.IGNORECASE
+
         for cell in iter_cells(ws):
             cell_value = str(cell.value)
             match = re.fullmatch(to_replace, cell_value, flags=flags)
             if match:
                 counter[match.group(0)] += 1
-                orig_data_type = type(cell.value)
-                try:
-                    cell.value = orig_data_type(value)
-                except TypeError:
-                    raise TypeError(
-                        f"Can't cast replacement value '{value}' to same "
-                        f"type of original value '{orig_data_type}'."
-                    )
+                if value == "":
+                    cell.value = value
+                else:
+                    orig_data_type = type(cell.value)
+                    try:
+                        cell.value = orig_data_type(value)
+                    except TypeError:
+                        raise TypeError(
+                            f"Can't cast replacement value '{value}' to same "
+                            f"type of original value '{orig_data_type}'."
+                        )
     else:
         for cell in iter_cells(ws):
             cell_value = str(cell.value)
