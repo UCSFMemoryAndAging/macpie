@@ -19,6 +19,7 @@ FilePairInfo = namedtuple("FilePairInfo", ["file_pair", "sheet_pairs", "filter_k
 @click.option("-l", "--filter-like", type=str)
 @click.option("-r", "--filter-regex", type=str)
 @click.option("-i", "--filter-invert", is_flag=True)
+@click.option("-x", "--filter-intersection", is_flag=True)
 @click.argument(
     "files",
     nargs=2,
@@ -28,7 +29,16 @@ FilePairInfo = namedtuple("FilePairInfo", ["file_pair", "sheet_pairs", "filter_k
 )
 @click.pass_context
 def main(
-    ctx, verbose, sheet, sheet_pair, filter_name, filter_like, filter_regex, filter_invert, files
+    ctx,
+    verbose,
+    sheet,
+    sheet_pair,
+    filter_name,
+    filter_like,
+    filter_regex,
+    filter_invert,
+    filter_intersection,
+    files,
 ):
     """
     This command processes a pair of files via one or more subcommands. One subcommand
@@ -52,6 +62,7 @@ def process_commands(
     filter_like,
     filter_regex,
     filter_invert,
+    filter_intersection,
     files,
 ):
     """This result callback is invoked with an iterable of all the chained
@@ -72,9 +83,8 @@ def process_commands(
         "like": filter_like,
         "regex": filter_regex,
         "invert": filter_invert,
+        "intersection": filter_intersection,
     }
-    if not any(filter_kwargs.values()):
-        filter_kwargs = {}
 
     stream = FilePairInfo(files, sheet_pairs, filter_kwargs)
 

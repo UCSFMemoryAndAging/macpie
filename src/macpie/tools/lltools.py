@@ -180,7 +180,7 @@ def filter_seq_pair(
     left_items = []
     right_items = []
 
-    if not kwargs:
+    if not kwargs or not any(kwargs.values()):
         # if no filtering is done, return all items
         if not left_filter_seq_kwargs:
             left_items = left
