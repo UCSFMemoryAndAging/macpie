@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import tablib as tl
 
+import macpie._compat as compat
 from macpie._config import get_option
 from macpie.tools import openpyxltools, tablibtools
 
@@ -35,7 +36,10 @@ class MACPieOpenpyxlReader(pd.io.excel._openpyxl.OpenpyxlReader, MACPieExcelRead
 
 
 class _MACPieOpenpyxlWriter(pd.io.excel._OpenpyxlWriter, MACPieExcelWriter):
-    engine = "mp_openpyxl"
+    if compat.PANDAS_GE_15:
+        _engine = "mp_openpyxl"
+    else:
+        engine = "mp_openpyxl"
 
     @property
     def sheet_names(self):
@@ -87,8 +91,18 @@ class _MACPieOpenpyxlWriter(pd.io.excel._OpenpyxlWriter, MACPieExcelWriter):
             if ws.title.startswith("_mp"):
                 openpyxltools.autofit_column_width(ws)
 
-    def save(self):
-        self._autofit_column_width()
-        self.finalize_sheet_order()
+    if compat.PANDAS_GE_15:
 
-        super().save()
+        def _save(self):
+            self._autofit_column_width()
+            self.finalize_sheet_order()
+
+            super()._save()
+
+    else:
+
+        def save(self):
+            self._autofit_column_width()
+            self.finalize_sheet_order()
+
+            super().save()

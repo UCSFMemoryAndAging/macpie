@@ -4,6 +4,7 @@ import pandas as pd
 import tablib as tl
 import xlsxwriter
 
+import macpie._compat as compat
 from macpie._config import get_option
 from macpie.io.excel._base import (
     DATASETS_SHEET_NAME,
@@ -15,7 +16,10 @@ from macpie.tools import tablibtools, xlsxwritertools
 
 
 class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
-    engine = "mp_xlsxwriter"
+    if compat.PANDAS_GE_15:
+        _engine = "mp_xlsxwriter"
+    else:
+        engine = "mp_xlsxwriter"
 
     def __init__(
         self,
@@ -42,7 +46,10 @@ class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
 
         engine_kwargs = pd.io.excel._util.combine_kwargs(engine_kwargs, kwargs)
 
-        self.book = MACPieXlsxWriterWorkbook(self.handles.handle, **engine_kwargs)
+        if compat.PANDAS_GE_15:
+            self._book = MACPieXlsxWriterWorkbook(self._handles.handle, **engine_kwargs)
+        else:
+            self.book = MACPieXlsxWriterWorkbook(self.handles.handle, **engine_kwargs)
 
         self.format_bold = self.book.add_format({"bold": True})
         self.format_text_wrap = self.book.add_format({"text_wrap": True})
@@ -90,10 +97,19 @@ class _MACPieXlsxWriter(pd.io.excel._XlsxWriter, MACPieExcelWriter):
         new_sheet_order = self.finalized_sheet_order(self.sheet_names())
         self.book.worksheets_objs.sort(key=lambda x: new_sheet_order.index(x.name))
 
-    def save(self):
-        self.finalize_sheet_order()
+    if compat.PANDAS_GE_15:
 
-        super().save()
+        def _save(self):
+            self.finalize_sheet_order()
+
+            super()._save()
+
+    else:
+
+        def save(self):
+            self.finalize_sheet_order()
+
+            super().save()
 
 
 class MACPieXlsxWriterWorkbook(xlsxwriter.workbook.Workbook):

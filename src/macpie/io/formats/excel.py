@@ -6,14 +6,17 @@ from typing import Callable, Iterable
 
 import numpy as np
 import pandas as pd
-import pandas.io.formats as pd_formats
+import pandas.core.common as com
+from pandas.io.formats.excel import CssExcelCell, CSSToExcelConverter, ExcelCell, ExcelFormatter
+from pandas.io.formats.format import get_level_lengths
+from pandas.io.formats.printing import pprint_thing
 
 
 def highlight_axis_by_predicate(s: pd.Series, axis_label=None, predicate=None, color="yellow"):
     if predicate is None:
         predicate = bool
 
-    style_converter = pd_formats.excel.CSSToExcelConverter()
+    style_converter = CSSToExcelConverter()
     css = f"background-color: {color}"
     xlstyle = style_converter(css)
 
@@ -22,7 +25,7 @@ def highlight_axis_by_predicate(s: pd.Series, axis_label=None, predicate=None, c
     return None
 
 
-class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
+class MACPieExcelFormatter(ExcelFormatter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -37,7 +40,7 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
         # see highlight_row_by_column_predicate for an example
         self._axis_styler = (axis, func, kwargs)
 
-    def _format_header_mi(self) -> Iterable[pd_formats.excel.ExcelCell]:
+    def _format_header_mi(self) -> Iterable[ExcelCell]:
         """Currently, as of pandas 1.3.4, still cannot write to Excel
         with MultiIndex columns and no index ('index'=False).
         Added a few hacks to make it work until hopefully it gets
@@ -49,7 +52,7 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
 
         columns = self.columns
         level_strs = columns.format(sparsify=self.merge_cells, adjoin=False, names=False)
-        level_lengths = pd_formats.format.get_level_lengths(level_strs)
+        level_lengths = get_level_lengths(level_strs)
         coloffset = 0
         lnum = 0
 
@@ -66,7 +69,7 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                 # hack 2/2
                 # if not self.index, skip this to avoid negative col index
                 for lnum, name in enumerate(columns.names):
-                    yield pd_formats.excel.ExcelCell(
+                    yield ExcelCell(
                         row=lnum,
                         col=coloffset,
                         val=name,
@@ -78,24 +81,39 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
             ):
                 values = levels.take(level_codes)
                 for i, span_val in spans.items():
-                    spans_multiple_cells = span_val > 1
-                    yield pd_formats.excel.ExcelCell(
+                    mergestart, mergeend = None, None
+                    if span_val > 1:
+                        mergestart, mergeend = lnum, coloffset + i + span_val
+                    yield CssExcelCell(
                         row=lnum,
                         col=coloffset + i + 1,
                         val=values[i],
                         style=self.header_style,
-                        mergestart=lnum if spans_multiple_cells else None,
-                        mergeend=(coloffset + i + span_val if spans_multiple_cells else None),
+                        css_styles=getattr(self.styler, "ctx_columns", None),
+                        css_row=lnum,
+                        css_col=i,
+                        css_converter=self.style_converter,
+                        mergestart=mergestart,
+                        mergeend=mergeend,
                     )
         else:
             # Format in legacy format with dots to indicate levels.
             for i, values in enumerate(zip(*level_strs)):
-                v = ".".join(map(pd_formats.printing.pprint_thing, values))
-                yield pd_formats.excel.ExcelCell(lnum, coloffset + i + 1, v, self.header_style)
+                v = ".".join(map(pprint_thing, values))
+                yield CssExcelCell(
+                    row=lnum,
+                    col=coloffset + i + 1,
+                    val=v,
+                    style=self.header_style,
+                    css_styles=getattr(self.styler, "ctx_columns", None),
+                    css_row=lnum,
+                    css_col=i,
+                    css_converter=self.style_converter,
+                )
 
         self.rowcounter = lnum
 
-    def _format_hierarchical_rows(self) -> Iterable[pd_formats.excel.ExcelCell]:
+    def _format_hierarchical_rows(self) -> Iterable[ExcelCell]:
         """Kludgey fix for: https://github.com/pandas-dev/pandas/issues/27772
         Code is verbatim from parent EXCEPT for the 'pass' line and the following
         commented out line
@@ -122,17 +140,15 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                 # self.rowcounter += 1
 
             # if index labels are not empty go ahead and dump
-            if pd.core.common.any_not_none(*index_labels) and self.header is not False:
+            if com.any_not_none(*index_labels) and self.header is not False:
 
                 for cidx, name in enumerate(index_labels):
-                    yield pd_formats.excel.ExcelCell(
-                        self.rowcounter - 1, cidx, name, self.header_style
-                    )
+                    yield ExcelCell(self.rowcounter - 1, cidx, name, self.header_style)
 
             if self.merge_cells:
                 # Format hierarchical rows as merged cells.
                 level_strs = self.df.index.format(sparsify=True, adjoin=False, names=False)
-                level_lengths = pd_formats.format.get_level_lengths(level_strs)
+                level_lengths = get_level_lengths(level_strs)
 
                 for spans, levels, level_codes in zip(
                     level_lengths, self.df.index.levels, self.df.index.codes
@@ -145,18 +161,21 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                     )
 
                     for i, span_val in spans.items():
-                        spans_multiple_cells = span_val > 1
-                        yield pd_formats.excel.ExcelCell(
+                        mergestart, mergeend = None, None
+                        if span_val > 1:
+                            mergestart = self.rowcounter + i + span_val - 1
+                            mergeend = gcolidx
+                        yield CssExcelCell(
                             row=self.rowcounter + i,
                             col=gcolidx,
                             val=values[i],
                             style=self.header_style,
-                            mergestart=(
-                                self.rowcounter + i + span_val - 1
-                                if spans_multiple_cells
-                                else None
-                            ),
-                            mergeend=gcolidx if spans_multiple_cells else None,
+                            css_styles=getattr(self.styler, "ctx_index", None),
+                            css_row=i,
+                            css_col=gcolidx,
+                            css_converter=self.style_converter,
+                            mergestart=mergestart,
+                            mergeend=mergeend,
                         )
                     gcolidx += 1
 
@@ -164,17 +183,21 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                 # Format hierarchical rows with non-merged values.
                 for indexcolvals in zip(*self.df.index):
                     for idx, indexcolval in enumerate(indexcolvals):
-                        yield pd_formats.excel.ExcelCell(
+                        yield CssExcelCell(
                             row=self.rowcounter + idx,
                             col=gcolidx,
                             val=indexcolval,
                             style=self.header_style,
+                            css_styles=getattr(self.styler, "ctx_index", None),
+                            css_row=idx,
+                            css_col=gcolidx,
+                            css_converter=self.style_converter,
                         )
                     gcolidx += 1
 
         yield from self._generate_body(gcolidx)
 
-    def _generate_body(self, coloffset: int) -> Iterable[pd_formats.excel.ExcelCell]:
+    def _generate_body(self, coloffset: int) -> Iterable[ExcelCell]:
         if self.axis_styler:
             axis, func, kwargs = self.axis_styler
             if axis == 1:
@@ -183,7 +206,7 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                     series = self.df.iloc[rowidx]
                     xlstyle = func(series, **kwargs)
                     for i, val in enumerate(series):
-                        yield pd_formats.excel.ExcelCell(
+                        yield ExcelCell(
                             row=self.rowcounter + rowidx, col=i + coloffset, val=val, style=xlstyle
                         )
             elif axis == 0:
@@ -192,13 +215,13 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                     series = self.df.iloc[:, colidx]
                     xlstyle = func(series, **kwargs)
                     for i, val in enumerate(series):
-                        yield pd_formats.excel.ExcelCell(
+                        yield ExcelCell(
                             row=self.rowcounter + i, col=colidx + coloffset, val=val, style=xlstyle
                         )
         else:
             yield from super()._generate_body(coloffset)
 
-    def _generate_body_rowwise(self, coloffset: int) -> Iterable[pd_formats.excel.ExcelCell]:
+    def _generate_body_rowwise(self, coloffset: int) -> Iterable[ExcelCell]:
         # useful if you want to generate the body row-wise, instead of
         # the default, which is column-wise
         if self.styler is None:
@@ -215,24 +238,4 @@ class MACPieExcelFormatter(pd_formats.excel.ExcelFormatter):
                 if styles is not None:
                     css = ";".join([a + ":" + str(v) for (a, v) in styles[rowidx, i]])
                     xlstyle = self.style_converter(css)
-                yield pd_formats.excel.ExcelCell(
-                    self.rowcounter + rowidx, i + coloffset, val, xlstyle
-                )
-
-    def write(self, writer, sheet_name=None, startrow=0, startcol=0, freeze_panes=None):
-        num_rows, num_cols = self.df.shape
-        if num_rows > self.max_rows or num_cols > self.max_cols:
-            raise ValueError(
-                f"This sheet is too large! Your sheet size is: {num_rows}, {num_cols} "
-                f"Max sheet size is: {self.max_rows}, {self.max_cols}"
-            )
-
-        formatted_cells = self.get_formatted_cells()
-
-        writer.write_cells(
-            formatted_cells,
-            sheet_name,
-            startrow=startrow,
-            startcol=startcol,
-            freeze_panes=freeze_panes,
-        )
+                yield ExcelCell(self.rowcounter + rowidx, i + coloffset, val, xlstyle)
