@@ -4,7 +4,7 @@ import macpie as mp
 from macpie.cli.core import pass_results_resource
 from macpie.cli.helpers import pipeline_processor, SingletonExcelWriter
 
-from .main import echo_command_info, FilePairInfo, iter_df_pairs
+from .helpers import echo_command_info, FilePairInfo, iter_df_pairs
 
 
 @click.command()

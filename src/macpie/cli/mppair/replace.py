@@ -4,7 +4,7 @@ from macpie.cli.core import pass_results_resource
 from macpie.cli.helpers import pipeline_processor
 from macpie.cli.macpie.replace import replace_params, replace_in_files
 
-from .main import echo_command_info, FilePairInfo
+from .helpers import echo_command_info, FilePairInfo
 
 
 @click.command()
