@@ -33,8 +33,15 @@
 
    .. autosummary::
    
+      ~MACPieExcelWriter.book
+      ~MACPieExcelWriter.cur_sheet
+      ~MACPieExcelWriter.date_format
+      ~MACPieExcelWriter.datetime_format
       ~MACPieExcelWriter.engine
+      ~MACPieExcelWriter.handles
+      ~MACPieExcelWriter.if_sheet_exists
       ~MACPieExcelWriter.path
+      ~MACPieExcelWriter.sheets
       ~MACPieExcelWriter.supported_extensions
    
    

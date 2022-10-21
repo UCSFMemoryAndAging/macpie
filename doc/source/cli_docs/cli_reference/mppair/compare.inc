@@ -16,7 +16,7 @@ Usage
 ~~~~~
 .. code-block:: bash
 
-    $ mppair compare [OPTIONS] LEFT_FILE RIGHT_FILE
+    $ mppair [OPTIONS] LEFT_FILE RIGHT_FILE compare [OPTIONS]
 
 
 Options
@@ -72,21 +72,25 @@ Examples
 
 #. To compare all common sheets between the two files: ::
    
-   $ macpie compare file1.xlsx file2.xlsx
+   $ macpie file1.xlsx file2.xlsx compare
 
 #. To compare sheet ``CDR`` in left file with sheet ``CDR`` in right file: ::
    
-   $ macpie compare --sheet CDR file1.xlsx file2.xlsx
+   $ macpie --sheet CDR file1.xlsx file2.xlsx compare
 
 #. To compare sheet ``CDR_A`` in left file with sheet ``CDR_B`` in right file: ::
    
-   $ macpie compare --sheet-pair CDR_A CDR_B file1.xlsx file2.xlsx
+   $ macpie --sheet-pair CDR_A CDR_B file1.xlsx file2.xlsx compare
 
 #. To compare sheet ``CDR`` in left file with sheet ``CDR`` in right file, but
    first sorting by the ``InstrID`` column. ::
    
-   $ macpie compare --sheet CDR --sort-col InstrID file1.xlsx file2.xlsx
+   $ macpie --sheet CDR --sort-col InstrID file1.xlsx file2.xlsx compare
 
 
 API
 ~~~
+
+.. click:: macpie.cli.mppair.compare:compare
+   :prog: mppair compare
+   :nested: full

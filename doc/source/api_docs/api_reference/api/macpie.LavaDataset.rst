@@ -98,6 +98,7 @@
       ~LavaDataset.info
       ~LavaDataset.insert
       ~LavaDataset.interpolate
+      ~LavaDataset.isetitem
       ~LavaDataset.isin
       ~LavaDataset.isna
       ~LavaDataset.isnull
@@ -203,6 +204,7 @@
       ~LavaDataset.to_latex
       ~LavaDataset.to_markdown
       ~LavaDataset.to_numpy
+      ~LavaDataset.to_orc
       ~LavaDataset.to_parquet
       ~LavaDataset.to_period
       ~LavaDataset.to_pickle

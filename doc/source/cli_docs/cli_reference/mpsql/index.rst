@@ -8,10 +8,18 @@
 Commands for working with SQL databases.
 
 
+Main Argument
+-------------
+
+.. option:: DATABASE
+
+   *Required*. Database name to connect to.
+
+
 .. _mpsql-main-options:
 
 Main Options
---------------
+------------
 
 These main options provide the information needed to establish a connection
 to the database.
@@ -26,7 +34,7 @@ to the database.
    Password to connect to the database.
    Environment variable is ``MACPIE_MYSQL_PWD``.
 
-.. option:: -p <INTEGER>, --port=<INTEGER>
+.. option:: -P <INTEGER>, --port=<INTEGER>
 
    Port number to use for connection. Default is ``3306``.
    Environment variable is ``MYSQL_TCP_PORT``.

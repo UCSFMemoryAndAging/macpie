@@ -98,6 +98,7 @@
       ~Dataset.info
       ~Dataset.insert
       ~Dataset.interpolate
+      ~Dataset.isetitem
       ~Dataset.isin
       ~Dataset.isna
       ~Dataset.isnull
@@ -203,6 +204,7 @@
       ~Dataset.to_latex
       ~Dataset.to_markdown
       ~Dataset.to_numpy
+      ~Dataset.to_orc
       ~Dataset.to_parquet
       ~Dataset.to_period
       ~Dataset.to_pickle
