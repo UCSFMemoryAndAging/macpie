@@ -13,13 +13,14 @@ all = all_cli + misc
 setup(
     name="macpie",
     install_requires=[
+        "pandas >= 1.3",
         "click >= 8.0",
         "openpyxl >= 3.0",
-        "pandas >= 1.3",
+        "XlsxWriter >= 3.0",
         "python-dotenv >= 0.20",
         "tablib >= 3.0",
         "tabulate >= 0.8",
-        "XlsxWriter >= 3.0",
+        "packaging",
     ],
     extras_require={"mpsql": mpsql_cli, "all_cli": all_cli, "all": all},
 )
