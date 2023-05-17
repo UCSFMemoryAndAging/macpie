@@ -13,7 +13,7 @@ all = all_cli + misc
 setup(
     name="macpie",
     install_requires=[
-        "pandas >= 1.3",
+        "pandas >= 1.3, < 2.0.0",
         "click >= 8.0",
         "openpyxl >= 3.0",
         "XlsxWriter >= 3.0",

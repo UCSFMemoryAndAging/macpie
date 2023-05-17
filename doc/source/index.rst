@@ -28,7 +28,7 @@ a dynamic multidisciplinary clinical research program investigating neurodegener
 .. container:: button
 
     :doc:`Getting started <getting_started/index>` :doc:`CLI reference <cli_docs/cli_reference>`
-    :doc:`API reference <getting_started/index>` :doc:`Release notes <changelog>`
+    :doc:`API reference <api_docs/api_reference>` :doc:`Release notes <changelog>`
     
 
 Useful links

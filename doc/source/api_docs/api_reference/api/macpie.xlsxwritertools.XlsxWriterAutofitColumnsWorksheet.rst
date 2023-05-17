@@ -19,6 +19,7 @@
       ~XlsxWriterAutofitColumnsWorksheet.add_table
       ~XlsxWriterAutofitColumnsWorksheet.add_write_handler
       ~XlsxWriterAutofitColumnsWorksheet.autofilter
+      ~XlsxWriterAutofitColumnsWorksheet.autofit
       ~XlsxWriterAutofitColumnsWorksheet.center_horizontally
       ~XlsxWriterAutofitColumnsWorksheet.center_vertically
       ~XlsxWriterAutofitColumnsWorksheet.conditional_format

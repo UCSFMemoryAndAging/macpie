@@ -1,6 +1,9 @@
 # locally created test output
 test_output/
 
+# virtual environments
+.venv
+
 # tox and pytest and pyenv
 .tox/
 .pytest_cache/

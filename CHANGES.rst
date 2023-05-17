@@ -13,7 +13,7 @@ Release notes
 =============
 
 
-0.6 (2022-XX-XX)
+0.6 (2023-05-17)
 ----------------
 
 Added
@@ -21,17 +21,31 @@ Added
 
 - CLI
 
-  - `macpie envfile` command
+  - :ref:`mppair <command-mppair>` command line tool for utilities related to
+    working with pairs of files (e.g. comparing files)
+  - ``macpie envfile`` command to create dotenv file template in your home directory
+
+- Pandas
+
+  - :func:`pandas.conform`
+  - :func:`pandas.filter_labels`
+  - :func:`pandas.filter_labels_pair`
+  - :func:`pandas.mimic_dtypes`
+  - :func:`pandas.mimic_index_order`
+  - :func:`pandas.sort_values_pair`
+  - :func:`pandas.subset`
+  - :func:`pandas.subset_pair`
 
 - Tools
 
+  - :func:`lltools.remove_duplicates`
   - :func:`shelltools.copy_file_same_dir`
   - :func:`strtools.make_unique`
 
 Changed
 ~~~~~~~
 - Refactored :ref:`Masker <util-masker>` classes
-- ResultsResource and output file names
+
 
 0.5 (2022-06-04)
 ----------------
@@ -69,8 +83,6 @@ Added
 ~~~~~
 - :ref:`mpsql <command-mpsql>` command line tool for utilities related to sql
   databases (e.g. generate create statements for tables and stored procs)
-- :ref:`mpfile <command-mpfile>` command line tool for utilities related to files
-  (e.g. comparing files)
 - :class:`MacSeriesAccessor` to extend :class:`pandas.Series` functionality
 - :external+xlsxwriter:doc:`xlsxwriter <index>` excel writing engine
   support for much improved writing performance
