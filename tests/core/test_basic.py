@@ -4,10 +4,11 @@ import pandas as pd
 
 import macpie as mp
 
+THIS_DIR = Path(__file__).parent.absolute()
 
-d = Path("/Users/alee7/ucsf/git/macpie/tests/core/dataset/")
-primary = mp.LavaDataset.from_file(d / "primary.xlsx")
-secondary = mp.LavaDataset.from_file(d / "secondary.xlsx")
+
+primary = mp.LavaDataset.from_file(THIS_DIR / "dataset" / "primary.xlsx")
+secondary = mp.LavaDataset.from_file(THIS_DIR / "dataset" / "secondary.xlsx")
 
 a = pd.concat([primary], keys=["Foo1"], axis="columns")
 b = pd.concat([a], keys=["Foo2"], axis="columns")
