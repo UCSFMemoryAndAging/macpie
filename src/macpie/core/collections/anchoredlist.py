@@ -1,8 +1,8 @@
 import itertools
 
-from macpie.core.dataset import Dataset
 from macpie.core.collections.base import BaseCollection
 from macpie.core.collections.basiclist import BasicList
+from macpie.core.dataset import Dataset
 
 
 class AnchoredList(BaseCollection):
@@ -67,9 +67,6 @@ class AnchoredList(BaseCollection):
             raise AttributeError(
                 "The 'primary' attribute has already been set, and can not be re-set."
             )
-
-        if dset is not None and dset[dset.id_col_name].duplicated().any():
-            raise ValueError("Primary Dataset in an AnchoredList cannot have duplicate IDs")
 
         self._primary = dset
 

@@ -1,6 +1,6 @@
-from collections import defaultdict
 import itertools
 import warnings
+from collections import defaultdict
 
 import numpy as np
 
@@ -80,6 +80,10 @@ class MergeableAnchoredList(AnchoredList):
                 self._secondary_anchor_col = (
                     self._primary.id_col_name + get_option("operators.binary.column_suffixes")[0]
                 )
+
+        # TODO: Check if there are any duplicates in the primary anchor column, and if so,
+        # handle so that a merge can be properly done. Should be similar to the logic in the
+        # add_secondary method.
 
     @property
     def merged_dset(self):
