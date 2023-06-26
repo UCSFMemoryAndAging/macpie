@@ -13,6 +13,19 @@ Release notes
 =============
 
 
+0.7 (2023-06-26)
+----------------
+
+Changed
+~~~~~~~
+- :class:`AnchoredList` to allow duplicates in primary Dataset
+
+Other
+~~~~~
+- Drop support for Python 3.8
+- Add support for Python 3.11
+
+
 0.6 (2023-05-17)
 ----------------
 
