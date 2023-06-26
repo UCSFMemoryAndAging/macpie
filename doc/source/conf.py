@@ -1,6 +1,5 @@
 import macpie
 
-
 # Project --------------------------------------------------------------
 
 project = "MACPie"
@@ -38,7 +37,7 @@ numpydoc_show_class_members = False
 html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "show_prev_next": False,
-    "page_sidebar_items": ["search-field", "page-toc"],
+    "secondary_sidebar_items": ["page-toc"],
     "github_url": "https://github.com/UCSFMemoryAndAging/macpie",
 }
 html_context = {"default_mode": "light"}

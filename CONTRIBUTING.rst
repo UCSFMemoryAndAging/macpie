@@ -174,7 +174,7 @@ Running full test suite
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The full test suite takes a long time to run because it tests multiple combinations
-of Python and dependencies. You need to have Python 3.8, 3.9, and 3.10 installed to
+of Python and dependencies. You need to have Python 3.9, 3.10, and 3.11 installed to
 run all of the environments. Then run:
 
 .. code-block:: text
@@ -204,15 +204,15 @@ If you aren't already set up to install multiple version of Python, I recommend 
 
     .. code-block:: text
 
-        $ pyenv install 3.8.13
-        $ pyenv install 3.9.13
-        $ pyenv install 3.10.4
+        $ pyenv install 3.9.16
+        $ pyenv install 3.10.11
+        $ pyenv install 3.11.3
     
 -   In your local repo root:
 
     .. code-block:: text
 
-        $ pyenv local 3.8.13 3.9.13 3.10.4
+        $ pyenv local 3.9.16 3.10.11 3.11.3
 
     This will set local application-specific Python version(s) (in order of preference)
     by writing the version name(s) to a ``.python-version`` file in the current directory.
@@ -237,14 +237,14 @@ Other useful ``pyenv`` commands:
     $ pyenv versions
     $
     $ # set the global Python version
-    $ pyenv global 3.6.12
+    $ pyenv global 3.11.3
     $
     $ # set application-specific version by creating a .python-version file in current dir.
     $ # sets the pyverison for current dir and subdirs
-    $ pyenv local 3.8.5
+    $ pyenv local 3.10.11
     $
     $ # set shell-specific Python version
-    $ pyenv shell 3.8-dev
+    $ pyenv shell 3.12-dev
 
 
 Read more about `tox <https://tox.readthedocs.io>`__.
@@ -271,11 +271,11 @@ Read more about `coverage <https://coverage.readthedocs.io>`__.
 Building the docs
 ~~~~~~~~~~~~~~~~~
 
-Build the docs in the ``docs`` directory using Sphinx.
+Build the docs in the ``doc`` directory using Sphinx.
 
 .. code-block:: text
 
-    $ cd docs
+    $ cd doc
     $ make html
 
 Open ``_build/html/index.html`` in your browser to view the docs.
